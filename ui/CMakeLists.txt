@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 3.8.0)
 set(app_name ui)
 
+find_package(Vulkan)
+find_package(SDL2)
+
 set(hdr
     imgui.h
     imgui_internal.h
     imgui_impl_sdl.h
     imgui_impl_vulkan.h
+
+    imgui_app.h
+    imgui_dlg.h
 )
 
 set(src
@@ -17,11 +23,19 @@ set(src
 
     imgui_impl_sdl.cpp
     imgui_impl_vulkan.cpp
+
+    imgui_app.cpp
+    imgui_dlg.cpp
 )
 
-add_library(${app_name} ${src} ${hdr})
+add_definitions(-DUI_EXPORTS)
 
-target_include_directories(${app_name} PRIVATE ${Vulkan_INCLUDE_DIR})
+add_library(${app_name} SHARED ${src} ${hdr})
 
-target_link_libraries(${app_name} ${Vulkan_LIBRARY})
-target_link_libraries(${app_name} SDL2::SDL2)
+
+target_include_directories(${app_name} PRIVATE ${Vulkan_INCLUDE_DIR} ${Vulkan_INCLUDE_DIR}/../Third-Party/Include)
+target_link_directories(${app_name} PRIVATE ${CMAKE_BINARY_DIR}/lib ${Vulkan_INCLUDE_DIR}/../Third-Party/Bin)
+
+if(MSVC)
+target_link_libraries(${app_name} ${Vulkan_LIBRARY} SDL2.lib SDL2main.lib)
+endif()

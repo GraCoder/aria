@@ -120,3 +120,7 @@ namespace ImGui
 	void MyFunction(const char* name, const MyMatrix44& v);
 }
 */
+
+#include "common.h"
+
+#define IMGUI_API UI_EXPORT 

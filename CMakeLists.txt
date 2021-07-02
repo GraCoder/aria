@@ -2,16 +2,24 @@ cmake_minimum_required(VERSION 3.8.0)
 
 project(aria)
 
-find_package(Vulkan)
-find_package(SDL2)
-
-foreach(CONF ${CMAKE_CONFIGURATION_TYPES})
-	string(TOUPPER "${CONF}" CONF)
+if(CMAKE_CONFIGURATION_TYPES)
+	#msvc etc
+	foreach(CONF ${CMAKE_CONFIGURATION_TYPES})
+		string(TOUPPER "${CONF}" CONF)
+		set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONF} ${CMAKE_BINARY_DIR}/lib)
+		set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONF} ${CMAKE_BINARY_DIR}/bin)
+	endforeach()
+	set(CMAKE_DEBUG_POSTFIX "d")
+else()
+	#makefile ninja etc
+	string(TOUPPER "${CMAKE_BUILD_TYPE}" CONF)
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONF} ${CMAKE_BINARY_DIR}/lib)
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONF} ${CMAKE_BINARY_DIR}/lib)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONF} ${CMAKE_BINARY_DIR}/bin)
-endforeach()
+	set(CMAKE_DEBUG_POSTFIX "d")
+endif()
 
-set(CMAKE_DEBUG_POSTFIX "d")
+add_definitions(-DIMGUI_VULKAN_DEBUG_REPORT)
 
 add_subdirectory(ui)
 add_subdirectory(aria)

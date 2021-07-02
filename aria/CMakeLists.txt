@@ -10,14 +10,10 @@ set(src
 add_executable(${app_name} main.cpp)
 
 
-target_include_directories(${app_name} PRIVATE ${Vulkan_INCLUDE_DIR})
 target_include_directories(${app_name} PRIVATE ${CMAKE_SOURCE_DIR}/ui)
+target_link_directories(${app_name} PRIVATE ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/lib)
 
-target_link_directories(${app_name} PRIVATE ${CMAKE_BINARY_DIR}/lib)
-
-target_link_libraries(${app_name} ${Vulkan_LIBRARY})
-target_link_libraries(${app_name} SDL2::SDL2)
-target_link_libraries(${app_name} "uid")
+target_link_libraries(${app_name} ui${CMAKE_DEBUG_POSTFIX}.lib)
 
 set_target_properties(${app_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${app_name}>"
                                                VS_DEBUGGER_COMMAND           "$<TARGET_FILE:${app_name}>"
