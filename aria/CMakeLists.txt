@@ -9,8 +9,10 @@ set(src
 
 add_executable(${app_name} main.cpp)
 
+target_include_directories(${app_name} PRIVATE ${Vulkan_INCLUDE_DIR} ${Vulkan_INCLUDE_DIR}/../Third-Party/Include)
 
 target_include_directories(${app_name} PRIVATE ${CMAKE_SOURCE_DIR}/ui)
+
 target_link_directories(${app_name} PRIVATE ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/lib)
 
 target_link_libraries(${app_name} ui${CMAKE_DEBUG_POSTFIX}.lib)

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.8.0)
 set(app_name ui)
 
-find_package(Vulkan)
 find_package(SDL2)
 
 set(hdr
