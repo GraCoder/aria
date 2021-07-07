@@ -9,7 +9,6 @@ set(hdr
     imgui_impl_sdl.h
     imgui_impl_vulkan.h
 
-    imgui_app.h
     imgui_dlg.h
 )
 
@@ -23,7 +22,6 @@ set(src
     imgui_impl_sdl.cpp
     imgui_impl_vulkan.cpp
 
-    imgui_app.cpp
     imgui_dlg.cpp
 )
 

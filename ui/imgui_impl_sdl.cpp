@@ -18,6 +18,7 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
+//  2021-06:29: *BREAKING CHANGE* Removed 'SDL_Window* window' parameter to ImGui_ImplSDL2_NewFrame() which was unnecessary.
 //  2021-06-29: Reorganized backend to pull data from a single structure to facilitate usage with multiple-contexts (all g_XXXX access changed to bd->XXXX).
 //  2021-03-22: Rework global mouse pos availability check listing supported platforms explicitly, effectively fixing mouse access on Raspberry Pi. (#2837, #3950)
 //  2020-05-25: Misc: Report a zero display-size when window is minimized, to be consistent with other backends.
@@ -60,8 +61,7 @@
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    SDL_VERSION_ATLEAST(2,0,4)
 #define SDL_HAS_VULKAN                      SDL_VERSION_ATLEAST(2,0,6)
 
-struct ImGui_ImplSDL2_Data
-{
+struct ImGui_ImplSDL2_Data {
 	SDL_Window* Window;
 	Uint64      Time;
 	bool        MousePressed[3];
@@ -76,9 +76,10 @@ struct ImGui_ImplSDL2_Data
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 // FIXME: multi-context support is not well tested and probably dysfunctional in this backend.
 // FIXME: some shared resources (mouse cursor shape, gamepad) are mishandled when using multi-context.
-static ImGui_ImplSDL2_Data* ImGui_ImplSDL2_CreateBackendData() { return IM_NEW(ImGui_ImplSDL2_Data)(); }
-static ImGui_ImplSDL2_Data* ImGui_ImplSDL2_GetBackendData() { return (ImGui_ImplSDL2_Data*)ImGui::GetIO().BackendPlatformUserData; }
-static void                 ImGui_ImplSDL2_DestroyBackendData() { IM_DELETE(ImGui_ImplSDL2_GetBackendData()); }
+static ImGui_ImplSDL2_Data* ImGui_ImplSDL2_GetBackendData()
+{
+	return ImGui::GetCurrentContext() ? (ImGui_ImplSDL2_Data*)ImGui::GetIO().BackendPlatformUserData : NULL;
+}
 
 // Functions
 static const char* ImGui_ImplSDL2_GetClipboardText(void*)
@@ -105,8 +106,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
 
-	switch (event->type)
-	{
+	switch (event->type) {
 		case SDL_MOUSEWHEEL:
 		{
 			if (event->wheel.x > 0) io.MouseWheelH += 1;
@@ -152,14 +152,14 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window)
 	ImGuiIO& io = ImGui::GetIO();
 	IM_ASSERT(io.BackendPlatformUserData == NULL && "Already initialized a platform backend!");
 
-	ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_CreateBackendData();
-	bd->Window = window;
-
 	// Setup backend capabilities flags
+	ImGui_ImplSDL2_Data* bd = IM_NEW(ImGui_ImplSDL2_Data)();
 	io.BackendPlatformUserData = (void*)bd;
 	io.BackendPlatformName = "imgui_impl_sdl";
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;        // We can honor io.WantSetMousePos requests (optional, rarely used)
+
+	bd->Window = window;
 
 	// Keyboard mapping. Dear ImGui will use those indices to peek into the io.KeysDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = SDL_SCANCODE_TAB;
@@ -252,21 +252,15 @@ void ImGui_ImplSDL2_Shutdown()
 {
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
-	bd->Window = NULL;
 
-	// Destroy last known clipboard data
 	if (bd->ClipboardTextData)
 		SDL_free(bd->ClipboardTextData);
-	bd->ClipboardTextData = NULL;
-
-	// Destroy SDL mouse cursors
 	for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
 		SDL_FreeCursor(bd->MouseCursors[cursor_n]);
-	memset(bd->MouseCursors, 0, sizeof(bd->MouseCursors));
 
 	io.BackendPlatformName = NULL;
 	io.BackendPlatformUserData = NULL;
-	ImGui_ImplSDL2_DestroyBackendData();
+	IM_DELETE(bd);
 }
 
 static void ImGui_ImplSDL2_UpdateMousePosAndButtons()
@@ -289,10 +283,8 @@ static void ImGui_ImplSDL2_UpdateMousePosAndButtons()
 
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IOS)
 	SDL_Window* focused_window = SDL_GetKeyboardFocus();
-	if (bd->Window == focused_window)
-	{
-		if (bd->MouseCanUseGlobalState)
-		{
+	if (bd->Window == focused_window) {
+		if (bd->MouseCanUseGlobalState) {
 			// SDL_GetMouseState() gives mouse position seemingly based on the last window entered/focused(?)
 			// The creation of a new windows at runtime and SDL_CaptureMouse both seems to severely mess up with that, so we retrieve that position globally.
 			// Won't use this workaround on SDL backends that have no global mouse position, like Wayland or RPI
@@ -323,12 +315,10 @@ static void ImGui_ImplSDL2_UpdateMouseCursor()
 	ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
 
 	ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-	if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
-	{
+	if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None) {
 		// Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
 		SDL_ShowCursor(SDL_FALSE);
-	} else
-	{
+	} else {
 		// Show OS mouse cursor
 		SDL_SetCursor(bd->MouseCursors[imgui_cursor] ? bd->MouseCursors[imgui_cursor] : bd->MouseCursors[ImGuiMouseCursor_Arrow]);
 		SDL_ShowCursor(SDL_TRUE);
@@ -344,8 +334,7 @@ static void ImGui_ImplSDL2_UpdateGamepads()
 
 	// Get gamepad
 	SDL_GameController* game_controller = SDL_GameControllerOpen(0);
-	if (!game_controller)
-	{
+	if (!game_controller) {
 		io.BackendFlags &= ~ImGuiBackendFlags_HasGamepad;
 		return;
 	}
@@ -376,20 +365,19 @@ static void ImGui_ImplSDL2_UpdateGamepads()
 #undef MAP_ANALOG
 }
 
-void ImGui_ImplSDL2_NewFrame(SDL_Window* window)
+void ImGui_ImplSDL2_NewFrame()
 {
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
 	IM_ASSERT(bd != NULL && "Did you call ImGui_ImplSDL2_Init()?");
-	IM_ASSERT(bd->Window == window); // FIXME: Should remove parameter from ImGui_ImplSDL2_NewFrame()
 
 	// Setup display size (every frame to accommodate for window resizing)
 	int w, h;
 	int display_w, display_h;
-	SDL_GetWindowSize(window, &w, &h);
-	if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
+	SDL_GetWindowSize(bd->Window, &w, &h);
+	if (SDL_GetWindowFlags(bd->Window) & SDL_WINDOW_MINIMIZED)
 		w = h = 0;
-	SDL_GL_GetDrawableSize(window, &display_w, &display_h);
+	SDL_GL_GetDrawableSize(bd->Window, &display_w, &display_h);
 	io.DisplaySize = ImVec2((float)w, (float)h);
 	if (w > 0 && h > 0)
 		io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
