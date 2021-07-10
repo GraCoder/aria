@@ -9,7 +9,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 
-static const int MinImageCount = 2;
+static const int MinImageCount = 3;
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL 
 debug_report(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
@@ -52,6 +52,8 @@ ImGuiDlg::ImGuiDlg()
 	setupVulkanWindow(w, h);
 
 	initImGui();
+
+	_renderObject = std::bind([](int, int) {}, std::placeholders::_1, std::placeholders::_2);
 }
 
 ImGuiDlg::~ImGuiDlg()
@@ -68,12 +70,13 @@ ImGuiDlg::~ImGuiDlg()
 	SDL_Quit();
 }
 
+void ImGuiDlg::setRenderObject(const std::function<void(int, int)> &fun)
+{
+	_renderObject = fun;
+}
+
 void ImGuiDlg::exec()
 {
-	bool show_demo_window = true;
-	bool show_another_window = false;
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 	// Main loop
 	bool done = false;
 	while (!done) {
@@ -106,53 +109,17 @@ void ImGuiDlg::exec()
 		// Start the Dear ImGui frame
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL2_NewFrame(_window);
+
 		ImGui::NewFrame();
-
-		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		if (show_demo_window)
-			ImGui::ShowDemoWindow(&show_demo_window);
-
-		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-		{
-			static float f = 0.0f;
-			static int counter = 0;
-
-			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-			ImGui::Checkbox("Another Window", &show_another_window);
-
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-			if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-				counter++;
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
-
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::End();
-		}
-
-		// 3. Show another simple window.
-		if (show_another_window) {
-			ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-			ImGui::Text("Hello from another window!");
-			if (ImGui::Button("Close Me"))
-				show_another_window = false;
-			ImGui::End();
-		}
-
-		// Rendering
+		_renderObject(10, 10);
 		ImGui::Render();
 		ImDrawData* draw_data = ImGui::GetDrawData();
 		const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
 		if (!is_minimized) {
-			_vulkanWindow->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-			_vulkanWindow->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-			_vulkanWindow->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-			_vulkanWindow->ClearValue.color.float32[3] = clear_color.w;
+			//_vulkanWindow->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
+			//_vulkanWindow->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
+			//_vulkanWindow->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
+			//_vulkanWindow->ClearValue.color.float32[3] = clear_color.w;
 			FrameRender(draw_data);
 			FramePresent();
 		}
@@ -214,7 +181,7 @@ void ImGuiDlg::setupVulkanWindow(int width, int height)
 		_physicalDevice, _surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
 
 	ImGui_ImplVulkanH_CreateOrResizeWindow(_instance,
-		_physicalDevice, _device, _vulkanWindow.get(), _queueFamily, _allocator, width, height, 2);
+		_physicalDevice, _device, _vulkanWindow.get(), _queueFamily, _allocator, width, height, MinImageCount);
 
 }
 
@@ -388,7 +355,7 @@ void ImGuiDlg::initImGui()
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+	ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Consola.ttf", 20.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	//IM_ASSERT(font != NULL);
 
 	// Use any command queue

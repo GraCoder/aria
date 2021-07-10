@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
 
 struct SDL_Window;
 struct ImGui_ImplVulkanH_Window;
@@ -15,6 +16,7 @@ public:
 	ImGuiDlg();
 	~ImGuiDlg();
 
+	void setRenderObject(const std::function<void(int, int)> &);
 public:
 	void				exec();
 	VkInstance			instance();
@@ -56,6 +58,8 @@ private:
 	VkAllocationCallbacks* _allocator = NULL;
 	VkDebugReportCallbackEXT _debugReport = VK_NULL_HANDLE;
 	std::vector<const char*> _extensions;
+
+	std::function<void(int, int)> _renderObject;
 };
 
 
