@@ -1,14 +1,23 @@
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
+#include <QApplication>
 
-#include "imgui_dlg.h"
+#include "ariaUi.h"
+#include <aria2/aria2.h>
 
+using namespace aria2;
 
-int main(int, char**)
+int main(int argc, char**argv)
 {
-	ImGuiDlg dlg;
+	QApplication app(argc, argv);
+
+	libraryInit();
+
+	AriaDlg dlg;
 
 	dlg.exec();
+
+	libraryDeinit();
 	
 	return 0;
 }

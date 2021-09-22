@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.8.0)
 
 project(aria)
 
-find_package(Vulkan)
-
 if(CMAKE_CONFIGURATION_TYPES)
 	#msvc etc
 	foreach(CONF ${CMAKE_CONFIGURATION_TYPES})
@@ -21,7 +19,4 @@ else()
 	set(CMAKE_DEBUG_POSTFIX "d")
 endif()
 
-add_definitions(-DIMGUI_VULKAN_DEBUG_REPORT)
-
-add_subdirectory(ui)
 add_subdirectory(aria)
