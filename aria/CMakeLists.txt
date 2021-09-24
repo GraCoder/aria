@@ -6,16 +6,22 @@ find_package(Qt5 COMPONENTS Widgets Gui REQUIRED)
 set(moc_h
 	ariaUi.h
 )
+
+
 qt5_wrap_cpp(mocfiles ${moc_h})
 source_group("moc" FILES ${mocfiles})
 
+qt5_add_resources(mocfiles ariaUi.qrc)
+
 set(hdr
 	ariaUi.h
+	uriLink.h
 )
 
 set(src
 	main.cpp
 	ariaUi.cpp
+	uriLink.cpp
 )
 
 

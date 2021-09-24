@@ -62,7 +62,7 @@ AriaDlg::~AriaDlg()
 QWidget *AriaDlg::createToolBar()
 {
 	auto bar = new QToolBar;
-	bar->addAction(tr("addUri"), this, &AriaDlg::addUri);
+	bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), this, &AriaDlg::addUri);
 	bar->addAction(tr("test"), this, &AriaDlg::test);
 	return bar;
 }
