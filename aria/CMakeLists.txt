@@ -15,13 +15,17 @@ qt5_add_resources(mocfiles ariaUi.qrc)
 
 set(hdr
 	ariaUi.h
+	ariaPanel.h
 	uriLink.h
+	frameless.h
 )
 
 set(src
 	main.cpp
 	ariaUi.cpp
+	ariaPanel.cpp
 	uriLink.cpp
+	frameless.cpp
 )
 
 

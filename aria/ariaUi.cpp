@@ -6,6 +6,10 @@
 #include <QStatusBar>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QCoreApplication>
+#include <QFile>
+
+#include "ariaPanel.h"
 
 int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 						  aria2::A2Gid gid, void* userData)
@@ -21,13 +25,12 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 	{
 		auto dlg = (AriaDlg*)userData;
 		dlg->errorProcedure(gid);
-	}
-		std::cerr << "ERROR";
+		std::cerr << "ERROR" << " [" << aria2::gidToHex(gid) << "] ";
 		break;
+	}
 	default:
 		return 0;
 	}
-	std::cerr << " [" << aria2::gidToHex(gid) << "] ";
 	return 1;
 }
 
@@ -36,14 +39,22 @@ AriaDlg::AriaDlg()
 	:_threadRunning(true)
 {
 	setMinimumSize(800, 600);
+	setContentsMargins(0, 0, 0, 0);
 	_mainWidget = new QListWidget;
 
-	auto mainLayout = new QVBoxLayout(this);
+	auto panel = new AriaPanel;
+
+	auto layout = new QHBoxLayout(this);
+	layout->setSpacing(0);
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->addWidget(panel);
+	auto mainLayout = new QVBoxLayout;
 	mainLayout->addWidget(createToolBar());
 	mainLayout->addWidget(_mainWidget);
 	mainLayout->addWidget(createStatusBar());
+	layout->addLayout(mainLayout);
 
-	aria2::libraryInit();
+	int ret = aria2::libraryInit();
 	_thread = std::thread(std::bind(&AriaDlg::download, this));
 	_emitter = new Emitter;
 
@@ -62,7 +73,10 @@ AriaDlg::~AriaDlg()
 QWidget *AriaDlg::createToolBar()
 {
 	auto bar = new QToolBar;
-	bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), this, &AriaDlg::addUri);
+	//bar->setFixedHeight(80);
+	{
+		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), this, &AriaDlg::addUri);
+	}
 	bar->addAction(tr("test"), this, &AriaDlg::test);
 	return bar;
 }
@@ -76,9 +90,10 @@ QWidget *AriaDlg::createStatusBar()
 void AriaDlg::addUri()
 {
 	Task tsk; tsk.type = 1;
-	//tsk.uri.push_back("https://download3.vmware.com/software/wkst/file/VMware-workstation-full-16.1.2-17966106.exe");
 
 	tsk.uri.push_back("https://download.visualstudio.microsoft.com/download/pr/78fa839b-2d86-4ece-9d97-5b9fe6fb66fa/10d406c0d247470daa80691d3b3460a6/windowsdesktop-runtime-5.0.10-win-x64.exe");
+	//tsk.uri.push_back("http://localhost:8080");
+	//tsk.uri.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
 	_addLock.lock();
 	_addTasks.push_back(tsk);
 	_addLock.unlock();
@@ -98,21 +113,56 @@ void AriaDlg::initAria()
 	using namespace aria2;
 
 	KeyVals options;
-	options.push_back(std::make_pair("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52"));
+	{
+		options.push_back(std::make_pair("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
+						 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52"));
+		options.push_back(std::make_pair("dir", "d:/thunder"));
+		options.push_back(std::make_pair("disable-ipv6", "true"));
+		options.push_back(std::make_pair("check-certificate", "false"));
+		options.push_back(std::make_pair("disk-cache", "64M"));
+		options.push_back(std::make_pair("no-file-allocation-limit", "64M"));
+		options.push_back(std::make_pair("continue", "true"));
+		options.push_back(std::make_pair("remote-time", "true"));
+
+	{
+		auto path = QCoreApplication::applicationDirPath();
+		path += "/aria.session";
+		QFile file(path);
+		if(!file.exists())
+		{
+			file.open(QIODevice::WriteOnly);
+			file.close();
+		}
+		options.push_back(std::make_pair("input-file", path.toStdString()));
+		options.push_back(std::make_pair("save-session", path.toStdString()));
+	}
+
+		options.push_back(std::make_pair("save-session-interval", "1"));
+		options.push_back(std::make_pair("auto-save-interval", "20"));
+
+		options.push_back(std::make_pair("max-file-not-found", "10"));
+		options.push_back(std::make_pair("max-tries", "30"));
+		options.push_back(std::make_pair("retry-wait", "10"));
+		options.push_back(std::make_pair("connect-timeout", "10"));
+		options.push_back(std::make_pair("timeout", "10"));
+		options.push_back(std::make_pair("max-concurrent-downloads", "5"));
+		options.push_back(std::make_pair("split", "64"));
+		options.push_back(std::make_pair("min-split-size", "4M"));
+		options.push_back(std::make_pair("piece-length", "1M"));
+		options.push_back(std::make_pair("allow-piece-length-change", "true"));
+		options.push_back(std::make_pair("", ""));
+		options.push_back(std::make_pair("", ""));
+		options.push_back(std::make_pair("", ""));
+		options.push_back(std::make_pair("", ""));
+		options.push_back(std::make_pair("", ""));
+	}
+
 	SessionConfig config;
 	config.keepRunning = true;
 	config.downloadEventCallback = downloadEventCallback;
 	config.userData = this;
 	_session = sessionNew(options, config);
 	auto opts = getGlobalOptions(_session);
-
-	for(auto &xx: opts)
-	{
-		if(xx.first.find("agent") != -1)
-	printf("");
-
-	}
-	printf("");
 }
 
 void AriaDlg::download()

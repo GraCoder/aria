@@ -8,6 +8,8 @@
 
 #include <aria2/aria2.h>
 
+#include "frameless.h"
+
 class QListWidget;
 class QListWidgetItem;
 
@@ -48,7 +50,7 @@ signals:
 	void addTaskSig(uint64_t);
 };
 
-class AriaDlg : public QDialog{
+class AriaDlg : public FramelessDlg{
 	friend int downloadEventCallback(aria2::Session* session,
 		aria2::DownloadEvent event, aria2::A2Gid gid, void* userData);
 public:
