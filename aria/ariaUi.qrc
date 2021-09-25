@@ -120,5 +120,8 @@
         <file>icons/view-statistics.svg</file>
         <file>icons/wallet-open.svg</file>
         <file>icons/webui.svg</file>
+        <file>icons/completed.png</file>
+        <file>icons/downloading.png</file>
+        <file>icons/list-remove.png</file>
     </qresource>
 </RCC>

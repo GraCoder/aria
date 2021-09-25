@@ -5,6 +5,7 @@ set(app_name aria)
 find_package(Qt5 COMPONENTS Widgets Gui REQUIRED)
 set(moc_h
 	ariaUi.h
+	frameless.h
 )
 
 
@@ -19,6 +20,8 @@ set(hdr
 	uriLink.h
 	frameless.h
 	ariaSys.h
+	ariaButton.h
+	ariaListWgt.h
 )
 
 set(src
@@ -28,6 +31,8 @@ set(src
 	uriLink.cpp
 	frameless.cpp
 	ariaSys.cpp
+	ariaButton.cpp
+	ariaListWgt.cpp
 )
 
 

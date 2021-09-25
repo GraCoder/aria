@@ -9,13 +9,14 @@
 #include <QCoreApplication>
 #include <QToolButton>
 #include <QFile>
+#include <QStackedWidget>
 
 #include "ariaSys.h"
 #include "ariaPanel.h"
 #include "uriLink.h"
 
 int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
-						  aria2::A2Gid gid, void* userData)
+			  aria2::A2Gid gid, void* userData)
 {
 	switch(event) {
 	case aria2::EVENT_ON_DOWNLOAD_START:
@@ -41,12 +42,24 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 AriaDlg::AriaDlg()
 	:_threadRunning(true)
 {
-	setMinimumSize(800, 600);
+	setMinimumSize(1000, 600);
 	setContentsMargins(0, 0, 0, 0);
-	_mainWidget = new QListWidget;
-	_mainWidget->setStyleSheet("QListWidget{border:none;}");
+	{
+		setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px; font-weight:100;}");
+	}
 
-	auto panel = new AriaPanel;
+	_dnWidget = new QListWidget;
+	_cmWidget = new QListWidget;
+	_trWidget = new QListWidget;
+
+	auto stackWgt = new QStackedWidget;
+	connect(this, &AriaDlg::changeViewSig, stackWgt, &QStackedWidget::setCurrentIndex);
+	stackWgt->setStyleSheet("QListWidget{border-top:1px solid gray;}");
+	stackWgt->addWidget(_dnWidget);
+	stackWgt->addWidget(_cmWidget);
+	stackWgt->addWidget(_trWidget);
+
+	auto panel = new AriaPanel(this);
 
 	_layout->setSpacing(0);
 	_layout->setContentsMargins(0, 0, 0, 0);
@@ -54,7 +67,7 @@ AriaDlg::AriaDlg()
 	auto mainLayout = new QVBoxLayout;
 	mainLayout->addWidget(new AriaSysMenu);
 	mainLayout->addWidget(createToolBar());
-	mainLayout->addWidget(_mainWidget);
+	mainLayout->addWidget(stackWgt);
 	mainLayout->addWidget(createStatusBar());
 	_layout->addLayout(mainLayout);
 
@@ -77,8 +90,9 @@ AriaDlg::~AriaDlg()
 QWidget *AriaDlg::createToolBar()
 {
 	auto bar = new QToolBar;
+	bar->setContentsMargins(30, 0, 0, 0);
 	bar->setAttribute(Qt::WA_TranslucentBackground, false);
-	bar->setIconSize(QSize(60, 60));
+	bar->setIconSize(QSize(40, 40));
 	{
 		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), this, &AriaDlg::addUri);
 	}
@@ -96,24 +110,25 @@ QWidget *AriaDlg::createStatusBar()
 
 void AriaDlg::addUri()
 {
-	Task tsk; tsk.type = 1;
-
-	tsk.uri.push_back("https://download.visualstudio.microsoft.com/download/pr/78fa839b-2d86-4ece-9d97-5b9fe6fb66fa/10d406c0d247470daa80691d3b3460a6/windowsdesktop-runtime-5.0.10-win-x64.exe");
-	//tsk.uri.push_back("http://localhost:8080");
 	//tsk.uri.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
+
+	URILinkWgt wgt;
+	if(wgt.exec() != QDialog::Accepted)
+		return;
+
+	Task tsk; tsk.type = 1;
+	tsk.uri = wgt.getUris();
+
 	_addLock.lock();
 	_addTasks.push_back(tsk);
 	_addLock.unlock();
-
-	URILinkWgt wgt;
-	wgt.exec();
 }
 
 void AriaDlg::addTaskSlt(uint64_t aid)
 {
 	auto item = new QListWidgetItem;
 	item->setData(Qt::UserRole, aid);
-	_mainWidget->addItem(item);
+	_dnWidget->addItem(item);
 
 	_items.insert(aid, item);
 }
@@ -122,50 +137,54 @@ void AriaDlg::initAria()
 {
 	using namespace aria2;
 
-	KeyVals options;
+	std::map<std::string, std::string> opTmps;
 	{
-		options.push_back(std::make_pair("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-						 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52"));
-		options.push_back(std::make_pair("dir", "d:/thunder"));
-		options.push_back(std::make_pair("disable-ipv6", "true"));
-		options.push_back(std::make_pair("check-certificate", "false"));
-		options.push_back(std::make_pair("disk-cache", "64M"));
-		options.push_back(std::make_pair("no-file-allocation-limit", "64M"));
-		options.push_back(std::make_pair("continue", "true"));
-		options.push_back(std::make_pair("remote-time", "true"));
+		opTmps["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
+				AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52";
+				opTmps["dir"] = "d:/thunder";
+		opTmps["disable-ipv6"] = "true";
+		opTmps["check-certificate"] = "false";
+		opTmps["disk-cache"] = "64M";
+		opTmps["no-file-allocation-limit"] = "64M";
+		opTmps["continue"] = "true";
+		opTmps["remote-time"] = "true";
 
-	{
-		auto path = QCoreApplication::applicationDirPath();
-		path += "/aria.session";
-		QFile file(path);
-		if(!file.exists())
 		{
-			file.open(QIODevice::WriteOnly);
-			file.close();
+			auto path = QCoreApplication::applicationDirPath();
+			path += "/aria.session";
+			QFile file(path);
+			if(!file.exists())
+			{
+				file.open(QIODevice::WriteOnly);
+				file.close();
+			}
+			opTmps["input-file"]= path.toStdString();
+			opTmps["save-session"]= path.toStdString();
 		}
-		options.push_back(std::make_pair("input-file", path.toStdString()));
-		options.push_back(std::make_pair("save-session", path.toStdString()));
+
+		opTmps["save-session-interval"]= "1";
+		opTmps["auto-save-interval"]= "20";
+
+		opTmps["max-file-not-found"]= "10";
+		opTmps["max-tries"]= "30";
+		opTmps["retry-wait"]= "10";
+		opTmps["connect-timeout"]= "10";
+		opTmps["timeout"]= "10";
+		opTmps["max-concurrent-downloads"]= "5";
+		opTmps["split"]= "64";
+		opTmps["min-split-size"]= "4M";
+		opTmps["piece-length"]= "1M";
+		opTmps["allow-piece-length-change"]= "true";
+		opTmps[""]= "";
+		opTmps[""]= "";
+		opTmps[""]= "";
+		opTmps[""]= "";
+		opTmps[""]= "";
 	}
 
-		options.push_back(std::make_pair("save-session-interval", "1"));
-		options.push_back(std::make_pair("auto-save-interval", "20"));
-
-		options.push_back(std::make_pair("max-file-not-found", "10"));
-		options.push_back(std::make_pair("max-tries", "30"));
-		options.push_back(std::make_pair("retry-wait", "10"));
-		options.push_back(std::make_pair("connect-timeout", "10"));
-		options.push_back(std::make_pair("timeout", "10"));
-		options.push_back(std::make_pair("max-concurrent-downloads", "5"));
-		options.push_back(std::make_pair("split", "64"));
-		options.push_back(std::make_pair("min-split-size", "4M"));
-		options.push_back(std::make_pair("piece-length", "1M"));
-		options.push_back(std::make_pair("allow-piece-length-change", "true"));
-		options.push_back(std::make_pair("", ""));
-		options.push_back(std::make_pair("", ""));
-		options.push_back(std::make_pair("", ""));
-		options.push_back(std::make_pair("", ""));
-		options.push_back(std::make_pair("", ""));
-	}
+	KeyVals options;
+	for(auto &iter : opTmps)
+		options.push_back(std::make_pair(iter.first, iter.second));
 
 	SessionConfig config;
 	config.keepRunning = true;

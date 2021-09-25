@@ -1,19 +1,19 @@
 #include "ariaSys.h"
 #include <QHBoxLayout>
-#include <QPushButton>
-#include <QToolButton>
+
+
+#include "ariaButton.h"
 
 AriaSysMenu::AriaSysMenu()
 {
 	setFixedHeight(40);
 
 	auto layout = new QHBoxLayout(this);
-	auto btn = new QToolButton;
-	btn->setIcon(QIcon(":/aria/icons/application-exit.svg"));
-	layout->addStretch();
+	auto btn = new AriaSysButton(":/aria/icons/application-exit.svg");
+	layout->addStretch(1);
 	layout->addWidget(btn, Qt::AlignTop);
 
-	connect(btn, &QToolButton::clicked, this, &AriaSysMenu::miniSlt);
+	connect(btn, &QAbstractButton::clicked, this, &AriaSysMenu::miniSlt);
 }
 
 void AriaSysMenu::miniSlt()

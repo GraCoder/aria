@@ -50,9 +50,10 @@ signals:
 	void addTaskSig(uint64_t);
 };
 
-class AriaDlg : public FramelessDlg{
+class AriaDlg : public FramelessFrame{
 	friend int downloadEventCallback(aria2::Session* session,
 		aria2::DownloadEvent event, aria2::A2Gid gid, void* userData);
+	Q_OBJECT
 public:
 	AriaDlg();
 	~AriaDlg();
@@ -64,6 +65,9 @@ public:
 	void 	addUri();
 
 	void 	addTaskSlt(uint64_t);
+
+signals:
+	void 	changeViewSig(int);
 private:
 	void 	initAria();
 	void 	download();
@@ -73,7 +77,8 @@ private:
 
 	void 	test();
 private:
-	QListWidget *_mainWidget;
+	QListWidget *_dnWidget, *_cmWidget, *_trWidget;
+
 	QHash<uint64_t, QListWidgetItem*>		 _items;
 
 	bool 			_threadRunning;

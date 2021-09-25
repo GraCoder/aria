@@ -4,12 +4,16 @@
 #include <QLabel>
 #include <QMouseEvent>
 
+
+#include "ariaButton.h"
+
 #include <windows.h>
 
-const int warea = 20, harea = 20;
+const int warea = 10, harea = 10;
 
-FramelessDlg::FramelessDlg()
-	: QDialog(nullptr, Qt::FramelessWindowHint)
+FramelessFrame::FramelessFrame(QBoxLayout::Direction dir, QWidget *par)
+	: QDialog(par, Qt::FramelessWindowHint)
+	, _fixsize(false)
 {
 	_area[0] = HTTOPLEFT;
 	_area[1] = HTTOP;
@@ -22,27 +26,44 @@ FramelessDlg::FramelessDlg()
 	_area[8] = HTBOTTOMRIGHT;
 
 	setAttribute(Qt::WA_TranslucentBackground, true);
-
 	auto layout = new QHBoxLayout(this);
-	layout->setContentsMargins(warea / 2, harea / 2, warea / 2, harea / 2);
+	layout->setContentsMargins(0, 0, 0, 0);
 	auto wgt = new QLabel;
+	wgt->setStyleSheet("QLabel{background-color: rgba(0, 0, 0, 15);}");
+	layout->addWidget(wgt);
+	layout = new QHBoxLayout(wgt);
+	layout->setContentsMargins(1, 1, 3, 3);
+	wgt = new QLabel;
 	wgt->setStyleSheet("QLabel{background-color: rgba(255, 255, 255, 255);}");
 	layout->addWidget(wgt);
-	_layout = new QHBoxLayout(wgt);
+
+	_layout = new QBoxLayout(dir, wgt);
+
+	ensurePolished();
 }
 
-FramelessDlg::~FramelessDlg()
+FramelessFrame::~FramelessFrame()
 {
 
 }
 
-void FramelessDlg::mousePressEvent(QMouseEvent *event)
+void FramelessFrame::setWidget(QWidget *wgt)
+{
+	_layout->addWidget(wgt);
+}
+
+void FramelessFrame::setFixSize(bool fixsize)
+{
+	_fixsize = fixsize;
+}
+
+void FramelessFrame::mousePressEvent(QMouseEvent *event)
 {
 	_lastPt = event->globalPos();
 	Base::mousePressEvent(event);
 }
 
-void FramelessDlg::mouseMoveEvent(QMouseEvent *event)
+void FramelessFrame::mouseMoveEvent(QMouseEvent *event)
 {
 	auto rect = geometry();
 	rect.translate(event->globalPos() - _lastPt);
@@ -51,18 +72,22 @@ void FramelessDlg::mouseMoveEvent(QMouseEvent *event)
 	Base::mouseMoveEvent(event);
 }
 
-void FramelessDlg::resizeEvent(QResizeEvent *ev)
+void FramelessFrame::resizeEvent(QResizeEvent *ev)
 {
 	Base::resizeEvent(ev);
 }
 
-bool FramelessDlg::nativeEvent(const QByteArray &eventType, void *message, long *result)
+bool FramelessFrame::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
 	if(eventType == "windows_generic_MSG"){
 		auto msg = (MSG*)message;
 		if (msg->message == WM_NCHITTEST){
-			int x = msg->lParam & 0xffff;
-			int y = msg->lParam >> 16;
+			if(_fixsize) {
+				*result = HTCLIENT;
+				return true;
+			}
+			int x = msg->pt.x;
+			int y = msg->pt.y;
 			int w = width(), h = height();
 			auto pt = mapFromGlobal(QPoint(x, y));
 			x = pt.x(); y = pt.y();
@@ -73,4 +98,32 @@ bool FramelessDlg::nativeEvent(const QByteArray &eventType, void *message, long 
 		}
 	}
 	return false;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------
+
+FramelessDlg::FramelessDlg(QBoxLayout::Direction dir, QWidget *par)
+	: FramelessFrame(dir, par)
+{
+	setMinimumSize(400, 250);
+	setFixSize(true);
+	auto btn = new AriaSysButton(":/aria/icons/application-exit.svg");
+	connect(btn, &QAbstractButton::clicked, this, &FramelessDlg::close);
+
+	auto layout = new QHBoxLayout;
+	layout->addStretch(1);
+	layout->addWidget(btn, Qt::AlignTop);
+	_sysLayout = layout;
+
+	_layout->addLayout(layout);
+}
+
+FramelessDlg::~FramelessDlg()
+{
+
+}
+
+void FramelessDlg::setTitle(const QString &title)
+{
+	_sysLayout->insertWidget(0, new QLabel(title));
 }
