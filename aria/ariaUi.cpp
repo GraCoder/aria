@@ -7,9 +7,12 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QCoreApplication>
+#include <QToolButton>
 #include <QFile>
 
+#include "ariaSys.h"
 #include "ariaPanel.h"
+#include "uriLink.h"
 
 int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 						  aria2::A2Gid gid, void* userData)
@@ -41,18 +44,19 @@ AriaDlg::AriaDlg()
 	setMinimumSize(800, 600);
 	setContentsMargins(0, 0, 0, 0);
 	_mainWidget = new QListWidget;
+	_mainWidget->setStyleSheet("QListWidget{border:none;}");
 
 	auto panel = new AriaPanel;
 
-	auto layout = new QHBoxLayout(this);
-	layout->setSpacing(0);
-	layout->setContentsMargins(0, 0, 0, 0);
-	layout->addWidget(panel);
+	_layout->setSpacing(0);
+	_layout->setContentsMargins(0, 0, 0, 0);
+	_layout->addWidget(panel);
 	auto mainLayout = new QVBoxLayout;
+	mainLayout->addWidget(new AriaSysMenu);
 	mainLayout->addWidget(createToolBar());
 	mainLayout->addWidget(_mainWidget);
 	mainLayout->addWidget(createStatusBar());
-	layout->addLayout(mainLayout);
+	_layout->addLayout(mainLayout);
 
 	int ret = aria2::libraryInit();
 	_thread = std::thread(std::bind(&AriaDlg::download, this));
@@ -73,9 +77,12 @@ AriaDlg::~AriaDlg()
 QWidget *AriaDlg::createToolBar()
 {
 	auto bar = new QToolBar;
-	//bar->setFixedHeight(80);
+	bar->setAttribute(Qt::WA_TranslucentBackground, false);
+	bar->setIconSize(QSize(60, 60));
 	{
 		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), this, &AriaDlg::addUri);
+	}
+	{
 	}
 	bar->addAction(tr("test"), this, &AriaDlg::test);
 	return bar;
@@ -97,6 +104,9 @@ void AriaDlg::addUri()
 	_addLock.lock();
 	_addTasks.push_back(tsk);
 	_addLock.unlock();
+
+	URILinkWgt wgt;
+	wgt.exec();
 }
 
 void AriaDlg::addTaskSlt(uint64_t aid)

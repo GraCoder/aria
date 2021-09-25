@@ -18,6 +18,7 @@ set(hdr
 	ariaPanel.h
 	uriLink.h
 	frameless.h
+	ariaSys.h
 )
 
 set(src
@@ -26,6 +27,7 @@ set(src
 	ariaPanel.cpp
 	uriLink.cpp
 	frameless.cpp
+	ariaSys.cpp
 )
 
 
