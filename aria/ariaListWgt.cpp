@@ -1,8 +1,9 @@
 #include "ariaListWgt.h"
 
 #include <QPainter>
-#include <QApplication>
+#include <QFileIconProvider>
 #include <QLocale>
+#include <QTime>
 
 const int dnheight = 80;
 
@@ -17,22 +18,52 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	auto listmodel = static_cast<AriaListModel*>(wgt->model());
 	auto &info = listmodel->_taskInfos[listmodel->_tasks[index.row()]];
 
-	//painter->fillRect(opt.rect, QColor(255, 0, 0));
+	if(opt.state & QStyle::State_Selected || opt.state & QStyle::State_MouseOver)
+		painter->fillRect(opt.rect, QColor(227, 230, 228));
+	painter->setRenderHint(QPainter::Antialiasing);
 
-	auto ft = opt.font; ft.setPixelSize(dnheight / 5.0 * 2);
+	const int popSize = dnheight / 5.0 * 2;
+
+	auto ico = QFileIconProvider().icon(QFileIconProvider::File).pixmap(32, 32);
+	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5, dnheight - popSize , dnheight - popSize), ico, QRect(0, 0, 32, 32));
+
+	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
+	ft.setBold(true);
 	painter->setFont(ft);
 
+	QTextOption texOpt;
+	texOpt.setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+	painter->setPen(QColor(25, 25, 25));
 	const int hfheight = dnheight / 5.0 * 2;
-	QRect texRect(dnheight, 0, opt.rect.width() / 2 - dnheight, dnheight / 5.0 * 2);
-	painter->drawText(texRect, info.name);
-	texRect.setTop(dnheight / 5.0 * 3);
-	painter->drawText(texRect, opt.locale.formattedDataSize(info.totalLength));
+	QRect texRect(dnheight, 0, opt.rect.width() / 2 - dnheight, popSize);
+	painter->drawText(texRect, info.name, texOpt);
 
-	auto dnspeed = opt.locale.formattedDataSize(info.dnspeed);
-	texRect = QRect(opt.rect.width() - 3 * dnheight, dnheight	/ 5.0 * 3, dnheight * 3, hfheight);
-	painter->drawText(texRect, dnspeed);
+	texOpt.setAlignment(Qt::AlignLeft | Qt::AlignTop);
+	painter->setPen(QColor(100, 100, 100));
+	texRect.translate(0, dnheight / 5.0 * 3);
+	auto filesize = opt.locale.formattedDataSize(info.dnloadLength, 2, opt.locale.DataSizeTraditionalFormat) + "/" +
+			opt.locale.formattedDataSize(info.totalLength, 2, opt.locale.DataSizeTraditionalFormat);
+	painter->drawText(texRect, filesize, texOpt);
 
-	double progress = info.dnloadLength / double(info.totalLength) * 100;
+	int secs = (info.totalLength - info.dnloadLength) / (info.dnspeed + 0.0001);
+	texRect.translate(opt.rect.width() / 5, 0);
+	auto tm = QTime(0, 0).addSecs(secs);
+	if(tm.isValid())
+		painter->drawText(texRect, tr("remain:") + opt.locale.toString(tm), texOpt);
+
+	auto dnspeed = opt.locale.formattedDataSize(info.dnspeed, 2, opt.locale.DataSizeTraditionalFormat);
+	texRect = QRect(opt.rect.width() - dnheight, dnheight - popSize, dnheight, hfheight);
+	painter->drawText(texRect, dnspeed + "/s", texOpt);
+
+	if(info.dnloadLength > 0 && info.totalLength > info.dnloadLength){
+		QRect prgRect(dnheight, dnheight / 2.0, opt.rect.width() - dnheight, 4);
+		QLinearGradient gradient(prgRect.left(), 0, prgRect.right(), 0);
+		gradient.setColorAt(0, QColor(255, 212, 102));
+		gradient.setColorAt(1, QColor(255, 160, 120));
+		float progress = info.dnloadLength / float(info.totalLength + 1);
+		prgRect.setWidth(prgRect.width() * progress);
+		painter->fillRect(prgRect, gradient);
+	}
 }
 
 QSize DownloadDelegate::sizeHint(const QStyleOptionViewItem &opt, const QModelIndex &index) const
@@ -54,6 +85,7 @@ AriaListWidget::AriaListWidget(AriListViewType type)
 		break;
 	}
 	setModel(new AriaListModel);
+	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
 	setStyleSheet("QListView{border:none;}");
 }
@@ -92,6 +124,11 @@ void AriaListWidget::completeTaskSlt(uint64_t aid)
 	listmodel->_tasks.removeAt(idx);
 	listmodel->_taskInfos.remove(aid);
 	listmodel->endRemoveRows();
+}
+
+void AriaListWidget::addCompleteTaskSlt(uint64_t)
+{
+
 }
 
 //--------------------------------------------------------------------------------

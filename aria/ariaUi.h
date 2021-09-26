@@ -55,8 +55,6 @@ signals:
 };
 
 class AriaDlg : public FramelessFrame{
-	friend int downloadEventCallback(aria2::Session* session,
-		aria2::DownloadEvent event, aria2::A2Gid gid, void* userData);
 	Q_OBJECT
 public:
 	AriaDlg();

@@ -6,6 +6,14 @@
 #include <aria2/aria2.h>
 
 struct TaskInfo{
+	TaskInfo()
+	{
+		dnspeed = 0;
+		upspeed = 0;
+		totalLength = 0;
+		uploadLength = 0;
+		dnloadLength = 0;
+	}
 
 	void operator=(const TaskInfo &other)
 	{

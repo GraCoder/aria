@@ -24,12 +24,16 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		printf("");
 		break;
 	case aria2::EVENT_ON_DOWNLOAD_COMPLETE:
+	{
+		auto dlg = (AriaDlg*)userData;
+		dlg->getEmitter()->completeTaskSig(gid);
 		std::cerr << "COMPLETE";
 		break;
+	}
 	case aria2::EVENT_ON_DOWNLOAD_ERROR:
 	{
 		auto dlg = (AriaDlg*)userData;
-		dlg->errorTask(gid);
+		//dlg->errorTask(gid);
 		std::cerr << "ERROR" << " [" << aria2::gidToHex(gid) << "] ";
 		break;
 	}
@@ -50,12 +54,12 @@ AriaDlg::AriaDlg()
 	}
 
 	_dnWidget = new AriaListWidget(DOWNLOADING);
-	_cmWidget = new AriaListWidget(DOWNLOADING);
-	_trWidget = new AriaListWidget(DOWNLOADING);
+	_cmWidget = new AriaListWidget(COMPLETED);
+	_trWidget = new AriaListWidget(TRACHCAN);
 
 	auto stackWgt = new QStackedWidget;
 	connect(this, &AriaDlg::changeViewSig, stackWgt, &QStackedWidget::setCurrentIndex);
-	stackWgt->setStyleSheet("QListWidget{border-top:1px solid gray;}");
+	stackWgt->setStyleSheet("QStackedWidget{border-top:1px solid gray;}");
 	stackWgt->addWidget(_dnWidget);
 	stackWgt->addWidget(_cmWidget);
 	stackWgt->addWidget(_trWidget);
@@ -81,6 +85,8 @@ AriaDlg::AriaDlg()
 	connect(_emitter, &Emitter::addTaskSig, _dnWidget, &AriaListWidget::addTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::updateTaskSig, _dnWidget, &AriaListWidget::updateTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::completeTaskSig, _dnWidget, &AriaListWidget::completeTaskSlt, Qt::QueuedConnection);
+
+	connect(_emitter, &Emitter::completeTaskSig, _cmWidget, &AriaListWidget::addCompleteTaskSlt, Qt::QueuedConnection);
 }
 
 AriaDlg::~AriaDlg()
@@ -234,6 +240,7 @@ void AriaDlg::mergeTask()
 				KeyVals tmpOpt;// = getGlobalOptions(_session);
 				ret = aria2::addUri(_session, &gid, tsk.uri, tmpOpt);
 				name = QUrl(QString::fromStdString(tsk.uri.front())).fileName();
+				getTaskInfo(gid);
 				break;
 			}
 			default:

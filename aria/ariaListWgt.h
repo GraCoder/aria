@@ -32,6 +32,8 @@ public:
 	void 	addTaskSlt(uint64_t, QString);
 	void 	updateTaskSlt(uint64_t, TaskInfo);
 	void 	completeTaskSlt(uint64_t);
+
+	void 	addCompleteTaskSlt(uint64_t);
 private:
 };
 
