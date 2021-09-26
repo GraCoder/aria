@@ -25,7 +25,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	const int popSize = dnheight / 5.0 * 2;
 
 	auto ico = QFileIconProvider().icon(QFileIconProvider::File).pixmap(32, 32);
-	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5, dnheight - popSize , dnheight - popSize), ico, QRect(0, 0, 32, 32));
+	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico, QRect(0, 0, 32, 32));
 
 	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
 	ft.setBold(true);
@@ -35,7 +35,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	texOpt.setAlignment(Qt::AlignLeft | Qt::AlignBottom);
 	painter->setPen(QColor(25, 25, 25));
 	const int hfheight = dnheight / 5.0 * 2;
-	QRect texRect(dnheight, 0, opt.rect.width() / 2 - dnheight, popSize);
+	QRect texRect(dnheight, opt.rect.top(), opt.rect.width() / 2 - dnheight, popSize);
 	painter->drawText(texRect, info.name, texOpt);
 
 	texOpt.setAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -52,11 +52,12 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 		painter->drawText(texRect, tr("remain:") + opt.locale.toString(tm), texOpt);
 
 	auto dnspeed = opt.locale.formattedDataSize(info.dnspeed, 2, opt.locale.DataSizeTraditionalFormat);
-	texRect = QRect(opt.rect.width() - dnheight, dnheight - popSize, dnheight, hfheight);
+	texRect = QRect(opt.rect.width() - dnheight, dnheight - popSize + opt.rect.top(), dnheight, hfheight);
 	painter->drawText(texRect, dnspeed + "/s", texOpt);
 
 	if(info.dnloadLength > 0 && info.totalLength > info.dnloadLength){
 		QRect prgRect(dnheight, dnheight / 2.0, opt.rect.width() - dnheight, 4);
+		prgRect.translate(0, opt.rect.top());
 		QLinearGradient gradient(prgRect.left(), 0, prgRect.right(), 0);
 		gradient.setColorAt(0, QColor(255, 212, 102));
 		gradient.setColorAt(1, QColor(255, 160, 120));
