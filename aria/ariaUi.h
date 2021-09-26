@@ -9,9 +9,11 @@
 #include <aria2/aria2.h>
 
 #include "frameless.h"
+#include "taskInfo.h"
 
 class QListWidget;
 class QListWidgetItem;
+class AriaListWidget;
 
 class SpinLock
 {
@@ -47,7 +49,9 @@ class Emitter : public QObject{
 	Q_OBJECT
 public:
 signals:
-	void addTaskSig(uint64_t);
+	void addTaskSig(uint64_t, QString);
+	void updateTaskSig(uint64_t, TaskInfo);
+	void completeTaskSig(uint64_t);
 };
 
 class AriaDlg : public FramelessFrame{
@@ -58,28 +62,30 @@ public:
 	AriaDlg();
 	~AriaDlg();
 
-	QWidget* createToolBar();
+	QWidget* 	createToolBar();
 
-	QWidget* createStatusBar();
+	QWidget* 	createStatusBar();
 
-	void 	addUri();
+	void 		addUri();
 
-	void 	addTaskSlt(uint64_t);
-
+	Emitter* 	getEmitter(){return _emitter;};
 signals:
-	void 	changeViewSig(int);
+	void 		changeViewSig(int);
 private:
-	void 	initAria();
-	void 	download();
+	void 		initAria();
+	void 		download();
 
-	void 	addTask();
-	void 	errorProcedure(aria2::A2Gid);
+	void 		mergeTask();
+	void 		errorTask(aria2::A2Gid);
 
-	void 	test();
+	void 		addTask(aria2::A2Gid, const QString &name);
+	void 		updateTask(aria2::A2Gid);
+	void 		completeTask(aria2::A2Gid);
+	TaskInfo 	getTaskInfo(aria2::A2Gid);
+
+	void 		test();
 private:
-	QListWidget *_dnWidget, *_cmWidget, *_trWidget;
-
-	QHash<uint64_t, QListWidgetItem*>		 _items;
+	AriaListWidget *_dnWidget, *_cmWidget, *_trWidget;
 
 	bool 			_threadRunning;
 	std::thread 	_thread;

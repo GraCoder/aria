@@ -14,6 +14,7 @@
 #include "ariaSys.h"
 #include "ariaPanel.h"
 #include "uriLink.h"
+#include "ariaListWgt.h"
 
 int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 			  aria2::A2Gid gid, void* userData)
@@ -28,7 +29,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 	case aria2::EVENT_ON_DOWNLOAD_ERROR:
 	{
 		auto dlg = (AriaDlg*)userData;
-		dlg->errorProcedure(gid);
+		dlg->errorTask(gid);
 		std::cerr << "ERROR" << " [" << aria2::gidToHex(gid) << "] ";
 		break;
 	}
@@ -48,9 +49,9 @@ AriaDlg::AriaDlg()
 		setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px; font-weight:100;}");
 	}
 
-	_dnWidget = new QListWidget;
-	_cmWidget = new QListWidget;
-	_trWidget = new QListWidget;
+	_dnWidget = new AriaListWidget(DOWNLOADING);
+	_cmWidget = new AriaListWidget(DOWNLOADING);
+	_trWidget = new AriaListWidget(DOWNLOADING);
 
 	auto stackWgt = new QStackedWidget;
 	connect(this, &AriaDlg::changeViewSig, stackWgt, &QStackedWidget::setCurrentIndex);
@@ -75,7 +76,11 @@ AriaDlg::AriaDlg()
 	_thread = std::thread(std::bind(&AriaDlg::download, this));
 	_emitter = new Emitter;
 
-	connect(_emitter, &Emitter::addTaskSig, this, &AriaDlg::addTaskSlt, Qt::QueuedConnection);
+	qRegisterMetaType<uint64_t>("uint64_t");
+	qRegisterMetaType<TaskInfo>("TaskInfo");
+	connect(_emitter, &Emitter::addTaskSig, _dnWidget, &AriaListWidget::addTaskSlt, Qt::QueuedConnection);
+	connect(_emitter, &Emitter::updateTaskSig, _dnWidget, &AriaListWidget::updateTaskSlt, Qt::QueuedConnection);
+	connect(_emitter, &Emitter::completeTaskSig, _dnWidget, &AriaListWidget::completeTaskSlt, Qt::QueuedConnection);
 }
 
 AriaDlg::~AriaDlg()
@@ -109,28 +114,21 @@ QWidget *AriaDlg::createStatusBar()
 }
 
 void AriaDlg::addUri()
-{
-	//tsk.uri.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
-
+{	
+#ifdef NDEBUG
 	URILinkWgt wgt;
 	if(wgt.exec() != QDialog::Accepted)
 		return;
-
 	Task tsk; tsk.type = 1;
 	tsk.uri = wgt.getUris();
+#else
+	Task tsk; tsk.type = 1;
+	tsk.uri.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
+#endif
 
 	_addLock.lock();
 	_addTasks.push_back(tsk);
 	_addLock.unlock();
-}
-
-void AriaDlg::addTaskSlt(uint64_t aid)
-{
-	auto item = new QListWidgetItem;
-	item->setData(Qt::UserRole, aid);
-	_dnWidget->addItem(item);
-
-	_items.insert(aid, item);
 }
 
 void AriaDlg::initAria()
@@ -175,11 +173,13 @@ void AriaDlg::initAria()
 		opTmps["min-split-size"]= "4M";
 		opTmps["piece-length"]= "1M";
 		opTmps["allow-piece-length-change"]= "true";
-		opTmps[""]= "";
-		opTmps[""]= "";
-		opTmps[""]= "";
-		opTmps[""]= "";
-		opTmps[""]= "";
+		opTmps["max-overall-download-limit"] = "0";
+		opTmps["max-download-limit"] = "30k";
+//		opTmps[""]= "";
+//		opTmps[""]= "";
+//		opTmps[""]= "";
+//		opTmps[""]= "";
+//		opTmps[""]= "";
 	}
 
 	KeyVals options;
@@ -203,43 +203,47 @@ void AriaDlg::download()
 	while(_threadRunning)
 	{
 		if(!_addTasks.empty())
-			addTask();
+			mergeTask();
 
 		int ret = run(_session, RUN_ONCE);
+
 		if(ret)
 		{
 			auto tks = getActiveDownload(_session);
 			for(int i = 0; i < tks.size(); i++) {
-				auto dh = getDownloadHandle(_session, tks[i]);
-				printf("");
-				auto speed = dh->getDownloadSpeed();
-				dh->getBitfield();
-				auto numPices = dh->getNumPieces();
-				auto picLen = dh->getPieceLength();
-				deleteDownloadHandle(dh);
+				updateTask(tks[i]);
 			}
 		}else
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
 
-void AriaDlg::addTask()
+void AriaDlg::mergeTask()
 {
 	using namespace aria2;
 
 	if(_addLock.try_lock()) {
 		for(int i = 0; i < _addTasks.size(); i++){
+			int ret = 0;
+			QString name;
+			A2Gid gid;
 			auto &tsk = _addTasks[i];
 			switch(tsk.type){
 			case 1:
 			{
-				A2Gid grid; KeyVals tmpOpt;// = getGlobalOptions(_session);
-				auto ret = aria2::addUri(_session, &grid, tsk.uri, tmpOpt);
-				_emitter->addTaskSig(grid);
+				KeyVals tmpOpt;// = getGlobalOptions(_session);
+				ret = aria2::addUri(_session, &gid, tsk.uri, tmpOpt);
+				name = QUrl(QString::fromStdString(tsk.uri.front())).fileName();
 				break;
 			}
 			default:
 				break;
+			}
+			if(ret == 0)
+				addTask(gid, name);
+			else
+			{
+				//errTask();
 			}
 		}
 		_addTasks.clear();
@@ -247,11 +251,45 @@ void AriaDlg::addTask()
 	}
 }
 
-void AriaDlg::errorProcedure(aria2::A2Gid id)
+void AriaDlg::errorTask(aria2::A2Gid id)
 {
 	auto dh = aria2::getDownloadHandle(_session, id);
 	auto code = dh->getErrorCode();
 	aria2::deleteDownloadHandle(dh);
+}
+
+void AriaDlg::addTask(aria2::A2Gid id, const QString &name)
+{
+	_emitter->addTaskSig(id, name);
+}
+
+void AriaDlg::updateTask(aria2::A2Gid id)
+{
+	auto tksInfo = getTaskInfo(id);
+	_emitter->updateTaskSig(id, std::move(tksInfo));
+}
+
+void AriaDlg::completeTask(aria2::A2Gid id)
+{
+	_emitter->completeTaskSig(id);
+}
+
+TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
+{
+	TaskInfo tskInfo;
+	auto dh = getDownloadHandle(_session, id);
+	tskInfo.fileData = dh->getFiles();
+
+	tskInfo.dnspeed = dh->getDownloadSpeed();
+	tskInfo.upspeed = dh->getUploadSpeed();
+	tskInfo.dnloadLength = dh->getCompletedLength();
+	tskInfo.totalLength = dh->getTotalLength();
+	tskInfo.uploadLength = dh->getUploadLength();
+
+	tskInfo.picNums = dh->getNumPieces();
+	tskInfo.picLength = dh->getPieceLength();
+	deleteDownloadHandle(dh);
+	return tskInfo;
 }
 
 void AriaDlg::test()

@@ -106,7 +106,6 @@ FramelessDlg::FramelessDlg(QBoxLayout::Direction dir, QWidget *par)
 	: FramelessFrame(dir, par)
 {
 	setMinimumSize(400, 250);
-	setFixSize(true);
 	auto btn = new AriaSysButton(":/aria/icons/application-exit.svg");
 	connect(btn, &QAbstractButton::clicked, this, &FramelessDlg::close);
 
