@@ -3,10 +3,10 @@
 #include <iostream>
 #include <QApplication>
 
-#include "ariaUi.h"
-
-#include <QFontDatabase>
 #include <QSettings>
+
+#include "ariaUi.h"
+#include "ariaHttpServer.h"
 
 using namespace aria2;
 
@@ -21,6 +21,8 @@ void browserIntersect()
 
 int main(int argc, char**argv)
 {
+	AriaHttpServer server;
+	server.run();
 	QApplication app(argc, argv);
 	//QFontDatabase db;
 	//auto ret = db.families();

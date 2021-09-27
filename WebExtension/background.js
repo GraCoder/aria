@@ -304,18 +304,18 @@ function SendCustomMessage(data,callback){
    //     }
 
    // });
-	fetch('http://127.0.0.1:8008/index', {
+    fetch('http://127.0.0.1:8623/addTask', {
 		method: "POST",
 		mode: 'cors',
-		headers:{ 'Content-Type':'application/x-www-form-urlencoded' }
+		headers:{ 'Content-Type':'application/x-www-form-urlencoded', 'uris': JSON.stringify(data)}
 	})
 		.then(function (res) {
 			if (res.status !== 200)
 				L('Looks like there was a problem. Status Code: ' + res.status);
 
-			L(`Got data: ${JSON.stringify(response)}`);
+			L(`Got data: ${JSON.stringify(res)}`);
 			if (callback)
-				callback(response);
+				callback(res);
 		})
 		.catch(function (err) {
 			L('Fetch Error : %S', err);
