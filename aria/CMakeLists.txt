@@ -24,6 +24,7 @@ set(hdr
 	ariaButton.h
 	ariaListWgt.h
 	taskInfo.h
+	ariaHttpServer.h
 )
 
 set(src
@@ -35,6 +36,7 @@ set(src
 	ariaSys.cpp
 	ariaButton.cpp
 	ariaListWgt.cpp
+	ariaHttpServer.cpp
 )
 
 

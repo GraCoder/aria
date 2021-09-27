@@ -87,6 +87,15 @@ AriaDlg::AriaDlg()
 	connect(_emitter, &Emitter::completeTaskSig, _dnWidget, &AriaListWidget::completeTaskSlt, Qt::QueuedConnection);
 
 	connect(_emitter, &Emitter::completeTaskSig, _cmWidget, &AriaListWidget::addCompleteTaskSlt, Qt::QueuedConnection);
+
+	std::thread browser([]{
+		int n;
+		while(true){
+			std::cin >> n;
+			printf("");
+		}
+	});
+	browser.detach();
 }
 
 AriaDlg::~AriaDlg()

@@ -1,0 +1,8 @@
+{
+  "name": "com.persepolis.pdmchromewrapper",
+  "type": "stdio",
+  "browser_action":{},
+  "permissions":["http://127.0.0.1/*"],
+  "description": "Integrate Persepolis with vivaldi using WebExtensions",
+  "allowed_origins": ["chrome-extension://dgblchojffkdlbgmgajnhkjpbdegghkp/"]
+}
