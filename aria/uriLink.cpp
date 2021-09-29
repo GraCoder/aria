@@ -5,7 +5,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
-URILinkWgt::URILinkWgt()
+
+URILinkWgt::URILinkWgt(const QString &url, const QString &name)
 {
 	setTitle("new link task");
 

@@ -40,11 +40,6 @@ private:
 	std::atomic_flag _lock;
 };
 
-struct Task{
-	int type; //1-url
-	std::vector<std::string> uri;
-};
-
 class Emitter : public QObject{
 	Q_OBJECT
 public:
@@ -64,7 +59,8 @@ public:
 
 	QWidget* 	createStatusBar();
 
-	void 		addUri();
+	void 		addUri(QString url = nullptr, QString name = nullptr, QString cookie = nullptr);
+	void 		addUriTask(std::unique_ptr<UriTask> &);
 
 	Emitter* 	getEmitter(){return _emitter;};
 signals:
@@ -93,5 +89,5 @@ private:
 	aria2::Session 	*_session;
 
 	SpinLock 			_addLock;
-	std::vector<Task> 	_addTasks;
+	std::vector<std::unique_ptr<Task>> 	_addTasks;
 };

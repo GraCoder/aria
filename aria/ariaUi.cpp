@@ -105,7 +105,7 @@ QWidget *AriaDlg::createToolBar()
 	bar->setAttribute(Qt::WA_TranslucentBackground, false);
 	bar->setIconSize(QSize(40, 40));
 	{
-		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), this, &AriaDlg::addUri);
+		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), std::bind(&AriaDlg::addUri, this, QString(), QString(), QString()));
 	}
 	{
 	}
@@ -119,21 +119,23 @@ QWidget *AriaDlg::createStatusBar()
 	return bar;
 }
 
-void AriaDlg::addUri()
-{	
+void AriaDlg::addUri(const QString url, const QString name, const QString cookie)
+{
 #ifdef NDEBUG
-	URILinkWgt wgt;
+	URILinkWgt wgt(url, name);
 	if(wgt.exec() != QDialog::Accepted)
 		return;
-	Task tsk; tsk.type = 1;
-	tsk.uri = wgt.getUris();
-#else
-	Task tsk; tsk.type = 1;
-	tsk.uri.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
 #endif
+	auto tsk = std::make_unique<UriTask>();
+	tsk->type = 1;
+	tsk->url ="http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar";
+	addUriTask(tsk);
+}
 
+void AriaDlg::addUriTask(std::unique_ptr<UriTask> &tsk)
+{
 	_addLock.lock();
-	_addTasks.push_back(tsk);
+	_addTasks.push_back(std::move(tsk));
 	_addLock.unlock();
 }
 
@@ -233,13 +235,15 @@ void AriaDlg::mergeTask()
 			int ret = 0;
 			QString name;
 			A2Gid gid;
-			auto &tsk = _addTasks[i];
-			switch(tsk.type){
+			auto tsk = std::move(_addTasks[i]);
+			switch(tsk->type){
 			case 1:
 			{
+				auto ptask = static_cast<UriTask*>(tsk.get());
 				KeyVals tmpOpt;// = getGlobalOptions(_session);
-				ret = aria2::addUri(_session, &gid, tsk.uri, tmpOpt);
-				name = QUrl(QString::fromStdString(tsk.uri.front())).fileName();
+				std::vector<std::string> url(1, tsk->url);
+				ret = aria2::addUri(_session, &gid, url, tmpOpt);
+				name = QString::fromStdString(ptask->name);
 				getTaskInfo(gid);
 				break;
 			}

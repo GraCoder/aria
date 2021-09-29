@@ -37,12 +37,15 @@ void browserIntersect()
 int main(int argc, char**argv)
 {
 	QApplication app(argc, argv);
-	AriaHttpServer server;
-	server.run();
-	browserIntersect();
-	//QFontDatabase db;
-	//auto ret = db.families();
 	AriaDlg dlg;
+
+	AriaHttpServer server(&dlg);
+	std::thread httpThread(
+		std::bind(&AriaHttpServer::run, &server));
+
+	browserIntersect();
+
 	dlg.exec();
+
 	return 0;
 }

@@ -7,7 +7,7 @@ class QPlainTextEdit;
 
 class URILinkWgt : public FramelessDlg{
 public:
-	URILinkWgt();
+	URILinkWgt(const QString &url, const QString &name);
 
 	std::vector<std::string> getUris();
 

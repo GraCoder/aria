@@ -10,21 +10,29 @@ struct request;
 
 #include <memory>
 #include <optional>
+#include <QObject>
+#include <QString>
 
+class AriaDlg;
 
-class AriaHttpServer
+class AriaHttpServer : public QObject
 {
+	Q_OBJECT
 public:
-	AriaHttpServer();
+	AriaHttpServer(AriaDlg *dlg);
 
 	~AriaHttpServer();
 
 	void run();
 
+signals:
+	void addUriTaskSig(QString, QString, QString);
 private:
 	std::optional<std::string> handler(const http::server::request &req);
 private:
 	std::unique_ptr<http::server::server> _server;
+
+	AriaDlg		*_dlg;
 };
 
 #endif // ARIAHTTPSERVER_H
