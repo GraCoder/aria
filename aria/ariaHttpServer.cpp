@@ -32,12 +32,14 @@ std::optional<std::string> AriaHttpServer::handler(const http::server::request &
 			{
 				auto jss = nlohmann::json::parse(header.value);
 				if(jss.count("url_links")){
-					auto uriArray = jss["url_links"].array();
-//					for(auto &uri : uriArray){
-//						auto name = uri["filename"];
-//						auto url = uri["url"];
-//						printf("");
-//					}
+					auto uriArray = jss["url_links"];
+					for(auto iter = uriArray.begin(); iter!= uriArray.end(); iter++)
+					{
+						std::string name = (*iter)["name"];
+						std::string url = (*iter)["url"];
+						std::string cookeie = (*iter)["cookies"];
+						printf("");
+					}
 				}
 				break;
 			}

@@ -1,29 +1,45 @@
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
 #include <iostream>
+#include <fstream>
 #include <QApplication>
 
 #include <QSettings>
 
 #include "ariaUi.h"
 #include "ariaHttpServer.h"
+#include "json.hpp"
 
 using namespace aria2;
 
 void browserIntersect()
 {
-	QCoreApplication::applicationDirPath() + "\\aria.json";
+	using namespace nlohmann;
+	json chrome = R"({
+		"name": "com.t.ariachromewrapper",
+		"type": "stdio",
+		"browser_action":{},
+		"permissions":["http://127.0.0.1/*"],
+		"description": "Integrate aria with vivaldi using WebExtensions",
+		"allowed_origins": ["chrome-extension://dgblchojffkdlbgmgajnhkjpbdegghkp/"]
+	})"_json;
+	chrome["path"] = QCoreApplication::applicationDirPath().toStdString() + "\\xx.exe";
+	auto contents = chrome.dump();
+	auto configpath = QCoreApplication::applicationDirPath().toStdString() + "\\com.t.ariachromewrapper.json";
+	std::ofstream(configpath) << contents;
 
-	QSettings setting("HKEY_CURRENT_USER\\SOFTWARE\\Google\\Chrome\\NativeMessagingHosts\\com.persepolis.pdmchromewrapper", QSettings::NativeFormat);
-	setting.setValue("", "billy");
+	QSettings setting("HKEY_CURRENT_USER\\SOFTWARE\\Google\\Chrome\\NativeMessagingHosts\\com.t.ariachromewrapper", QSettings::NativeFormat);
+	setting.setValue(".", QString::fromStdString(configpath));
+	setting.sync();
 }
 
 
 int main(int argc, char**argv)
 {
+	QApplication app(argc, argv);
 	AriaHttpServer server;
 	server.run();
-	QApplication app(argc, argv);
+	browserIntersect();
 	//QFontDatabase db;
 	//auto ret = db.families();
 	AriaDlg dlg;

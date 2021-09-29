@@ -81,7 +81,7 @@ function L(msg) {
 let interruptDownloads = true;
 let contextMenu = true;
 let PDMNotFound = false;
-let hostName = 'com.persepolis.pdmchromewrapper';
+let hostName = 'com.t.ariachromewrapper';
 let keywords = [];
 
 
