@@ -42,13 +42,16 @@ struct TaskInfo{
 
 struct Task{
 	int type; //1-url
+	std::string name;
 
-	std::string url;
+	virtual std::string getUri() = 0;
 };
 
 struct UriTask : public Task{
-	std::string name;
 	std::string cookie;
+	std::vector<std::string> url;
+
+	std::string getUri();
 };
 
 

@@ -105,7 +105,7 @@ QWidget *AriaDlg::createToolBar()
 	bar->setAttribute(Qt::WA_TranslucentBackground, false);
 	bar->setIconSize(QSize(40, 40));
 	{
-		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), std::bind(&AriaDlg::addUri, this, QString(), QString(), QString()));
+		bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), std::bind(&AriaDlg::addUri, this, QString(), QString()));
 	}
 	{
 	}
@@ -119,21 +119,23 @@ QWidget *AriaDlg::createStatusBar()
 	return bar;
 }
 
-void AriaDlg::addUri(const QString url, const QString name, const QString cookie)
+void AriaDlg::addUri(const QString url, const QString cookie)
 {
-#ifdef NDEBUG
-	URILinkWgt wgt(url, name);
+	URILinkWgt wgt(url);
 	if(wgt.exec() != QDialog::Accepted)
 		return;
-#endif
-	auto tsk = std::make_unique<UriTask>();
-	tsk->type = 1;
-	tsk->url ="http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar";
-	addUriTask(tsk);
+
+	auto tsks = wgt.getTasks();
+	//auto tsk = std::make_unique<UriTask>();
+	//tsk->type = 1;
+	//tsk->url.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
+	for(auto &tsk : tsks)
+		addUriTask(tsk);
 }
 
 void AriaDlg::addUriTask(std::unique_ptr<UriTask> &tsk)
 {
+	_database.addToTask(tsk.get());
 	_addLock.lock();
 	_addTasks.push_back(std::move(tsk));
 	_addLock.unlock();
@@ -164,7 +166,7 @@ void AriaDlg::initAria()
 				file.open(QIODevice::WriteOnly);
 				file.close();
 			}
-			opTmps["input-file"]= path.toStdString();
+			//opTmps["input-file"]= path.toStdString();
 			opTmps["save-session"]= path.toStdString();
 		}
 
@@ -182,7 +184,7 @@ void AriaDlg::initAria()
 		opTmps["piece-length"]= "1M";
 		opTmps["allow-piece-length-change"]= "true";
 		opTmps["max-overall-download-limit"] = "0";
-		opTmps["max-download-limit"] = "30k";
+		opTmps["max-download-limit"] = "0";
 //		opTmps[""]= "";
 //		opTmps[""]= "";
 //		opTmps[""]= "";
@@ -241,8 +243,7 @@ void AriaDlg::mergeTask()
 			{
 				auto ptask = static_cast<UriTask*>(tsk.get());
 				KeyVals tmpOpt;// = getGlobalOptions(_session);
-				std::vector<std::string> url(1, tsk->url);
-				ret = aria2::addUri(_session, &gid, url, tmpOpt);
+				ret = aria2::addUri(_session, &gid, ptask->url, tmpOpt);
 				name = QString::fromStdString(ptask->name);
 				getTaskInfo(gid);
 				break;

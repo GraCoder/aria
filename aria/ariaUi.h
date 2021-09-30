@@ -11,6 +11,8 @@
 #include "frameless.h"
 #include "taskInfo.h"
 
+#include "taskDatabase.h"
+
 class QListWidget;
 class QListWidgetItem;
 class AriaListWidget;
@@ -59,7 +61,7 @@ public:
 
 	QWidget* 	createStatusBar();
 
-	void 		addUri(QString url = nullptr, QString name = nullptr, QString cookie = nullptr);
+	void 		addUri(QString url = nullptr, QString cookie = nullptr);
 	void 		addUriTask(std::unique_ptr<UriTask> &);
 
 	Emitter* 	getEmitter(){return _emitter;};
@@ -90,4 +92,6 @@ private:
 
 	SpinLock 			_addLock;
 	std::vector<std::unique_ptr<Task>> 	_addTasks;
+
+	taskDatabase		_database;
 };

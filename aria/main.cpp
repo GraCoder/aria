@@ -39,11 +39,10 @@ int main(int argc, char**argv)
 	QApplication app(argc, argv);
 	AriaDlg dlg;
 
-	AriaHttpServer server(&dlg);
-	std::thread httpThread(
-		std::bind(&AriaHttpServer::run, &server));
-
-	browserIntersect();
+//	AriaHttpServer server(&dlg);
+//	std::thread httpThread(
+//		std::bind(&AriaHttpServer::run, &server));
+//	browserIntersect();
 
 	dlg.exec();
 

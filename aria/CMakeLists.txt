@@ -31,6 +31,7 @@ set(hdr
 	ariaListWgt.h
 	taskInfo.h
 	ariaHttpServer.h
+	taskDatabase.h
 )
 
 set(src
@@ -42,7 +43,9 @@ set(src
 	ariaSys.cpp
 	ariaButton.cpp
 	ariaListWgt.cpp
+	taskInfo.cpp
 	ariaHttpServer.cpp
+	taskDatabase.cpp
 )
 
 
@@ -54,5 +57,5 @@ set_target_properties(${app_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TA
                                                VS_DEBUGGER_COMMAND           "$<TARGET_FILE:${app_name}>"
                                                VS_DEBUGGER_ENVIRONMENT       "PATH=%PATH%;${CMAKE_PREFIX_PATH}/bin")
 target_link_libraries(${app_name} Qt5::Widgets Qt5::Gui)
-target_link_libraries(${app_name} aria2)
+target_link_libraries(${app_name} aria2 sqlite3)
 target_link_libraries(${app_name} ws2_32 wsock32)

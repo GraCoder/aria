@@ -6,7 +6,39 @@
 #include <QVBoxLayout>
 
 
-URILinkWgt::URILinkWgt(const QString &url, const QString &name)
+URILinkWgt::URILinkWgt(const QString &url)
+{
+	createWidgets();
+	_edit->setPlainText(url);
+}
+
+std::vector<std::unique_ptr<UriTask> >
+URILinkWgt::getTasks()
+{
+	std::vector<std::unique_ptr<UriTask> > ret;
+
+	auto text = _edit->toPlainText();
+	auto uris = text.split('\n');
+	auto tsk = std::make_unique<UriTask>();
+	for(auto &uri : uris)
+		tsk->url.push_back(uri.toStdString());
+
+//	std::vector<std::string> tmp;
+//	tmp.push_back("http://www.sqliteexpert.com/v5/SQLiteExpertPersSetup64.exe");
+//	tmp.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
+//	tsk->url = tmp;
+
+	tsk->type = 1;
+	ret.push_back(std::move(tsk));
+	return ret;
+}
+
+void URILinkWgt::downloadSlt()
+{
+	accept();
+}
+
+void URILinkWgt::createWidgets()
 {
 	setTitle("new link task");
 
@@ -29,20 +61,4 @@ URILinkWgt::URILinkWgt(const QString &url, const QString &name)
 	setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px; font-weight:100;}");
 
 	connect(_dnBtn, &QPushButton::clicked, this, &URILinkWgt::downloadSlt);
-}
-
-std::vector<std::string>
-URILinkWgt::getUris()
-{
-	auto text = _edit->toPlainText();
-	auto uris = text.split('\n');
-	std::vector<std::string> ret;
-	for(auto &uri : uris)
-		ret.push_back(uri.toStdString());
-	return ret;
-}
-
-void URILinkWgt::downloadSlt()
-{
-	accept();
 }

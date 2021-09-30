@@ -40,16 +40,14 @@ std::optional<std::string> AriaHttpServer::handler(const http::server::request &
 					auto uriArray = jss["url_links"];
 					for(auto iter = uriArray.begin(); iter!= uriArray.end(); iter++)
 					{
-						QString url, name, cookie;
+						QString url, cookie;
 						if(iter->contains("url"))
 							url = QString::fromStdString((*iter)["url"]);
 						else
 							continue;
-						if(iter->contains("filename"))
-							name = QString::fromStdString((*iter)["filename"]);
 						if(iter->contains("cookies"))
 							cookie = QString::fromStdString((*iter)["cookies"]);
-						addUriTaskSig(url, name, cookie);
+						addUriTaskSig(url, cookie);
 					}
 				}
 				break;

@@ -3,15 +3,20 @@
 
 #include "frameless.h"
 
+#include "taskInfo.h"
+
 class QPlainTextEdit;
 
 class URILinkWgt : public FramelessDlg{
 public:
-	URILinkWgt(const QString &url, const QString &name);
+	URILinkWgt(const QString &url);
 
-	std::vector<std::string> getUris();
+	std::vector<std::unique_ptr<UriTask>> getTasks();
 
 	void downloadSlt();
+
+protected:
+	void createWidgets();
 private:
 	QPlainTextEdit *_edit;
 

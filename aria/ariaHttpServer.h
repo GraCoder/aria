@@ -26,7 +26,7 @@ public:
 	void run();
 
 signals:
-	void addUriTaskSig(QString, QString, QString);
+	void addUriTaskSig(QString, QString);
 private:
 	std::optional<std::string> handler(const http::server::request &req);
 private:
