@@ -42,6 +42,7 @@ struct TaskInfo{
 
 struct Task{
 	int type; //1-url
+	uint64_t rid;
 	std::string name;
 
 	virtual std::string getUri() = 0;

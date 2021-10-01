@@ -5,20 +5,21 @@
 
 class sqlite3;
 
-class taskDatabase
+class TaskDatabase
 {
 public:
-	taskDatabase();
+	TaskDatabase();
 
-	~taskDatabase();
+	~TaskDatabase();
 
-	void addToTask(Task *);
+	uint64_t findTask(Task *);
 
-	void addToDownloading(aria2::A2Gid);
+	uint64_t addTask(Task *);
+
+	void addToDownloading(uint64_t, aria2::A2Gid);
 
 	void addToCompleted(aria2::A2Gid);
 
-	bool findUrl(const std::string &);
 protected:
 private:
 	sqlite3 *_sql;

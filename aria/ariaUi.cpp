@@ -27,6 +27,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 	{
 		auto dlg = (AriaDlg*)userData;
 		dlg->getEmitter()->completeTaskSig(gid);
+		dlg->getDatabase().addToCompleted(gid);
 		std::cerr << "COMPLETE";
 		break;
 	}
@@ -135,7 +136,12 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 
 void AriaDlg::addUriTask(std::unique_ptr<UriTask> &tsk)
 {
-	_database.addToTask(tsk.get());
+	auto rid = _database.findTask(tsk.get());
+	if(rid == 0)
+		tsk->rid = _database.addTask(tsk.get());
+	else{
+		return;
+	}
 	_addLock.lock();
 	_addTasks.push_back(std::move(tsk));
 	_addLock.unlock();
@@ -245,7 +251,8 @@ void AriaDlg::mergeTask()
 				KeyVals tmpOpt;// = getGlobalOptions(_session);
 				ret = aria2::addUri(_session, &gid, ptask->url, tmpOpt);
 				name = QString::fromStdString(ptask->name);
-				getTaskInfo(gid);
+				//getTaskInfo(gid);
+				_database.addToDownloading(ptask->rid, gid);
 				break;
 			}
 			default:

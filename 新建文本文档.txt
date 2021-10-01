@@ -1,0 +1,23 @@
+CREATE TABLE task_table(
+                                                                                gid TEXT,
+                                                                                start_time TEXT,
+                                                                                end_time TEXT,
+                                                                                link TEXT,
+                                                                                ip TEXT,
+                                                                                port TEXT,
+                                                                                proxy_user TEXT,
+                                                                                proxy_passwd TEXT,
+                                                                                download_user TEXT,
+                                                                                download_passwd TEXT,
+                                                                                connections TEXT,
+                                                                                limit_value TEXT,
+                                                                                download_path TEXT,
+                                                                                referer TEXT,
+                                                                                load_cookies TEXT,
+                                                                                user_agent TEXT,
+                                                                                header TEXT,
+                                                                                after_download TEXT,
+                                                                                FOREIGN KEY(gid) REFERENCES download_table(gid) 
+                                                                                ON UPDATE CASCADE 
+                                                                                ON DELETE CASCADE 
+                                                                                    );

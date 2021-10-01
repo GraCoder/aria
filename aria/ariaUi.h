@@ -64,7 +64,8 @@ public:
 	void 		addUri(QString url = nullptr, QString cookie = nullptr);
 	void 		addUriTask(std::unique_ptr<UriTask> &);
 
-	Emitter* 	getEmitter(){return _emitter;};
+	Emitter* 		getEmitter(){return _emitter;}
+	TaskDatabase& 	getDatabase() {return _database;}
 signals:
 	void 		changeViewSig(int);
 private:
@@ -93,5 +94,5 @@ private:
 	SpinLock 			_addLock;
 	std::vector<std::unique_ptr<Task>> 	_addTasks;
 
-	taskDatabase		_database;
+	TaskDatabase		_database;
 };
