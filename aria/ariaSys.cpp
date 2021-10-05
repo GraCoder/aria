@@ -18,5 +18,5 @@ AriaSysMenu::AriaSysMenu()
 
 void AriaSysMenu::miniSlt()
 {
-	topLevelWidget()->showMinimized();
+	topLevelWidget()->hide();
 }

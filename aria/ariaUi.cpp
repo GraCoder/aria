@@ -44,7 +44,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		auto dlg = (AriaDlg*)userData;
 		auto tskInfo = dlg->getTaskInfo(gid);
 		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
-		dlg->getEmitter()->removeTaskSig(gid);
+		//dlg->getEmitter()->removeTaskSig(gid);
 		std::cout << "STOP" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
 		break;
 	}
@@ -110,7 +110,6 @@ AriaDlg::AriaDlg()
 	_layout->addLayout(mainLayout);
 
 	initAria();
-	_thread = std::thread(std::bind(&AriaDlg::download, this));
 	_emitter = new Emitter;
 
 	qRegisterMetaType<uint64_t>("uint64_t");
@@ -128,7 +127,9 @@ AriaDlg::AriaDlg()
 	_database->initDownloadTask();
 
 	connect(_emitter, &Emitter::completeTaskSig, _database, &TaskDatabase::completeTask, Qt::QueuedConnection);
-	connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::deleteTask, Qt::QueuedConnection);
+	//connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::deleteTask, Qt::QueuedConnection);
+
+	_thread = std::thread(std::bind(&AriaDlg::download, this));
 }
 
 AriaDlg::~AriaDlg()
@@ -250,6 +251,8 @@ void AriaDlg::deleteSelected()
 	auto ids = _dnWidget->getSelected();
 	for(auto id : ids){
 		removeDownload(_session, id);
+		_dnWidget->removeTaskSlt(id);
+		_database->deleteTask(id);
 	}
 }
 
@@ -268,7 +271,9 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 	tskInfo.state = dh->getStatus();
 	tskInfo.picNums = dh->getNumPieces();
 	tskInfo.picLength = dh->getPieceLength();
+	auto xx = dh->getOptions();
 	deleteDownloadHandle(dh);
+
 	return tskInfo;
 }
 
@@ -316,8 +321,9 @@ void AriaDlg::initAria()
 		opTmps["min-split-size"]= "4M";
 		opTmps["piece-length"]= "1M";
 		opTmps["allow-piece-length-change"]= "true";
-		opTmps["max-overall-download-limit"] = "1024k";
+		opTmps["max-overall-download-limit"] = "10k";
 //		opTmps["max-download-limit"] = "10k";
+		opTmps["optimize-concurrent-downloads"] = "false";
 //		opTmps[""]= "";
 //		opTmps[""]= "";
 //		opTmps[""]= "";
@@ -341,6 +347,8 @@ void AriaDlg::download()
 {
 	using namespace aria2;
 
+	auto prev = std::chrono::system_clock().now();
+
 	while(_threadRunning)
 	{
 		if(!_addTasks.empty())
@@ -348,14 +356,17 @@ void AriaDlg::download()
 
 		int ret = run(_session, RUN_ONCE);
 
-		if(ret)
+		//if(ret)
 		{
+			auto curr = std::chrono::system_clock().now();
+			auto sec = std::chrono::duration_cast<std::chrono::seconds>(curr - prev);
+			if(sec.count() < 2)
+				continue;
 			auto tks = getActiveDownload(_session);
 			for(int i = 0; i < tks.size(); i++) {
 				updateTask(tks[i]);
 			}
-		}else
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
 	}
 }
 
@@ -377,7 +388,7 @@ void AriaDlg::mergeTask()
 				std::vector<std::string> url(1, ptask->url);
 				ret = aria2::addUri(_session, &gid, url, tmpOpt);
 				name = QString::fromStdString(ptask->name);
-				//getTaskInfo(gid);
+				getTaskInfo(gid);
 				_database->downloadTask(ptask->rid, gid);
 				break;
 			}

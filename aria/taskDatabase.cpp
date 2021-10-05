@@ -133,7 +133,7 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfo &taskInfo)
 
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 	const char lang[] = "update task_table set state=%d, total_size=%lld, end_time='%s' where id=%lld;";
-	sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, datatime.data(), id);
+	sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
