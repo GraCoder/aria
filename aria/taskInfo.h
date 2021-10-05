@@ -33,6 +33,7 @@ struct TaskInfo{
 	int64_t uploadLength;
 	int64_t dnloadLength;
 
+	int 	state;
 	int 	picNums;
 	int 	picLength;
 
@@ -40,8 +41,18 @@ struct TaskInfo{
 
 };
 
+struct FinishTaskInfo{
+	uint64_t id;
+	QString name;
+
+	int64_t size;
+	QString datetime;
+	QString localPath;
+};
+
 struct Task{
 	int type; //1-url
+	int state;
 	uint64_t rid;
 	std::string name;
 
@@ -50,8 +61,8 @@ struct Task{
 
 struct UriTask : public Task{
 	std::string cookie;
-	std::vector<std::string> url;
 
+	std::string url;
 	std::string getUri();
 };
 

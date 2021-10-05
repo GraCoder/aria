@@ -21,7 +21,10 @@ URILinkWgt::getTasks()
 	auto uris = text.split('\n');
 	auto tsk = std::make_unique<UriTask>();
 	for(auto &uri : uris)
-		tsk->url.push_back(uri.toStdString());
+	{
+		tsk->url = uri.toStdString();
+		tsk->name = QUrl(uri).fileName().toStdString();
+	}
 
 //	std::vector<std::string> tmp;
 //	tmp.push_back("http://www.sqliteexpert.com/v5/SQLiteExpertPersSetup64.exe");
@@ -58,7 +61,7 @@ void URILinkWgt::createWidgets()
 	_layout->addLayout(btnLayout);
 	_layout->addSpacing(20);
 
-	setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px; font-weight:100;}");
+	setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px;}");
 
 	connect(_dnBtn, &QPushButton::clicked, this, &URILinkWgt::downloadSlt);
 }

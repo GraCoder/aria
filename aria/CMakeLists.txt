@@ -11,6 +11,7 @@ set(moc_h
 	frameless.h
 	ariaListWgt.h
 	ariaHttpServer.h
+	taskDatabase.h
 )
 
 qt5_wrap_cpp(mocfiles ${moc_h})

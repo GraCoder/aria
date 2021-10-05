@@ -11,11 +11,10 @@
 #include "frameless.h"
 #include "taskInfo.h"
 
-#include "taskDatabase.h"
-
 class QListWidget;
 class QListWidgetItem;
 class AriaListWidget;
+class TaskDatabase;
 
 class SpinLock
 {
@@ -49,6 +48,11 @@ signals:
 	void addTaskSig(uint64_t, QString);
 	void updateTaskSig(uint64_t, TaskInfo);
 	void completeTaskSig(uint64_t);
+	void removeTaskSig(uint64_t);
+	void startTaskSig(uint64_t);
+	void pauseTaskSig(uint64_t);
+
+	void failTaskSig(uint64_t);
 };
 
 class AriaDlg : public FramelessFrame{
@@ -57,6 +61,11 @@ public:
 	AriaDlg();
 	~AriaDlg();
 
+	static AriaDlg* getMainDlg();
+	AriaListWidget* getDownloadWgt();
+	AriaListWidget* getCompleteWgt();
+	AriaListWidget* getTrashWgt();
+
 	QWidget* 	createToolBar();
 
 	QWidget* 	createStatusBar();
@@ -64,8 +73,14 @@ public:
 	void 		addUri(QString url = nullptr, QString cookie = nullptr);
 	void 		addUriTask(std::unique_ptr<UriTask> &);
 
+	void		startSelected();
+	void 		pauseSelected();
+	void 		deleteSelected();
+
 	Emitter* 		getEmitter(){return _emitter;}
-	TaskDatabase& 	getDatabase() {return _database;}
+	TaskDatabase* 	getDatabase() {return _database;}
+
+	TaskInfo 	getTaskInfo(aria2::A2Gid);
 signals:
 	void 		changeViewSig(int);
 private:
@@ -78,7 +93,6 @@ private:
 	void 		addTask(aria2::A2Gid, const QString &name);
 	void 		updateTask(aria2::A2Gid);
 	void 		completeTask(aria2::A2Gid);
-	TaskInfo 	getTaskInfo(aria2::A2Gid);
 
 	void 		test();
 private:
@@ -88,11 +102,10 @@ private:
 	std::thread 	_thread;
 
 	Emitter			*_emitter;
+	TaskDatabase	*_database;
 
 	aria2::Session 	*_session;
 
 	SpinLock 			_addLock;
 	std::vector<std::unique_ptr<Task>> 	_addTasks;
-
-	TaskDatabase		_database;
 };

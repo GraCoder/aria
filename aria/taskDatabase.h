@@ -2,11 +2,17 @@
 #define TASKDATABASE_H
 
 #include "taskInfo.h"
+#include <QObject>
+
+#include <map>
 
 class sqlite3;
 
-class TaskDatabase
+class AriaUi;
+
+class TaskDatabase : public QObject
 {
+	Q_OBJECT
 public:
 	TaskDatabase();
 
@@ -16,13 +22,29 @@ public:
 
 	uint64_t addTask(Task *);
 
-	void addToDownloading(uint64_t, aria2::A2Gid);
+	void downloadTask(uint64_t, aria2::A2Gid);
 
-	void addToCompleted(aria2::A2Gid);
+	void completeTask(aria2::A2Gid);
+
+	void deleteTask(aria2::A2Gid);
+
+	void failTask(aria2::A2Gid);
+
+	void updateTaskInfo(aria2::A2Gid, TaskInfo &);
+
+	void initDownloadTask();
+
+	void initCompleteTask();
+
+	void initTrashTask();
+
+	void addLocalTask(uint64_t, int);
 
 protected:
 private:
 	sqlite3 *_sql;
+
+	std::map<uint64_t, uint64_t> _idTable;
 };
 
 #endif // TASKDATABASE_H

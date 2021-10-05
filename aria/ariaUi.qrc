@@ -123,5 +123,11 @@
         <file>icons/completed.png</file>
         <file>icons/downloading.png</file>
         <file>icons/list-remove.png</file>
+        <file>icons/xx/download.svg</file>
+        <file>icons/xx/pause.svg</file>
+        <file>icons/xx/download.png</file>
+        <file>icons/xx/pause.png</file>
+        <file>icons/xx/delete.svg</file>
+        <file>icons/xx/waiting.svg</file>
     </qresource>
 </RCC>
