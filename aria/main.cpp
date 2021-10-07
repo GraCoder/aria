@@ -2,10 +2,11 @@
 #include <stdlib.h>         // abort
 #include <iostream>
 #include <fstream>
-#include <QApplication>
 
 #include <QSettings>
 
+#include <QApplication>
+#include "singleapplication.h"
 #include "ariaUi.h"
 #include "ariaHttpServer.h"
 #include "json.hpp"
@@ -36,7 +37,9 @@ void browserIntersect()
 
 int main(int argc, char**argv)
 {
-	QApplication app(argc, argv);
+	SingleApplication app(argc, argv);
+
+	auto ft = qApp->font();
 	AriaDlg dlg;
 
 	AriaHttpServer server(&dlg);
@@ -44,7 +47,7 @@ int main(int argc, char**argv)
 		std::bind(&AriaHttpServer::run, &server));
 	browserIntersect();
 
-	dlg.exec();
+	dlg.show();
 
-	return 0;
+	return app.exec();
 }

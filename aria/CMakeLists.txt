@@ -5,13 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt5 COMPONENTS Widgets Gui REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Gui Network REQUIRED)
 set(moc_h
 	ariaUi.h
 	frameless.h
 	ariaListWgt.h
 	ariaHttpServer.h
 	taskDatabase.h
+	singleapplication.h
+	singleapplication_p.h
 )
 
 qt5_wrap_cpp(mocfiles ${moc_h})
@@ -33,6 +35,8 @@ set(hdr
 	taskInfo.h
 	ariaHttpServer.h
 	taskDatabase.h
+	singleapplication.h
+	singleapplication_p.h
 )
 
 set(src
@@ -47,16 +51,19 @@ set(src
 	taskInfo.cpp
 	ariaHttpServer.cpp
 	taskDatabase.cpp
+	singleapplication.cpp
+	singleapplication_p.cpp
 )
 
-
-add_executable(${app_name} ${hdr} ${src} ${mocfiles} ${httpserver})
+add_executable(${app_name} WIN32 ${hdr} ${src} ${mocfiles} ${httpserver})
 
 target_link_directories(${app_name} PRIVATE ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/lib)
 
 set_target_properties(${app_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${app_name}>"
                                                VS_DEBUGGER_COMMAND           "$<TARGET_FILE:${app_name}>"
                                                VS_DEBUGGER_ENVIRONMENT       "PATH=%PATH%;${CMAKE_PREFIX_PATH}/bin")
-target_link_libraries(${app_name} Qt5::Widgets Qt5::Gui)
+target_link_libraries(${app_name} Qt5::Widgets Qt5::Gui Qt5::Network)
 target_link_libraries(${app_name} aria2 sqlite3)
-target_link_libraries(${app_name} ws2_32 wsock32)
+target_compile_definitions(${app_name} PUBLIC QAPPLICATION_CLASS=QApplication)
+target_link_libraries(${app_name} ws2_32 wsock32 advapi32)
+

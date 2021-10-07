@@ -321,7 +321,7 @@ void AriaDlg::initAria()
 		opTmps["min-split-size"]= "4M";
 		opTmps["piece-length"]= "1M";
 		opTmps["allow-piece-length-change"]= "true";
-		opTmps["max-overall-download-limit"] = "10k";
+		opTmps["max-overall-download-limit"] = "1024K";
 //		opTmps["max-download-limit"] = "10k";
 		opTmps["optimize-concurrent-downloads"] = "false";
 //		opTmps[""]= "";
@@ -360,7 +360,7 @@ void AriaDlg::download()
 		{
 			auto curr = std::chrono::system_clock().now();
 			auto sec = std::chrono::duration_cast<std::chrono::seconds>(curr - prev);
-			if(sec.count() < 2)
+			if(sec < std::chrono::seconds(3))
 				continue;
 			auto tks = getActiveDownload(_session);
 			for(int i = 0; i < tks.size(); i++) {

@@ -126,14 +126,17 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfo &taskInfo)
 
 	auto id = _idTable[gid];
 	auto &filedata = taskInfo.fileData;
-	for(int i = 0; i < filedata.size() - 1; i++)
-	{
+	std::string filepath;
+	if(filedata.size() == 1) {
+		filepath = filedata[0].path;
+	}else{
 
 	}
 
+
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-	const char lang[] = "update task_table set state=%d, total_size=%lld, end_time='%s' where id=%lld;";
-	sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), id);
+	const char lang[] = "update task_table set state=%d, total_size=%lld, end_time='%s', local_path='%s' where id=%lld;";
+	sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), filepath.c_str(), id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 

@@ -2,14 +2,18 @@
 
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
 
 URILinkWgt::URILinkWgt(const QString &url)
 {
+	setMinimumSize(600, 400);
 	createWidgets();
 	_edit->setPlainText(url);
+
+	connect(_edit, &QPlainTextEdit::textChanged, this, &URILinkWgt::uriChangedSlt);
 }
 
 std::vector<std::unique_ptr<UriTask> >
@@ -41,6 +45,16 @@ void URILinkWgt::downloadSlt()
 	accept();
 }
 
+void URILinkWgt::uriChangedSlt()
+{
+
+}
+
+void URILinkWgt::addBtSlt()
+{
+	QFileDialog::getOpenFileNames(this, tr("open torrent files."), "", "Torrent (*.torrent)");
+}
+
 void URILinkWgt::createWidgets()
 {
 	setTitle("new link task");
@@ -51,9 +65,14 @@ void URILinkWgt::createWidgets()
 	btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	_dnBtn = btn;
 
+	btn = new QPushButton(tr("bt"));
+	btn->setMaximumSize(100, 40);
+	_btBtn = btn;
+
 	auto btnLayout = new QHBoxLayout;
+	btnLayout->addWidget(_btBtn, Qt::AlignLeft);
 	btnLayout->addStretch();
-	btnLayout->addWidget(btn, Qt::AlignRight);
+	btnLayout->addWidget(_dnBtn, Qt::AlignRight);
 
 	_layout->addSpacing(20);
 	_layout->addWidget(_edit);
@@ -64,4 +83,5 @@ void URILinkWgt::createWidgets()
 	setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px;}");
 
 	connect(_dnBtn, &QPushButton::clicked, this, &URILinkWgt::downloadSlt);
+	connect(_btBtn, &QPushButton::clicked, this, &URILinkWgt::addBtSlt);
 }

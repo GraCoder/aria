@@ -15,12 +15,16 @@ public:
 
 	void downloadSlt();
 
+	void uriChangedSlt();
+
+	void addBtSlt();
 protected:
 	void createWidgets();
+
 private:
 	QPlainTextEdit *_edit;
 
-	QPushButton *_dnBtn;
+	QPushButton *_dnBtn, *_btBtn;
 };
 
 #endif // URILINK_H
