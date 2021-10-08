@@ -1,5 +1,6 @@
 #include "ariaListWgt.h"
 
+#include <QScrollBar>
 #include <QPainter>
 #include <QFileIconProvider>
 #include <QLocale>
@@ -213,6 +214,8 @@ AriaListWidget::AriaListWidget(AriListViewType type)
 
 	setMouseTracking(true);
 	setStyleSheet("QListView{border:none;}");
+	//verticalScrollBar()->hide();
+	verticalScrollBar()->setStyleSheet("QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical { border: none; background: none; color: none; }");
 }
 
 void AriaListWidget::addTaskSlt(uint64_t aid, QString name)
@@ -238,6 +241,7 @@ void AriaListWidget::updateTaskSlt(uint64_t aid, TaskInfo tskInfo)
 	listmodel->_taskInfos[aid] = tskInfo;
 	auto idx = listmodel->createIndex(listmodel->_tasks.indexOf(aid), 0);
 	listmodel->dataChanged(idx, idx);
+	update();
 }
 
 void AriaListWidget::removeTaskSlt(uint64_t aid)
