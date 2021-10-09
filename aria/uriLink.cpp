@@ -3,13 +3,13 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QListWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
 
 URILinkWgt::URILinkWgt(const QString &url)
 {
-	setMinimumSize(600, 400);
 	createWidgets();
 	_edit->setPlainText(url);
 
@@ -47,7 +47,40 @@ void URILinkWgt::downloadSlt()
 
 void URILinkWgt::uriChangedSlt()
 {
+	auto text = _edit->toPlainText();
+	auto uris = text.split('\n');
+	if(uris.empty()){
+		_downList->setVisible(false);
+		setMinimumHeight(300);
+		return;
+	}
+	QSet<QUrl> currentUrls;
+	for(auto iter = _items.begin(); iter != _items.end(); iter++)
+		currentUrls.insert(iter.key());
 
+	QSet<QUrl> newUrls;
+	for(auto &uri : uris){
+		QUrl quri(uri);
+		if( quri.isValid())
+			newUrls.insert(quri);
+	}
+	if(currentUrls == newUrls)
+		return;
+
+	_downList->clear();
+
+	for(auto &uri : uris) {
+		QUrl quri(uri, QUrl::StrictMode);
+		if(quri.isValid()){
+			auto item = new QListWidgetItem(uri);
+			item->setCheckState(Qt::Unchecked);
+			_items.insert(quri, item);
+			_downList->addItem(item);
+		}
+	}
+
+	_downList->setVisible(true);
+	setMinimumHeight(500);
 }
 
 void URILinkWgt::addBtSlt()
@@ -59,14 +92,20 @@ void URILinkWgt::createWidgets()
 {
 	setTitle("new link task");
 
+	setFixedWidth(500);
+	setMinimumHeight(300);
+
 	_edit = new QPlainTextEdit;
 	auto btn = new QPushButton(tr("download"));
-	btn->setMaximumSize(100, 40);
-	btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+	_downList = new QListWidget;
+	_downList->setVisible(false);
+
+	btn->setMaximumWidth(100);
 	_dnBtn = btn;
 
 	btn = new QPushButton(tr("bt"));
-	btn->setMaximumSize(100, 40);
+	btn->setMaximumWidth(100);
 	_btBtn = btn;
 
 	auto btnLayout = new QHBoxLayout;
@@ -75,8 +114,9 @@ void URILinkWgt::createWidgets()
 	btnLayout->addWidget(_dnBtn, Qt::AlignRight);
 
 	_layout->addSpacing(20);
-	_layout->addWidget(_edit);
-	_layout->addSpacing(20);
+	_layout->addWidget(_edit, 10);
+	_layout->addWidget(_downList, 6);
+	_layout->addStretch(1);
 	_layout->addLayout(btnLayout);
 	_layout->addSpacing(20);
 

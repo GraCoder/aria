@@ -215,7 +215,23 @@ AriaListWidget::AriaListWidget(AriListViewType type)
 	setMouseTracking(true);
 	setStyleSheet("QListView{border:none;}");
 	//verticalScrollBar()->hide();
-	verticalScrollBar()->setStyleSheet("QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical { border: none; background: none; color: none; }");
+	verticalScrollBar()->setStyleSheet( R"(QScrollBar:vertical {
+					   border: none;
+					   background: white;
+					   width: 10px;
+					  }
+					  QScrollBar::handle:vertical{
+					   background: #4e72b8;
+					  }
+					  QScrollBar::add-line:vertical{
+					   width: 10px;
+					   height: 0px;
+					  }
+
+					  QScrollBar::sub-line:vertical{
+					   width: 10px;
+					   height: 0px;
+					  })");
 }
 
 void AriaListWidget::addTaskSlt(uint64_t aid, QString name)

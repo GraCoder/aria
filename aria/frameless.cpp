@@ -37,7 +37,8 @@ FramelessFrame::FramelessFrame(QBoxLayout::Direction dir, QWidget *par)
 	wgt->setStyleSheet("QLabel{background-color: rgba(255, 255, 255, 255);}");
 	layout->addWidget(wgt);
 
-	_layout = new QBoxLayout(dir, wgt);
+	_layout = new QBoxLayout(dir);
+	wgt->setLayout(_layout);
 
 	ensurePolished();
 }
@@ -105,7 +106,6 @@ bool FramelessFrame::nativeEvent(const QByteArray &eventType, void *message, lon
 FramelessDlg::FramelessDlg(QBoxLayout::Direction dir, QWidget *par)
 	: FramelessFrame(dir, par)
 {
-	setMinimumSize(400, 250);
 	auto btn = new AriaSysButton(":/aria/icons/application-exit.svg");
 	connect(btn, &QAbstractButton::clicked, this, &FramelessDlg::close);
 
@@ -115,6 +115,7 @@ FramelessDlg::FramelessDlg(QBoxLayout::Direction dir, QWidget *par)
 	_sysLayout = layout;
 
 	_layout->addLayout(layout);
+	_layout->addStretch();
 }
 
 FramelessDlg::~FramelessDlg()

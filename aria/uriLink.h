@@ -5,7 +5,11 @@
 
 #include "taskInfo.h"
 
+#include <QMap>
+
 class QPlainTextEdit;
+class QListWidget;
+class QListWidgetItem;
 
 class URILinkWgt : public FramelessDlg{
 public:
@@ -22,9 +26,12 @@ protected:
 	void createWidgets();
 
 private:
-	QPlainTextEdit *_edit;
+	QPlainTextEdit 	*_edit;
+	QListWidget 	*_downList;
 
 	QPushButton *_dnBtn, *_btBtn;
+
+	QMap<QUrl, QListWidgetItem*> _items;
 };
 
 #endif // URILINK_H
