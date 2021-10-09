@@ -271,7 +271,6 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 	tskInfo.state = dh->getStatus();
 	tskInfo.picNums = dh->getNumPieces();
 	tskInfo.picLength = dh->getPieceLength();
-	auto xx = dh->getOptions();
 	deleteDownloadHandle(dh);
 
 	return tskInfo;
@@ -321,7 +320,7 @@ void AriaDlg::initAria()
 		opTmps["min-split-size"]= "4M";
 		opTmps["piece-length"]= "1M";
 		opTmps["allow-piece-length-change"]= "true";
-		opTmps["max-overall-download-limit"] = "1024K";
+		opTmps["max-overall-download-limit"] = "1248K";
 //		opTmps["max-download-limit"] = "10k";
 		opTmps["optimize-concurrent-downloads"] = "false";
 //		opTmps[""]= "";

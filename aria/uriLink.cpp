@@ -4,9 +4,12 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QListWidget>
+#include <QTableWidget>
+#include <QHeaderView>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
+#include <regex>
 
 URILinkWgt::URILinkWgt(const QString &url)
 {
@@ -50,7 +53,6 @@ void URILinkWgt::uriChangedSlt()
 	auto text = _edit->toPlainText();
 	auto uris = text.split('\n');
 	if(uris.empty()){
-		_downList->setVisible(false);
 		setMinimumHeight(300);
 		return;
 	}
@@ -58,10 +60,26 @@ void URILinkWgt::uriChangedSlt()
 	for(auto iter = _items.begin(); iter != _items.end(); iter++)
 		currentUrls.insert(iter.key());
 
+	auto validUrl = [](QUrl &url)->bool{
+		if(!url.isValid())
+			return false;
+		auto p = url.path();
+		if(p == "http" || p == "https")
+			return false;
+		std::regex url_regex (
+		  R"(^(([^:\/?#]+):)?(//([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
+		  std::regex::extended );
+		std::smatch regex_result;
+		std::string spath = p.toStdString();
+		if(!std::regex_match(spath, regex_result, url_regex))
+			return false;
+		return true;
+	};
+
 	QSet<QUrl> newUrls;
 	for(auto &uri : uris){
 		QUrl quri(uri);
-		if( quri.isValid())
+		if(validUrl(quri))
 			newUrls.insert(quri);
 	}
 	if(currentUrls == newUrls)
@@ -69,17 +87,15 @@ void URILinkWgt::uriChangedSlt()
 
 	_downList->clear();
 
-	for(auto &uri : uris) {
-		QUrl quri(uri, QUrl::StrictMode);
-		if(quri.isValid()){
-			auto item = new QListWidgetItem(uri);
-			item->setCheckState(Qt::Unchecked);
-			_items.insert(quri, item);
-			_downList->addItem(item);
-		}
+	int count = 0;
+	for(auto &uri : newUrls) {
+		_downList->setRowCount(count + 1);
+		auto item = new QTableWidgetItem(uri.fileName());
+		item->setCheckState(Qt::Checked);
+		_items.insert(uri, item);
+		_downList->setItem(count, 0, item);
 	}
 
-	_downList->setVisible(true);
 	setMinimumHeight(500);
 }
 
@@ -98,8 +114,12 @@ void URILinkWgt::createWidgets()
 	_edit = new QPlainTextEdit;
 	auto btn = new QPushButton(tr("download"));
 
-	_downList = new QListWidget;
-	_downList->setVisible(false);
+	_downList = new QTableWidget;
+	_downList->setColumnCount(3);
+	QStringList headrs; headrs << tr("name") << tr("size") << tr("type");
+	_downList->setHorizontalHeaderLabels(headrs);
+	_downList->setColumnWidth(0, 200);
+	_downList->horizontalHeader()->stretchLastSection();
 
 	btn->setMaximumWidth(100);
 	_dnBtn = btn;

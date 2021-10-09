@@ -8,8 +8,8 @@
 #include <QMap>
 
 class QPlainTextEdit;
-class QListWidget;
-class QListWidgetItem;
+class QTableWidget;
+class QTableWidgetItem;
 
 class URILinkWgt : public FramelessDlg{
 public:
@@ -27,11 +27,11 @@ protected:
 
 private:
 	QPlainTextEdit 	*_edit;
-	QListWidget 	*_downList;
+	QTableWidget 	*_downList;
 
 	QPushButton *_dnBtn, *_btBtn;
 
-	QMap<QUrl, QListWidgetItem*> _items;
+	QMap<QUrl, QTableWidgetItem*> _items;
 };
 
 #endif // URILINK_H

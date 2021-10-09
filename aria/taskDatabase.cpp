@@ -1,7 +1,8 @@
 #include "taskDatabase.h"
 
-#include <sqlite3.h>
 #include <QDateTime>
+#include <sqlite3.h>
+#include <filesystem>
 
 #include "ariaUi.h"
 #include "ariaListWgt.h"
@@ -133,10 +134,10 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfo &taskInfo)
 
 	}
 
-
+	std::filesystem::path lpath(filepath);
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-	const char lang[] = "update task_table set state=%d, total_size=%lld, end_time='%s', local_path='%s' where id=%lld;";
-	sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), filepath.c_str(), id);
+	const char lang[] = "update task_table set name=%s, state=%d, total_size=%lld, end_time='%s', local_path='%s' where id=%lld;";
+	sprintf(exeLang, lang, lpath.filename().c_str(), taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), filepath.c_str(), id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 

@@ -257,7 +257,6 @@ void AriaListWidget::updateTaskSlt(uint64_t aid, TaskInfo tskInfo)
 	listmodel->_taskInfos[aid] = tskInfo;
 	auto idx = listmodel->createIndex(listmodel->_tasks.indexOf(aid), 0);
 	listmodel->dataChanged(idx, idx);
-	update();
 }
 
 void AriaListWidget::removeTaskSlt(uint64_t aid)
