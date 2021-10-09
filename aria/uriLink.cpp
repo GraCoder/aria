@@ -53,6 +53,7 @@ void URILinkWgt::uriChangedSlt()
 	auto text = _edit->toPlainText();
 	auto uris = text.split('\n');
 	if(uris.empty()){
+		_downList->hide();
 		setMinimumHeight(300);
 		return;
 	}
@@ -97,6 +98,7 @@ void URILinkWgt::uriChangedSlt()
 	}
 
 	setMinimumHeight(500);
+	_downList->show();
 }
 
 void URILinkWgt::addBtSlt()
@@ -116,10 +118,11 @@ void URILinkWgt::createWidgets()
 
 	_downList = new QTableWidget;
 	_downList->setColumnCount(3);
-	QStringList headrs; headrs << tr("name") << tr("size") << tr("type");
-	_downList->setHorizontalHeaderLabels(headrs);
 	_downList->setColumnWidth(0, 200);
 	_downList->horizontalHeader()->stretchLastSection();
+	_downList->hide();
+	QStringList headrs; headrs << tr("name") << tr("size") << tr("type");
+	_downList->setHorizontalHeaderLabels(headrs);
 
 	btn->setMaximumWidth(100);
 	_dnBtn = btn;
