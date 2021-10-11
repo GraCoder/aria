@@ -13,6 +13,7 @@
 
 class QListWidget;
 class QListWidgetItem;
+class QSystemTrayIcon;
 class AriaListWidget;
 class TaskDatabase;
 
@@ -67,8 +68,11 @@ public:
 	AriaListWidget* getTrashWgt();
 
 	QWidget* 	createToolBar();
-
 	QWidget* 	createStatusBar();
+	void		createTrayIcon();
+
+	void		showSlt(int);
+	void 		quitSlt();
 
 	void 		addUri(QString url = nullptr, QString cookie = nullptr);
 	void 		addUriTask(std::unique_ptr<UriTask> &);
@@ -97,6 +101,8 @@ private:
 	void 		test();
 private:
 	AriaListWidget *_dnWidget, *_cmWidget, *_trWidget;
+
+	QSystemTrayIcon *_trayIcon;
 
 	bool 			_threadRunning;
 	std::thread 	_thread;

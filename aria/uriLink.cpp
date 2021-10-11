@@ -18,9 +18,9 @@
 URILinkWgt::URILinkWgt(const QString &url)
 {
 	createWidgets();
-	_edit->setPlainText(url);
-
 	connect(_edit, &QPlainTextEdit::textChanged, this, &URILinkWgt::uriChangedSlt);
+
+	_edit->setPlainText(url);
 }
 
 std::vector<std::unique_ptr<UriTask> >
@@ -28,17 +28,16 @@ URILinkWgt::getTasks()
 {
 	std::vector<std::unique_ptr<UriTask> > ret;
 
-	auto text = _edit->toPlainText();
-	auto uris = text.split('\n');
-	auto tsk = std::make_unique<UriTask>();
-	for(auto &uri : uris)
+	for(int i = 0; i < _downList->rowCount(); i++)
 	{
-		tsk->url = uri.toStdString();
-		tsk->name = QUrl(uri).fileName().toStdString();
+		auto item = _downList->item(i, 0);
+		auto tsk = std::make_unique<UriTask>();
+		tsk->url = item->data(Qt::UserRole).toUrl().toString().toStdString();
+		tsk->name = item->text().toStdString();
+		tsk->type = 1;
+		ret.push_back(std::move(tsk));
 	}
 
-	tsk->type = 1;
-	ret.push_back(std::move(tsk));
 	return ret;
 }
 
@@ -55,10 +54,6 @@ void URILinkWgt::uriChangedSlt()
 		return;
 	}
 	auto uris = text.split('\n');
-	QSet<QUrl> currentUrls;
-	for(auto iter = _items.begin(); iter != _items.end(); iter++)
-		currentUrls.insert(iter.key());
-
 	auto validUrl = [](QUrl &url)->bool{
 		if(!url.isValid())
 			return false;
@@ -77,25 +72,43 @@ void URILinkWgt::uriChangedSlt()
 		return true;
 	};
 
-	QSet<QUrl> newUrls;
-	for(auto &uri : uris){
-		QUrl quri(uri);
+	QMap<QUrl, int> newUrls;
+	for(int i = 0; i < uris.size(); i++){
+		QUrl quri(uris[i]);
 		if(validUrl(quri))
-			newUrls.insert(quri);
+			newUrls.insert(quri, i);
 	}
-	if(currentUrls == newUrls)
-		return;
 
-	_downList->clear();
+	for(int i = 0; i < _downList->rowCount(); i++)
+	{
+		auto url = _downList->item(i, 0)->data(Qt::UserRole).toUrl();
+		if(newUrls.contains(url))
+			newUrls.remove(url);
+		else{
+			_downList->removeRow(i);
+			i--;
+		}
+	}
+	QMap<int, QUrl> resultUrls;
+	for(auto iter = newUrls.begin(); iter!=newUrls.end(); iter++)
+		resultUrls.insert(iter.value(), iter.key());
 
-	int count = 0;
-	for(auto &uri : newUrls) {
-		_downList->setRowCount(count + 1);
-		auto item = new QTableWidgetItem(uri.fileName());
+	for(auto iter = resultUrls.begin(); iter != resultUrls.end(); iter++) {
+		int pos = iter.key();
+		_downList->insertRow(pos);
+		auto item = new QTableWidgetItem(iter.value().fileName());
 		item->setCheckState(Qt::Checked);
+		item->setFlags(item->flags() & ~Qt::ItemIsSelectable);
+		item->setData(Qt::UserRole, iter.value());
+		_downList->setItem(pos, 0, item);
+
+		item = new QTableWidgetItem("0");
 		item->setFlags(Qt::NoItemFlags);
-		_items.insert(uri, item);
-		_downList->setItem(count, 0, item);
+		_downList->setItem(pos, 1, item);
+
+		item = new QTableWidgetItem("0");
+		item->setFlags(Qt::NoItemFlags);
+		_downList->setItem(pos, 2, item);
 	}
 	showDownloads();
 }
@@ -110,7 +123,7 @@ void URILinkWgt::downloadDirSlt()
 	auto dir = QFileDialog::getExistingDirectory();
 	if(dir.isEmpty())
 	{
-		auto dir = QString::fromStdString(ariaSetting::instance().downloadPath());
+		dir = QString::fromStdString(ariaSetting::instance().downloadPath());
 	}
 	_downdir->setText(dir);
 }
@@ -126,11 +139,10 @@ void URILinkWgt::createWidgets()
 
 	_downList = new QTableWidget;
 	_downList->setColumnCount(3);
-	_downList->setColumnWidth(0, 250);
 	_downList->horizontalHeader()->setStretchLastSection(true);
 	_downList->verticalHeader()->hide();
-	_downList->setSelectionMode(QAbstractItemView::NoSelection);
 	_downList->setSelectionBehavior(QAbstractItemView::SelectRows);
+	_downList->setFocusPolicy(Qt::NoFocus);
 
 	_downdir = new QLineEdit;
 	_dnDirBtn = new QPushButton(QIcon(":/aria/icons/xx/folder.png"), "");

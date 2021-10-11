@@ -8,8 +8,10 @@
 #include <QListWidgetItem>
 #include <QCoreApplication>
 #include <QToolButton>
+#include <QMenu>
 #include <QFile>
 #include <QStackedWidget>
+#include <QSystemTrayIcon>
 
 #include "ariaSys.h"
 #include "ariaPanel.h"
@@ -109,6 +111,7 @@ AriaDlg::AriaDlg()
 	mainLayout->addWidget(stackWgt, 10);
 	mainLayout->addWidget(createStatusBar());
 	_layout->addLayout(mainLayout);
+	createTrayIcon();
 
 	initAria();
 	_emitter = new Emitter;
@@ -202,6 +205,28 @@ QWidget *AriaDlg::createStatusBar()
 {
 	auto bar = new QStatusBar;
 	return bar;
+}
+
+void AriaDlg::createTrayIcon()
+{
+	_trayIcon = new QSystemTrayIcon(QIcon(":/aria/icons/qbittorrent.ico"));
+	_trayIcon->show();
+
+	auto menu = _trayIcon->contextMenu();
+	menu->addAction(tr("quit"), this, &AriaDlg::quitSlt);
+
+	connect(_trayIcon, &QSystemTrayIcon::activated, this, &AriaDlg::showSlt);
+}
+
+void AriaDlg::showSlt(int ret)
+{
+	if(ret == QSystemTrayIcon::DoubleClick)
+		show();
+}
+
+void AriaDlg::quitSlt()
+{
+	QCoreApplication::quit();
 }
 
 void AriaDlg::addUri(const QString url, const QString cookie)
@@ -312,9 +337,10 @@ void AriaDlg::download()
 		//if(ret)
 		{
 			auto curr = std::chrono::system_clock().now();
-			auto sec = std::chrono::duration_cast<std::chrono::seconds>(curr - prev);
-			if(sec < std::chrono::seconds(3))
-				continue;
+			auto sec = std::chrono::duration_cast<std::chrono::milliseconds>(curr - prev);
+			if(sec.count() < 2000)
+				std::this_thread::sleep_for(std::chrono::milliseconds(2000) - sec);
+			prev = std::chrono::system_clock().now();
 			auto tks = getActiveDownload(_session);
 			for(int i = 0; i < tks.size(); i++) {
 				updateTask(tks[i]);
