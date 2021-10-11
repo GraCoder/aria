@@ -37,6 +37,7 @@ set(hdr
 	taskDatabase.h
 	singleapplication.h
 	singleapplication_p.h
+	ariaSetting.h
 )
 
 set(src
@@ -53,6 +54,7 @@ set(src
 	taskDatabase.cpp
 	singleapplication.cpp
 	singleapplication_p.cpp
+	ariaSetting.cpp
 )
 
 add_executable(${app_name} WIN32 ${hdr} ${src} ${mocfiles} ${httpserver})

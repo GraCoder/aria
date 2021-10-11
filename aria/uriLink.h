@@ -7,6 +7,7 @@
 
 #include <QMap>
 
+class QLineEdit;
 class QPlainTextEdit;
 class QTableWidget;
 class QTableWidgetItem;
@@ -22,14 +23,19 @@ public:
 	void uriChangedSlt();
 
 	void addBtSlt();
+
+	void downloadDirSlt();
 protected:
 	void createWidgets();
 
+	void showDownloads();
+
+	void hideDownloads();
 private:
 	QPlainTextEdit 	*_edit;
 	QTableWidget 	*_downList;
-
-	QPushButton *_dnBtn, *_btBtn;
+	QLineEdit		*_downdir;
+	QPushButton *_dnBtn, *_btBtn, *_dnDirBtn;
 
 	QMap<QUrl, QTableWidgetItem*> _items;
 };

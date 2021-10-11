@@ -16,6 +16,7 @@
 #include "uriLink.h"
 #include "ariaListWgt.h"
 #include "taskDatabase.h"
+#include "ariaSetting.h"
 
 int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 			  aria2::A2Gid gid, void* userData)
@@ -280,56 +281,9 @@ void AriaDlg::initAria()
 {
 	aria2::libraryInit();
 
-	using namespace aria2;
+	using namespace aria2;	
 
-	std::map<std::string, std::string> opTmps;
-	{
-		opTmps["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-				AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52";
-				opTmps["dir"] = "d:/thunder";
-		opTmps["disable-ipv6"] = "true";
-		opTmps["check-certificate"] = "false";
-		opTmps["disk-cache"] = "64M";
-		opTmps["no-file-allocation-limit"] = "64M";
-		opTmps["continue"] = "true";
-		opTmps["remote-time"] = "true";
-
-		{
-			auto path = QCoreApplication::applicationDirPath();
-			path += "/aria.session";
-			QFile file(path);
-			if(!file.exists())
-			{
-				file.open(QIODevice::WriteOnly);
-				file.close();
-			}
-			opTmps["input-file"]= path.toStdString();
-			opTmps["save-session"]= path.toStdString();
-		}
-
-		opTmps["save-session-interval"]= "1";
-		opTmps["auto-save-interval"]= "20";
-
-		opTmps["max-concurrent-downloads"]= "5";
-		opTmps["max-file-not-found"]= "10";
-		opTmps["max-tries"]= "5";
-		opTmps["retry-wait"]= "10";
-		opTmps["connect-timeout"]= "10";
-		opTmps["timeout"]= "10";
-		opTmps["split"]= "64";
-		opTmps["min-split-size"]= "4M";
-		opTmps["piece-length"]= "1M";
-		opTmps["allow-piece-length-change"]= "true";
-		opTmps["max-overall-download-limit"] = "1248K";
-//		opTmps["max-download-limit"] = "10k";
-		opTmps["optimize-concurrent-downloads"] = "false";
-//		opTmps[""]= "";
-//		opTmps[""]= "";
-//		opTmps[""]= "";
-//		opTmps[""]= "";
-//		opTmps[""]= "";
-	}
-
+	auto &opTmps = ariaSetting::instance().setting();
 	KeyVals options;
 	for(auto &iter : opTmps)
 		options.push_back(std::make_pair(iter.first, iter.second));

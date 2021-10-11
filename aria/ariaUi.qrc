@@ -129,5 +129,6 @@
         <file>icons/xx/pause.png</file>
         <file>icons/xx/delete.svg</file>
         <file>icons/xx/waiting.svg</file>
+        <file>icons/xx/folder.png</file>
     </qresource>
 </RCC>
