@@ -10,6 +10,7 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QFile>
+#include <QFileInfo>
 #include <QStackedWidget>
 #include <QSystemTrayIcon>
 
@@ -212,7 +213,8 @@ void AriaDlg::createTrayIcon()
 	_trayIcon = new QSystemTrayIcon(QIcon(":/aria/icons/qbittorrent.ico"));
 	_trayIcon->show();
 
-	auto menu = _trayIcon->contextMenu();
+	auto menu = new QMenu;
+	_trayIcon->setContextMenu(menu);
 	menu->addAction(tr("quit"), this, &AriaDlg::quitSlt);
 
 	connect(_trayIcon, &QSystemTrayIcon::activated, this, &AriaDlg::showSlt);
@@ -243,7 +245,7 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 		addUriTask(tsk);
 }
 
-void AriaDlg::addUriTask(std::unique_ptr<UriTask> &tsk)
+void AriaDlg::addUriTask(std::unique_ptr<Task> &tsk)
 {
 	auto rid = _database->findTask(tsk.get());
 	if(rid == 0)
@@ -368,7 +370,14 @@ void AriaDlg::mergeTask()
 				ret = aria2::addUri(_session, &gid, url, tmpOpt);
 				name = QString::fromStdString(ptask->name);
 				getTaskInfo(gid);
-				_database->downloadTask(ptask->rid, gid);
+				break;
+			}
+			case 2:
+			{
+				auto ptask = static_cast<BtTask*>(tsk.get());
+				KeyVals tmpOpt;
+				ret = aria2::addTorrent(_session, &gid, ptask->torrent, tmpOpt);
+				name = QString::fromStdString(ptask->name);
 				break;
 			}
 			default:
@@ -376,7 +385,7 @@ void AriaDlg::mergeTask()
 			}
 			if(ret == 0)
 			{
-				addTask(gid, name);
+				addTask(gid, name, tsk.get());
 			}
 			else
 			{
@@ -395,8 +404,9 @@ void AriaDlg::errorTask(aria2::A2Gid id)
 	aria2::deleteDownloadHandle(dh);
 }
 
-void AriaDlg::addTask(aria2::A2Gid id, const QString &name)
+void AriaDlg::addTask(aria2::A2Gid id, const QString &name, Task *tsk)
 {
+	_database->downloadTask(tsk->rid, id);
 	_emitter->addTaskSig(id, name);
 }
 

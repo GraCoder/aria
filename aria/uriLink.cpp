@@ -10,6 +10,7 @@
 #include <QHeaderView>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QFileInfo>
 
 #include <regex>
 
@@ -23,10 +24,10 @@ URILinkWgt::URILinkWgt(const QString &url)
 	_edit->setPlainText(url);
 }
 
-std::vector<std::unique_ptr<UriTask> >
+std::vector<std::unique_ptr<Task> >
 URILinkWgt::getTasks()
 {
-	std::vector<std::unique_ptr<UriTask> > ret;
+	std::vector<std::unique_ptr<Task> > ret;
 
 	for(int i = 0; i < _downList->rowCount(); i++)
 	{
@@ -35,6 +36,15 @@ URILinkWgt::getTasks()
 		tsk->url = item->data(Qt::UserRole).toUrl().toString().toStdString();
 		tsk->name = item->text().toStdString();
 		tsk->type = 1;
+		ret.push_back(std::move(tsk));
+	}
+
+	for(int i = 0; i < _btFiles.size(); i++)
+	{
+		auto tsk = std::make_unique<BtTask>();
+		tsk->torrent = _btFiles[i].toStdString();
+		tsk->name = QFileInfo(_btFiles[i]).fileName().toStdString();
+		tsk->type = 2;
 		ret.push_back(std::move(tsk));
 	}
 
@@ -115,7 +125,13 @@ void URILinkWgt::uriChangedSlt()
 
 void URILinkWgt::addBtSlt()
 {
-	QFileDialog::getOpenFileNames(this, tr("open torrent files."), "", "Torrent (*.torrent)");
+	auto files = QFileDialog::getOpenFileNames(this, tr("open torrent files."), "", "Torrent (*.torrent)");
+	if(files.isEmpty())
+		return;
+
+	_btFiles = files;
+
+	accept();
 }
 
 void URILinkWgt::downloadDirSlt()

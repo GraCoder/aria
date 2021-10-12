@@ -12,3 +12,8 @@ std::string UriTask::getUri()
 
 
 
+
+std::string BtTask::getUri()
+{
+	return torrent;
+}

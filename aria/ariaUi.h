@@ -75,7 +75,7 @@ public:
 	void 		quitSlt();
 
 	void 		addUri(QString url = nullptr, QString cookie = nullptr);
-	void 		addUriTask(std::unique_ptr<UriTask> &);
+	void 		addUriTask(std::unique_ptr<Task> &);
 
 	void		startSelected();
 	void 		pauseSelected();
@@ -94,7 +94,7 @@ private:
 	void 		mergeTask();
 	void 		errorTask(aria2::A2Gid);
 
-	void 		addTask(aria2::A2Gid, const QString &name);
+	void 		addTask(aria2::A2Gid, const QString &name, Task *);
 	void 		updateTask(aria2::A2Gid);
 	void 		completeTask(aria2::A2Gid);
 

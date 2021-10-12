@@ -16,7 +16,7 @@ class URILinkWgt : public FramelessDlg{
 public:
 	URILinkWgt(const QString &url);
 
-	std::vector<std::unique_ptr<UriTask>> getTasks();
+	std::vector<std::unique_ptr<Task>> getTasks();
 
 	void downloadSlt();
 
@@ -37,7 +37,7 @@ private:
 	QLineEdit		*_downdir;
 	QPushButton *_dnBtn, *_btBtn, *_dnDirBtn;
 
-	QMap<QUrl, QTableWidgetItem*> _items;
+	QList<QString>  _btFiles;
 };
 
 #endif // URILINK_H

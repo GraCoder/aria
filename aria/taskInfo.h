@@ -66,6 +66,10 @@ struct UriTask : public Task{
 	std::string getUri();
 };
 
+struct BtTask : public Task{
+	std::string torrent;
 
+	std::string getUri();
+};
 
 #endif // TASKINFO_H
