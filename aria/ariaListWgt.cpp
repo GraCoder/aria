@@ -14,9 +14,9 @@
 const int dnheight = 80;
 const int hfheight = dnheight / 5.0 * 2;
 
-void AriaListDelegate::setSize(const QSize &)
+void AriaListDelegate::setSize(const QSize &size)
 {
-
+	_btnRect = QRect(size.width() - dnheight, 10, hfheight - 10, hfheight - 10);
 }
 
 QSize AriaListDelegate::sizeHint(const QStyleOptionViewItem &opt, const QModelIndex &index) const
@@ -174,6 +174,14 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 		texRect.translate(0, hfheight);
 		auto filesize = opt.locale.formattedDataSize(info.size, 2, opt.locale.DataSizeTraditionalFormat);
 		painter->drawText(texRect, filesize, texOpt);
+	}
+
+	{
+		QRect pixRect = _btnRect.translated(0, opt.rect.top());
+		QPixmap icon;
+		if(wgt->type() == COMPLETED )
+			icon = QPixmap(":/aria/icons/xx/folder.png");
+		painter->drawPixmap(pixRect, icon, icon.rect());
 	}
 }
 
@@ -337,10 +345,10 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 	Base::mousePressEvent(ev);
 
 	auto pt = ev->pos();
+	auto dngate = dynamic_cast<AriaListDelegate*>(itemDelegate());
+	int i = pt.y() / dnheight;
+	int y = pt.y() % dnheight;
 	if(_type == DOWNLOADING) {
-		auto dngate = dynamic_cast<DownloadDelegate*>(itemDelegate());
-		int i = pt.y() / dnheight;
-		int y = pt.y() % dnheight;
 		if(dngate->_btnRect.contains(pt.x(), y))
 		{
 			auto gid = ((AriaDownloadListModel*)model())->_tasks[i];
@@ -348,7 +356,10 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 		}
 	}
 	else if(_type == COMPLETED) {
-
+		if(dngate->_btnRect.contains(pt.x(), y));
+		{
+			printf("");
+		}
 	}
 	else{
 

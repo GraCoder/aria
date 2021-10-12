@@ -44,7 +44,6 @@ struct TaskInfo{
 struct FinishTaskInfo{
 	uint64_t id;
 	QString name;
-
 	int64_t size;
 	QString datetime;
 	QString localPath;
@@ -55,6 +54,8 @@ struct Task{
 	int state;
 	uint64_t rid;
 	std::string name;
+
+	aria2::KeyVals opt;
 
 	virtual std::string getUri() = 0;
 };

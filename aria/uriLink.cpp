@@ -36,6 +36,10 @@ URILinkWgt::getTasks()
 		tsk->url = item->data(Qt::UserRole).toUrl().toString().toStdString();
 		tsk->name = item->text().toStdString();
 		tsk->type = 1;
+
+		{
+			tsk->opt.push_back(std::make_pair("dir", _downdir->text().toStdString()));
+		}
 		ret.push_back(std::move(tsk));
 	}
 
@@ -45,6 +49,9 @@ URILinkWgt::getTasks()
 		tsk->torrent = _btFiles[i].toStdString();
 		tsk->name = QFileInfo(_btFiles[i]).fileName().toStdString();
 		tsk->type = 2;
+		{
+			tsk->opt.push_back(std::make_pair("dir", _downdir->text().toStdString()));
+		}
 		ret.push_back(std::move(tsk));
 	}
 

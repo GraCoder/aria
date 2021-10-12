@@ -11,10 +11,14 @@ enum AriListViewType{
 };
 
 class AriaListDelegate: public QAbstractItemDelegate{
+	friend class AriaListWidget;
 public:
 	virtual void setSize(const QSize &);
 protected:
 	QSize sizeHint(const QStyleOptionViewItem &opt, const QModelIndex &index) const;
+
+protected:
+	QRect _btnRect;
 };
 
 //--------------------------------------------------------------------------------
@@ -29,8 +33,6 @@ protected:
 	void paint(QPainter *painter, const QStyleOptionViewItem &opt, const QModelIndex &index) const;
 
 	void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-private:
-	QRect _btnRect;
 };
 
 //--------------------------------------------------------------------------------
@@ -65,6 +67,7 @@ public:
 	typedef QListView Base;
 
 	AriaListWidget(AriListViewType type);
+	AriListViewType type() const {return _type;}
 
 	void 	addTaskSlt(uint64_t, QString);
 	void 	updateTaskSlt(uint64_t, TaskInfo);
