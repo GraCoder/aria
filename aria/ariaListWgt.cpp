@@ -7,6 +7,8 @@
 #include <QTime>
 #include <QResizeEvent>
 #include <QMouseEvent>
+#include <QDir>
+#include <QDesktopServices>
 
 #include "ariaUi.h"
 #include "taskDatabase.h"
@@ -356,13 +358,16 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 		}
 	}
 	else if(_type == COMPLETED) {
-		if(dngate->_btnRect.contains(pt.x(), y));
-		{
-			printf("");
-		}
+		if(dngate->_btnRect.contains(pt.x(), y))
+			return;
+		auto &taskInfo = ((AriaFinishListModel*)model())->_taskInfos[i];
+		QFileInfo fileInfo(taskInfo.localPath);
+		QString dir = fileInfo.absoluteDir().absolutePath();
+		QDesktopServices::openUrl(QUrl(dir));
 	}
 	else{
-
+		if(!dngate->_btnRect.contains(pt.x(), y))
+			return;
 	}
 }
 

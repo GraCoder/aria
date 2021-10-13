@@ -206,6 +206,7 @@ void TaskDatabase::addLocalTask(uint64_t id, int wgtType)
 		QDateTime dt = QDateTime::fromString((char *)tm);
 		FinishTaskInfo info; info.id = id;
 		info.name = name; info.size = sz;
+		info.localPath = QString((const char *)lp);
 		info.datetime = AriaDlg::getMainDlg()->locale().toString(dt);
 		if(wgtType == COMPLETED)
 		{
