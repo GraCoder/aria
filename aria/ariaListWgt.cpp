@@ -351,14 +351,13 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 	int i = pt.y() / dnheight;
 	int y = pt.y() % dnheight;
 	if(_type == DOWNLOADING) {
-		if(dngate->_btnRect.contains(pt.x(), y))
-		{
-			auto gid = ((AriaDownloadListModel*)model())->_tasks[i];
-			changeTaskState(gid);
-		}
+		if(!dngate->_btnRect.contains(pt.x(), y))
+			return;
+		auto gid = ((AriaDownloadListModel*)model())->_tasks[i];
+		changeTaskState(gid);
 	}
 	else if(_type == COMPLETED) {
-		if(dngate->_btnRect.contains(pt.x(), y))
+		if(!dngate->_btnRect.contains(pt.x(), y))
 			return;
 		auto &taskInfo = ((AriaFinishListModel*)model())->_taskInfos[i];
 		QFileInfo fileInfo(taskInfo.localPath);

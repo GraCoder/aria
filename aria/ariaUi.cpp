@@ -341,8 +341,8 @@ void AriaDlg::download()
 			auto curr = std::chrono::system_clock().now();
 			auto sec = std::chrono::duration_cast<std::chrono::milliseconds>(curr - prev);
 			if(sec.count() < 2000)
-				std::this_thread::sleep_for(std::chrono::milliseconds(2000) - sec);
-			prev = std::chrono::system_clock().now();
+				continue;
+			prev = curr;
 			auto tks = getActiveDownload(_session);
 			for(int i = 0; i < tks.size(); i++) {
 				updateTask(tks[i]);

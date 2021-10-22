@@ -6,13 +6,19 @@
 
 #include "ariaUi.h"
 #include "ariaListWgt.h"
+#include "ariaSetting.h"
 
 char exeLang[8192];
 
 TaskDatabase::TaskDatabase()
 {
 	_sql = nullptr;
+	auto appPath = ariaSetting::instance().appPath();
+#ifdef NDEBUG
+	sqlite3_open((appPath + "/aria.db").c_str(), &_sql);
+#else
 	sqlite3_open("d:/dev/aria/aria.db", &_sql);
+#endif
 }
 
 TaskDatabase::~TaskDatabase()
