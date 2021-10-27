@@ -37,6 +37,8 @@ void browserIntersect()
 
 int main(int argc, char**argv)
 {
+	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
 	SingleApplication app(argc, argv);
 
 	auto ft = qApp->font();

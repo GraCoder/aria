@@ -20,4 +20,5 @@ else()
 endif()
 
 add_subdirectory(aria)
+add_subdirectory(libaria)
 
