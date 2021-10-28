@@ -29,6 +29,7 @@ ariaSetting::ariaSetting()
 		_settings["input-file"]= path;
 		_settings["save-session"]= path;
 	}
+	_settings["log"] = "-";
 
 	_settings["save-session-interval"]= "1";
 	_settings["auto-save-interval"]= "20";

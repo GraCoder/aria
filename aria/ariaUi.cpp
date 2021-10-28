@@ -307,8 +307,11 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 void AriaDlg::initAria()
 {
 	aria2::libraryInit();
+}
 
-	using namespace aria2;	
+void AriaDlg::download()
+{
+	using namespace aria2;
 
 	auto &opTmps = ariaSetting::instance().setting();
 	KeyVals options;
@@ -316,16 +319,11 @@ void AriaDlg::initAria()
 		options.push_back(std::make_pair(iter.first, iter.second));
 
 	SessionConfig config;
-	config.keepRunning = true;
+	config.keepRunning = false;
 	config.downloadEventCallback = downloadEventCallback;
 	config.userData = this;
 	_session = sessionNew(options, config);
 	auto opts = getGlobalOptions(_session);
-}
-
-void AriaDlg::download()
-{
-	using namespace aria2;
 
 	auto prev = std::chrono::system_clock().now();
 
@@ -336,7 +334,7 @@ void AriaDlg::download()
 
 		int ret = run(_session, RUN_ONCE);
 
-		//if(ret)
+		if(ret)
 		{
 			auto curr = std::chrono::system_clock().now();
 			auto sec = std::chrono::duration_cast<std::chrono::milliseconds>(curr - prev);

@@ -9,7 +9,6 @@ file(GLOB hdrs *.h)
 
 file(GLOB srcs *.cc *.c)
 
-
 find_package(libXml2)
 
 add_library(${lib_name} SHARED ${srcs} ${hdrs})
