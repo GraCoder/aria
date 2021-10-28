@@ -3,7 +3,7 @@
 
 #include <QString>
 
-#include <aria2/aria2.h>
+#include "aria2/aria2.h"
 
 struct TaskInfo{
 	TaskInfo()

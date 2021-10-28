@@ -59,6 +59,8 @@ set(src
 
 add_executable(${app_name} WIN32 ${hdr} ${src} ${mocfiles} ${httpserver})
 
+target_include_directories(${app_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../libaria)
+
 target_link_directories(${app_name} PRIVATE ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/lib)
 
 set_target_properties(${app_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${app_name}>"
