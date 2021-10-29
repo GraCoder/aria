@@ -85,6 +85,7 @@ public:
 	TaskDatabase* 	getDatabase() {return _database;}
 
 	TaskInfo 	getTaskInfo(aria2::A2Gid);
+	TaskInfo	getTaskInfo(aria2::Session *session, aria2::A2Gid);
 signals:
 	void 		changeViewSig(int);
 private:
@@ -94,7 +95,7 @@ private:
 	void 		mergeTask();
 	void 		errorTask(aria2::A2Gid);
 
-	void 		addTask(aria2::A2Gid, const QString &name, Task *);
+	void 		addTask(aria2::A2Gid, Task *);
 	void 		updateTask(aria2::A2Gid);
 	void 		completeTask(aria2::A2Gid);
 

@@ -103,31 +103,31 @@ typedef std::vector<std::pair<std::string, std::string>> KeyVals;
  * Download event constants
  */
 enum DownloadEvent {
-  /**
+	/**
    * Indicating download has started.
    */
-  EVENT_ON_DOWNLOAD_START = 1,
-  /**
+	EVENT_ON_DOWNLOAD_START = 1,
+	/**
    * Indicating download has paused.
    */
-  EVENT_ON_DOWNLOAD_PAUSE,
-  /**
+	EVENT_ON_DOWNLOAD_PAUSE,
+	/**
    * Indicating download has stopped.
    */
-  EVENT_ON_DOWNLOAD_STOP,
-  /**
+	EVENT_ON_DOWNLOAD_STOP,
+	/**
    * Indicating download has completed.
    */
-  EVENT_ON_DOWNLOAD_COMPLETE,
-  /**
+	EVENT_ON_DOWNLOAD_COMPLETE,
+	/**
    * Indicating download has stopped because of the error.
    */
-  EVENT_ON_DOWNLOAD_ERROR,
-  /**
+	EVENT_ON_DOWNLOAD_ERROR,
+	/**
    * Indicating BitTorrent download has completed, but it may still
    * continue to perform seeding.
    */
-  EVENT_ON_BT_DOWNLOAD_COMPLETE
+	EVENT_ON_BT_DOWNLOAD_COMPLETE,
 };
 
 /**
@@ -143,7 +143,7 @@ enum DownloadEvent {
  * of this callback should return 0 for compatibility.
  */
 typedef int (*DownloadEventCallback)(Session* session, DownloadEvent event,
-                                     A2Gid gid, void* userData);
+									 A2Gid gid, void* userData);
 
 /**
  * @struct
@@ -151,19 +151,19 @@ typedef int (*DownloadEventCallback)(Session* session, DownloadEvent event,
  * The configuration for the session.
  */
 struct SessionConfig {
-  /**
+	/**
    * The constructor fills default values for all members.
    */
-  SessionConfig();
-  /**
+	SessionConfig();
+	/**
    * If the |keepRunning| member is true, ``run(session, RUN_ONCE)``
    * will return 1 even if there are no download to perform. The
    * behavior is very similar to RPC server, except that this option
    * does not enable RPC functionality. To stop aria2, use
    * :func:`shutdown()` function.  The default value is false.
    */
-  bool keepRunning;
-  /**
+	bool keepRunning;
+	/**
    * If the |useSignalHandler| is true, the library setups following
    * signal handlers in :func:`sessionNew()`. These signal handlers
    * are removed in :func:`sessionFinal()`. The default value is
@@ -180,18 +180,18 @@ struct SessionConfig {
    * ``SIGINT``:
    *   handled like shutdown(session, false) is called.
    */
-  bool useSignalHandler;
-  /**
+	bool useSignalHandler;
+	/**
    * Specify the callback function which will be invoked when download
    * event occurred. See :type:`DownloadEvent` about the download
    * event. The default value is ``NULL``.
    */
-  DownloadEventCallback downloadEventCallback;
-  /**
+	DownloadEventCallback downloadEventCallback;
+	/**
    * Pointer to user defined data. libaria2 treats this as opaque
    * pointer and will not free it. The default value is ``NULL``.
    */
-  void* userData;
+	void* userData;
 };
 
 /**
@@ -223,14 +223,14 @@ int sessionFinal(Session* session);
  * Execution mode for :func:`run()`
  */
 enum RUN_MODE {
-  /**
+	/**
    * :func:`run()` returns when no downloads are left.
    */
-  RUN_DEFAULT,
-  /**
+	RUN_DEFAULT,
+	/**
    * :func:`run()` returns after one event polling.
    */
-  RUN_ONCE
+	RUN_ONCE
 };
 
 /**
@@ -292,7 +292,7 @@ bool isNull(A2Gid gid);
  * returns 0 if it succeeds, or negative error code.
  */
 int addUri(Session* session, A2Gid* gid, const std::vector<std::string>& uris,
-           const KeyVals& options, int position = -1);
+		   const KeyVals& options, int position = -1);
 
 /**
  * @function
@@ -309,8 +309,8 @@ int addUri(Session* session, A2Gid* gid, const std::vector<std::string>& uris,
  * returns 0 if it succeeds, or negative error code.
  */
 int addMetalink(Session* session, std::vector<A2Gid>* gids,
-                const std::string& metalinkFile, const KeyVals& options,
-                int position = -1);
+				const std::string& metalinkFile, const KeyVals& options,
+				int position = -1);
 
 /**
  * @function
@@ -335,8 +335,8 @@ int addMetalink(Session* session, std::vector<A2Gid>* gids,
  *
  */
 int addTorrent(Session* session, A2Gid* gid, const std::string& torrentFile,
-               const std::vector<std::string>& webSeedUris,
-               const KeyVals& options, int position = -1);
+			   const std::vector<std::string>& webSeedUris,
+			   const KeyVals& options, int position = -1);
 
 /**
  * @function
@@ -345,7 +345,7 @@ int addTorrent(Session* session, A2Gid* gid, const std::string& torrentFile,
  * |webSeedUris|.
  */
 int addTorrent(Session* session, A2Gid* gid, const std::string& torrentFile,
-               const KeyVals& options, int position = -1);
+			   const KeyVals& options, int position = -1);
 
 /**
  * @function
@@ -483,26 +483,26 @@ int changeGlobalOption(Session* session, const KeyVals& options);
  * Global statistics of current aria2 session.
  */
 struct GlobalStat {
-  /**
+	/**
    * Overall download speed (byte/sec).
    */
-  int downloadSpeed;
-  /**
+	int downloadSpeed;
+	/**
    * Overall upload speed(byte/sec).
    */
-  int uploadSpeed;
-  /**
+	int uploadSpeed;
+	/**
    * The number of active downloads.
    */
-  int numActive;
-  /**
+	int numActive;
+	/**
    * The number of waiting downloads.
    */
-  int numWaiting;
-  /**
+	int numWaiting;
+	/**
    * The number of stopped downloads.
    */
-  int numStopped;
+	int numStopped;
 };
 
 /**
@@ -519,21 +519,21 @@ GlobalStat getGlobalStat(Session* session);
  * Constants how to re-position a download.
  */
 enum OffsetMode {
-  /**
+	/**
    * Moves the download to a position relative to the beginning of the
    * queue.
    */
-  OFFSET_MODE_SET,
-  /**
+	OFFSET_MODE_SET,
+	/**
    * Moves the download to a position relative to the current
    * position.
    */
-  OFFSET_MODE_CUR,
-  /**
+	OFFSET_MODE_CUR,
+	/**
    * Moves the download to a position relative to the end of the
    * queue.
    */
-  OFFSET_MODE_END
+	OFFSET_MODE_END
 };
 
 /**
@@ -579,14 +579,14 @@ int shutdown(Session* session, bool force = false);
  * The status of URI.
  */
 enum UriStatus {
-  /**
+	/**
    * Indicating the URI has been used.
    */
-  URI_USED,
-  /**
+	URI_USED,
+	/**
    * Indicating the URI has not been used.
    */
-  URI_WAITING
+	URI_WAITING
 };
 
 /**
@@ -595,14 +595,14 @@ enum UriStatus {
  * This object contains URI and its status.
  */
 struct UriData {
-  /**
+	/**
    * URI
    */
-  std::string uri;
-  /**
+	std::string uri;
+	/**
    * The status of URI
    */
-  UriStatus status;
+	UriStatus status;
 };
 
 /**
@@ -611,22 +611,22 @@ struct UriData {
  * This object contains information of file to download.
  */
 struct FileData {
-  /**
+	/**
    * 1-based index of the file in the download. This is the same order
    * with the files in multi-file torrent. This index is used to get
    * this object using :func:`DownloadHandle::getFile()` function.
    */
-  int index;
-  /**
+	int index;
+	/**
    * The local file path to this file when downloaded.
    */
-  std::string path;
-  /**
+	std::string path;
+	/**
    * The file size in bytes. This is not the current size of the local
    * file.
    */
-  int64_t length;
-  /**
+	int64_t length;
+	/**
    * The completed length of this file in bytes. Please note that it
    * is possible that sum of |completedLength| is less than the return
    * value of :func:`DownloadHandle::getCompletedLength()`
@@ -635,17 +635,17 @@ struct FileData {
    * :func:`DownloadHandle::getCompletedLength()` takes into account
    * of partially completed piece.
    */
-  int64_t completedLength;
-  /**
+	int64_t completedLength;
+	/**
    * true if this file is selected by ``select-file`` option. If
    * ``select-file`` is not specified or this is single torrent or no
    * torrent download, this value is always true.
    */
-  bool selected;
-  /**
+	bool selected;
+	/**
    * Returns the list of URI for this file.
    */
-  std::vector<UriData> uris;
+	std::vector<UriData> uris;
 };
 
 /**
@@ -654,19 +654,19 @@ struct FileData {
  * BitTorrent file mode
  */
 enum BtFileMode {
-  /**
+	/**
    * Indicating no mode. This value is used when file mode is not
    * available.
    */
-  BT_FILE_MODE_NONE,
-  /**
+	BT_FILE_MODE_NONE,
+	/**
    * Indicating single file torrent
    */
-  BT_FILE_MODE_SINGLE,
-  /**
+	BT_FILE_MODE_SINGLE,
+	/**
    * Indicating multi file torrent
    */
-  BT_FILE_MODE_MULTI
+	BT_FILE_MODE_MULTI
 };
 
 /**
@@ -675,31 +675,31 @@ enum BtFileMode {
  * BitTorrent metainfo data retrieved from ".torrent" file.
  */
 struct BtMetaInfoData {
-  /**
+	/**
    * List of lists of announce URI. If ".torrent" file contains
    * ``announce`` and no ``announce-list``, ``announce`` is converted
    * to ``announce-list`` format.
    */
-  std::vector<std::vector<std::string>> announceList;
-  /**
+	std::vector<std::vector<std::string>> announceList;
+	/**
    * ``comment`` for the torrent. ``comment.utf-8`` is used if
    * available.
    */
-  std::string comment;
-  /**
+	std::string comment;
+	/**
    * The creation time of the torrent. The value is an integer since
    * the Epoch, measured in seconds.
    */
-  time_t creationDate;
-  /**
+	time_t creationDate;
+	/**
    * File mode of the torrent.
    */
-  BtFileMode mode;
-  /**
+	BtFileMode mode;
+	/**
    * ``name`` in ``info`` dictionary. ``name.utf-8`` is used if
    * available.
    */
-  std::string name;
+	std::string name;
 };
 
 /**
@@ -708,30 +708,30 @@ struct BtMetaInfoData {
  * The status of download item.
  */
 enum DownloadStatus {
-  /**
+	/**
    * Indicating currently downloading/seeding.
    */
-  DOWNLOAD_ACTIVE,
-  /**
+	DOWNLOAD_ACTIVE,
+	/**
    * Indicating in the queue; download is not started.
    */
-  DOWNLOAD_WAITING,
-  /**
+	DOWNLOAD_WAITING,
+	/**
    * Indicating the download is paused.
    */
-  DOWNLOAD_PAUSED,
-  /**
+	DOWNLOAD_PAUSED,
+	/**
    * Indicating stopped and completed download.
    */
-  DOWNLOAD_COMPLETE,
-  /**
+	DOWNLOAD_COMPLETE,
+	/**
    * Indicating stopped download because of error.
    */
-  DOWNLOAD_ERROR,
-  /**
+	DOWNLOAD_ERROR,
+	/**
    * Indicating removed by user's discretion.
    */
-  DOWNLOAD_REMOVED
+	DOWNLOAD_REMOVED
 };
 
 /**
@@ -741,64 +741,64 @@ enum DownloadStatus {
  */
 class DownloadHandle {
 public:
-  virtual ~DownloadHandle() = default;
-  /**
+	virtual ~DownloadHandle() = default;
+	/**
    * Returns status of this download.
    */
-  virtual DownloadStatus getStatus() = 0;
-  /**
+	virtual DownloadStatus getStatus() = 0;
+	/**
    * Returns the total length of this download in bytes.
    */
-  virtual int64_t getTotalLength() = 0;
-  /**
+	virtual int64_t getTotalLength() = 0;
+	/**
    * Returns the completed length of this download in bytes.
    */
-  virtual int64_t getCompletedLength() = 0;
-  /**
+	virtual int64_t getCompletedLength() = 0;
+	/**
    * Returns the uploaded length of this download in bytes.
    */
-  virtual int64_t getUploadLength() = 0;
-  /**
+	virtual int64_t getUploadLength() = 0;
+	/**
    * Returns the download progress in byte-string. The highest bit
    * corresponds to piece index 0. The set bits indicate the piece is
    * available and unset bits indicate the piece is missing. The spare
    * bits at the end are set to zero. When download has not started
    * yet, returns empty string.
    */
-  virtual std::string getBitfield() = 0;
-  /**
+	virtual std::string getBitfield() = 0;
+	/**
    * Returns download speed of this download measured in bytes/sec.
    */
-  virtual int getDownloadSpeed() = 0;
-  /**
+	virtual int getDownloadSpeed() = 0;
+	/**
    * Returns upload speed of this download measured in bytes/sec.
    */
-  virtual int getUploadSpeed() = 0;
-  /**
+	virtual int getUploadSpeed() = 0;
+	/**
    * Returns 20 bytes InfoHash if BitTorrent transfer is
    * involved. Otherwise the empty string is returned.
    */
-  virtual const std::string& getInfoHash() = 0;
-  /**
+	virtual const std::string& getInfoHash() = 0;
+	/**
    * Returns piece length in bytes.
    */
-  virtual size_t getPieceLength() = 0;
-  /**
+	virtual size_t getPieceLength() = 0;
+	/**
    * Returns the number of pieces.
    */
-  virtual int getNumPieces() = 0;
-  /**
+	virtual int getNumPieces() = 0;
+	/**
    * Returns the number of peers/servers the client has connected to.
    */
-  virtual int getConnections() = 0;
-  /**
+	virtual int getConnections() = 0;
+	/**
    * Returns the last error code occurred in this download. The error
    * codes are defined in :ref:`exit-status` section of
    * :manpage:`aria2c(1)`. This value has its meaning only for
    * stopped/completed downloads.
    */
-  virtual int getErrorCode() = 0;
-  /**
+	virtual int getErrorCode() = 0;
+	/**
    * Returns array of GIDs which are generated by the consequence of
    * this download. For example, when aria2 downloaded Metalink file,
    * it generates downloads described in it (see
@@ -806,48 +806,48 @@ public:
    * track these auto generated downloads. If there is no such
    * downloads, this function returns empty array.
    */
-  virtual const std::vector<A2Gid>& getFollowedBy() = 0;
-  /**
+	virtual const std::vector<A2Gid>& getFollowedBy() = 0;
+	/**
    * Returns the GID of the download which generated this download.
    * This is a reverse link of
    * :func:`DownloadHandle::getFollowedBy()`.
    */
-  virtual A2Gid getFollowing() = 0;
-  /**
+	virtual A2Gid getFollowing() = 0;
+	/**
    * Returns the GID of a parent download. Some downloads are a part
    * of another download. For example, if a file in Metalink has
    * BitTorrent resource, the download of ".torrent" is a part of that
    * file. If this download has no parent, the invalid GID is returned
    * (``isNull(gid)`` is true).
    */
-  virtual A2Gid getBelongsTo() = 0;
-  /**
+	virtual A2Gid getBelongsTo() = 0;
+	/**
    * Returns the directory to save files.
    */
-  virtual const std::string& getDir() = 0;
-  /**
+	virtual const std::string& getDir() = 0;
+	/**
    * Returns the array of files this download contains.
    */
-  virtual std::vector<FileData> getFiles() = 0;
-  /**
+	virtual std::vector<FileData> getFiles() = 0;
+	/**
    * Returns the number of files. The return value is equivalent to
    * ``DownloadHandle::getFiles().size()``.
    */
-  virtual int getNumFiles() = 0;
-  /**
+	virtual int getNumFiles() = 0;
+	/**
    * Returns the FileData of the file at the specified |index|. Please
    * note that the index is 1-based. It is undefined when the |index|
    * is out-of-bound.
    */
-  virtual FileData getFile(int index) = 0;
-  /**
+	virtual FileData getFile(int index) = 0;
+	/**
    * Returns the information retrieved from ".torrent" file. This
    * function is only meaningful only when BitTorrent transfer is
    * involved in the download and the download is not
    * stopped/completed.
    */
-  virtual BtMetaInfoData getBtMetaInfo() = 0;
-  /**
+	virtual BtMetaInfoData getBtMetaInfo() = 0;
+	/**
    * Returns the option value denoted by the |name|.  If the option
    * denoted by the |name| is not available, returns empty string.
    *
@@ -855,14 +855,14 @@ public:
    * :c:macro:`DOWNLOAD_ACTIVE`, :c:macro:`DOWNLOAD_PAUSED` or
    * :c:macro:`DOWNLOAD_WAITING` will return empty string.
    */
-  virtual const std::string& getOption(const std::string& name) = 0;
-  /**
+	virtual const std::string& getOption(const std::string& name) = 0;
+	/**
    * Returns options for this download. Note that this function does
    * not return options which have no default value and have not been
    * set by :func:`sessionNew()`, configuration files or API
    * functions.
    */
-  virtual KeyVals getOptions() = 0;
+	virtual KeyVals getOptions() = 0;
 };
 
 /**

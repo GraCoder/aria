@@ -38,7 +38,7 @@ struct TaskInfo{
 	int 	picLength;
 
 	std::vector<aria2::FileData> fileData;
-
+	aria2::KeyVals opts;
 };
 
 struct FinishTaskInfo{

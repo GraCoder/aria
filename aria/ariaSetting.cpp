@@ -26,13 +26,14 @@ ariaSetting::ariaSetting()
 			file.open(QIODevice::WriteOnly);
 			file.close();
 		}
-		_settings["input-file"]= path;
+		//_settings["input-file"]= path;
 		_settings["save-session"]= path;
 	}
 	_settings["log"] = "-";
 
-	_settings["save-session-interval"]= "1";
-	_settings["auto-save-interval"]= "20";
+	_settings["save-session-interval"]= "20"; //session
+
+	_settings["auto-save-interval"]= "10"; //control
 
 	_settings["max-concurrent-downloads"]= "5";
 	_settings["max-file-not-found"]= "10";
@@ -44,7 +45,7 @@ ariaSetting::ariaSetting()
 	_settings["min-split-size"]= "4M";
 	_settings["piece-length"]= "1M";
 	_settings["allow-piece-length-change"]= "true";
-	//_settings["max-overall-download-limit"] = "1248K";
+	_settings["max-overall-download-limit"] = "12K";
 	//		_settings["max-download-limit"] = "10k";
 	_settings["optimize-concurrent-downloads"] = "false";
 	//		_settings[""]= "";

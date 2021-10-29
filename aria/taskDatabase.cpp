@@ -4,6 +4,8 @@
 #include <sqlite3.h>
 #include <filesystem>
 
+#include "boost/algorithm/string/join.hpp"
+
 #include "ariaUi.h"
 #include "ariaListWgt.h"
 #include "ariaSetting.h"
@@ -140,11 +142,16 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfo &taskInfo)
 
 	}
 
+	std::vector<std::string> vals;
+	for(auto &keyval : taskInfo.opts)
+		vals.push_back(keyval.first + "=" + keyval.second);
+	std::string opts = boost::algorithm::join(vals, "|");
+
 	std::filesystem::path lpath(filepath);
 	std::string filename = lpath.filename().string();
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-	const char lang[] = "update task_table set name='%s', state=%d, total_size=%lld, end_time='%s', local_path='%s' where id=%lld;";
-	sprintf(exeLang, lang, filename.c_str(), taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), filepath.c_str(), id);
+	const char lang[] = "update task_table set name='%s', state=%d, total_size=%lld, end_time='%s', local_path='%s', options='%s' where id=%lld;";
+	sprintf(exeLang, lang, filename.c_str(), taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), filepath.c_str(), opts.c_str(), id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 

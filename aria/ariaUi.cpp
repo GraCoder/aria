@@ -14,6 +14,8 @@
 #include <QStackedWidget>
 #include <QSystemTrayIcon>
 
+#include <algorithm>
+
 #include "ariaSys.h"
 #include "ariaPanel.h"
 #include "uriLink.h"
@@ -29,7 +31,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		std::cout << "START" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
 	{
 		auto dlg = (AriaDlg*)userData;
-		auto tskInfo = dlg->getTaskInfo(gid);
+		auto tskInfo = dlg->getTaskInfo(session, gid);
 		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
 		dlg->getEmitter()->startTaskSig(gid);
 		break;
@@ -37,7 +39,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 	case aria2::EVENT_ON_DOWNLOAD_PAUSE:
 	{
 		auto dlg = (AriaDlg*)userData;
-		auto tskInfo = dlg->getTaskInfo(gid);
+		auto tskInfo = dlg->getTaskInfo(session, gid);
 		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
 		dlg->getEmitter()->pauseTaskSig(gid);
 		std::cout << "PAUSE" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
@@ -46,7 +48,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 	case aria2::EVENT_ON_DOWNLOAD_STOP:
 	{
 		auto dlg = (AriaDlg*)userData;
-		auto tskInfo = dlg->getTaskInfo(gid);
+		auto tskInfo = dlg->getTaskInfo(session, gid);
 		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
 		//dlg->getEmitter()->removeTaskSig(gid);
 		std::cout << "STOP" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
@@ -56,7 +58,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 	case aria2::EVENT_ON_DOWNLOAD_COMPLETE:
 	{
 		auto dlg = (AriaDlg*)userData;
-		auto tskInfo = dlg->getTaskInfo(gid);
+		auto tskInfo = dlg->getTaskInfo(session, gid);
 		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
 		dlg->getEmitter()->completeTaskSig(gid);
 		std::cout << "COMPLETE" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
@@ -300,18 +302,35 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 	tskInfo.picNums = dh->getNumPieces();
 	tskInfo.picLength = dh->getPieceLength();
 	deleteDownloadHandle(dh);
+	return tskInfo;
+}
+
+TaskInfo AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
+{
+	TaskInfo tskInfo;
+	auto dh = getDownloadHandle(session, id);
+	tskInfo.fileData = dh->getFiles();
+
+	tskInfo.dnspeed = dh->getDownloadSpeed();
+	tskInfo.upspeed = dh->getUploadSpeed();
+	tskInfo.dnloadLength = dh->getCompletedLength();
+	tskInfo.totalLength = dh->getTotalLength();
+	tskInfo.uploadLength = dh->getUploadLength();
+
+	tskInfo.state = dh->getStatus();
+	tskInfo.picNums = dh->getNumPieces();
+	tskInfo.picLength = dh->getPieceLength();
+	tskInfo.opts = dh->getOptions();
+	deleteDownloadHandle(dh);
 
 	return tskInfo;
 }
 
 void AriaDlg::initAria()
 {
-	aria2::libraryInit();
-}
-
-void AriaDlg::download()
-{
 	using namespace aria2;
+
+	aria2::libraryInit();
 
 	auto &opTmps = ariaSetting::instance().setting();
 	KeyVals options;
@@ -319,11 +338,16 @@ void AriaDlg::download()
 		options.push_back(std::make_pair(iter.first, iter.second));
 
 	SessionConfig config;
-	config.keepRunning = false;
+	config.keepRunning = true;
 	config.downloadEventCallback = downloadEventCallback;
 	config.userData = this;
 	_session = sessionNew(options, config);
 	auto opts = getGlobalOptions(_session);
+}
+
+void AriaDlg::download()
+{
+	using namespace aria2;
 
 	auto prev = std::chrono::system_clock().now();
 
@@ -383,7 +407,7 @@ void AriaDlg::mergeTask()
 			}
 			if(ret == 0)
 			{
-				addTask(gid, name, tsk.get());
+				addTask(gid, tsk.get());
 			}
 			else
 			{
@@ -402,10 +426,10 @@ void AriaDlg::errorTask(aria2::A2Gid id)
 	aria2::deleteDownloadHandle(dh);
 }
 
-void AriaDlg::addTask(aria2::A2Gid id, const QString &name, Task *tsk)
+void AriaDlg::addTask(aria2::A2Gid id, Task *tsk)
 {
 	_database->downloadTask(tsk->rid, id);
-	_emitter->addTaskSig(id, name);
+	_emitter->addTaskSig(id, QString::fromStdString(tsk->name));
 }
 
 void AriaDlg::updateTask(aria2::A2Gid id)
