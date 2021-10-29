@@ -54,58 +54,58 @@ class DownloadEngine;
 
 class MultiUrlRequestInfo {
 private:
-  std::vector<std::shared_ptr<RequestGroup>> requestGroups_;
+	std::vector<std::shared_ptr<RequestGroup>> requestGroups_;
 
-  std::shared_ptr<Option> option_;
+	std::shared_ptr<Option> option_;
 
-  std::shared_ptr<UriListParser> uriListParser_;
+	std::shared_ptr<UriListParser> uriListParser_;
 
-  std::unique_ptr<DownloadEngine> e_;
+	std::unique_ptr<DownloadEngine> e_;
 
-  sigset_t mask_;
+	sigset_t mask_;
 
-  bool useSignalHandler_;
+	bool useSignalHandler_;
 
-  void printMessageForContinue();
-  void setupSignalHandlers();
-  void resetSignalHandlers();
+	void printMessageForContinue();
+	void setupSignalHandlers();
+	void resetSignalHandlers();
 
 public:
-  /*
+	/*
    * MultiRequestInfo effectively takes ownership of the
    * requestGroups.
    */
-  MultiUrlRequestInfo(std::vector<std::shared_ptr<RequestGroup>> requestGroups,
-                      const std::shared_ptr<Option>& op,
-                      const std::shared_ptr<UriListParser>& uriListParser);
+	MultiUrlRequestInfo(std::vector<std::shared_ptr<RequestGroup>> requestGroups,
+				const std::shared_ptr<Option>& op,
+				const std::shared_ptr<UriListParser>& uriListParser);
 
-  ~MultiUrlRequestInfo();
+	~MultiUrlRequestInfo();
 
-  // Returns FINISHED if all downloads have completed, otherwise returns the
-  // last download result.
-  //
-  // This method actually calls prepare() and
-  // getDownloadEngine()->run(true) and getResult().
-  error_code::Value execute();
+	// Returns FINISHED if all downloads have completed, otherwise returns the
+	// last download result.
+	//
+	// This method actually calls prepare() and
+	// getDownloadEngine()->run(true) and getResult().
+	error_code::Value execute();
 
-  // Performs preparations for downloads, including creating
-  // DownloadEngine instance. This function returns 0 if it succeeds,
-  // or -1.
-  int prepare();
+	// Performs preparations for downloads, including creating
+	// DownloadEngine instance. This function returns 0 if it succeeds,
+	// or -1.
+	int prepare();
 
-  // Performs finalization of download process, including saving
-  // sessions. This function returns last error code in this session,
-  // in particular, this function returns FINISHED if all downloads
-  // have completed.
-  error_code::Value getResult();
+	// Performs finalization of download process, including saving
+	// sessions. This function returns last error code in this session,
+	// in particular, this function returns FINISHED if all downloads
+	// have completed.
+	error_code::Value getResult();
 
-  const std::unique_ptr<DownloadEngine>& getDownloadEngine() const;
+	const std::unique_ptr<DownloadEngine>& getDownloadEngine() const;
 
-  // Signal handlers are not prepared if false is given.
-  void setUseSignalHandler(bool useSignalHandler)
-  {
-    useSignalHandler_ = useSignalHandler;
-  }
+	// Signal handlers are not prepared if false is given.
+	void setUseSignalHandler(bool useSignalHandler)
+	{
+		useSignalHandler_ = useSignalHandler;
+	}
 };
 
 } // namespace aria2
