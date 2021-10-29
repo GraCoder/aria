@@ -290,7 +290,6 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 {
 	TaskInfo tskInfo;
 	auto dh = getDownloadHandle(_session, id);
-	tskInfo.fileData = dh->getFiles();
 
 	tskInfo.dnspeed = dh->getDownloadSpeed();
 	tskInfo.upspeed = dh->getUploadSpeed();
@@ -305,9 +304,9 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 	return tskInfo;
 }
 
-TaskInfo AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
+TaskInfoEx AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 {
-	TaskInfo tskInfo;
+	TaskInfoEx tskInfo;
 	auto dh = getDownloadHandle(session, id);
 	tskInfo.fileData = dh->getFiles();
 
@@ -320,6 +319,7 @@ TaskInfo AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 	tskInfo.state = dh->getStatus();
 	tskInfo.picNums = dh->getNumPieces();
 	tskInfo.picLength = dh->getPieceLength();
+	tskInfo.fileData = dh->getFiles();
 	tskInfo.opts = dh->getOptions();
 	deleteDownloadHandle(dh);
 

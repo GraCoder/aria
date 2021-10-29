@@ -30,7 +30,7 @@ public:
 
 	void failTask(aria2::A2Gid);
 
-	void updateTaskInfo(aria2::A2Gid, TaskInfo &);
+	void updateTaskInfo(aria2::A2Gid, TaskInfoEx &);
 
 	void initDownloadTask();
 

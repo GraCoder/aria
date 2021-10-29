@@ -128,7 +128,7 @@ void TaskDatabase::failTask(aria2::A2Gid gid)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
-void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfo &taskInfo)
+void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 {
 	if(_sql == nullptr)
 		return;

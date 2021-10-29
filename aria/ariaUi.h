@@ -85,7 +85,7 @@ public:
 	TaskDatabase* 	getDatabase() {return _database;}
 
 	TaskInfo 	getTaskInfo(aria2::A2Gid);
-	TaskInfo	getTaskInfo(aria2::Session *session, aria2::A2Gid);
+	TaskInfoEx	getTaskInfo(aria2::Session *session, aria2::A2Gid);
 signals:
 	void 		changeViewSig(int);
 private:

@@ -20,8 +20,7 @@ struct TaskInfo{
 		if(!other.name.isEmpty())
 			name = other.name;
 
-		memcpy(&dnspeed, &other.dnspeed, offsetof(TaskInfo, fileData) - offsetof(TaskInfo, dnspeed));
-		fileData = other.fileData;
+		memcpy(&dnspeed, &other.dnspeed, offsetof(TaskInfo, xx) - offsetof(TaskInfo, dnspeed));
 	}
 
 	QString name;
@@ -36,7 +35,10 @@ struct TaskInfo{
 	int 	state;
 	int 	picNums;
 	int 	picLength;
+	int 	xx;
+};
 
+struct TaskInfoEx : public TaskInfo{
 	std::vector<aria2::FileData> fileData;
 	aria2::KeyVals opts;
 };
