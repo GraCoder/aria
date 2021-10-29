@@ -57,7 +57,7 @@ struct Task{
 	uint64_t rid;
 	std::string name;
 
-	aria2::KeyVals opt;
+	aria2::KeyVals opts;
 
 	virtual std::string getUri() = 0;
 };

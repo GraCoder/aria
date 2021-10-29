@@ -383,13 +383,18 @@ void AriaDlg::mergeTask()
 			QString name;
 			A2Gid gid;
 			auto tsk = std::move(_addTasks[i]);
+			KeyVals tmpOpts;
+			{
+				//for(auto &opt : tsk->opts)
+				//	tmpOpts
+				tmpOpts.push_back(std::make_pair("gid", "111"));
+			}
 			switch(tsk->type){
 			case 1:
 			{
 				auto ptask = static_cast<UriTask*>(tsk.get());
-				KeyVals tmpOpt;// = getGlobalOptions(_session);
 				std::vector<std::string> url(1, ptask->url);
-				ret = aria2::addUri(_session, &gid, url, tmpOpt);
+				ret = aria2::addUri(_session, &gid, url, tmpOpts);
 				name = QString::fromStdString(ptask->name);
 				getTaskInfo(gid);
 				break;
@@ -397,8 +402,7 @@ void AriaDlg::mergeTask()
 			case 2:
 			{
 				auto ptask = static_cast<BtTask*>(tsk.get());
-				KeyVals tmpOpt;
-				ret = aria2::addTorrent(_session, &gid, ptask->torrent, tmpOpt);
+				ret = aria2::addTorrent(_session, &gid, ptask->torrent, tmpOpts);
 				name = QString::fromStdString(ptask->name);
 				break;
 			}
