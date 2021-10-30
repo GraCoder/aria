@@ -252,9 +252,7 @@ void AriaDlg::addUriTask(std::unique_ptr<Task> &tsk)
 	auto rid = _database->findTask(tsk.get());
 	if(rid == 0)
 		tsk->rid = _database->addTask(tsk.get());
-	else{
-		return;
-	}
+
 	_addLock.lock();
 	_addTasks.push_back(std::move(tsk));
 	_addLock.unlock();
@@ -290,17 +288,19 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 {
 	TaskInfo tskInfo;
 	auto dh = getDownloadHandle(_session, id);
+	if(dh)
+	{
+		tskInfo.dnspeed = dh->getDownloadSpeed();
+		tskInfo.upspeed = dh->getUploadSpeed();
+		tskInfo.dnloadLength = dh->getCompletedLength();
+		tskInfo.totalLength = dh->getTotalLength();
+		tskInfo.uploadLength = dh->getUploadLength();
 
-	tskInfo.dnspeed = dh->getDownloadSpeed();
-	tskInfo.upspeed = dh->getUploadSpeed();
-	tskInfo.dnloadLength = dh->getCompletedLength();
-	tskInfo.totalLength = dh->getTotalLength();
-	tskInfo.uploadLength = dh->getUploadLength();
-
-	tskInfo.state = dh->getStatus();
-	tskInfo.picNums = dh->getNumPieces();
-	tskInfo.picLength = dh->getPieceLength();
-	deleteDownloadHandle(dh);
+		tskInfo.state = dh->getStatus();
+		tskInfo.picNums = dh->getNumPieces();
+		tskInfo.picLength = dh->getPieceLength();
+		deleteDownloadHandle(dh);
+	}
 	return tskInfo;
 }
 
@@ -308,20 +308,22 @@ TaskInfoEx AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 {
 	TaskInfoEx tskInfo;
 	auto dh = getDownloadHandle(session, id);
-	tskInfo.fileData = dh->getFiles();
+	if(dh){
+		tskInfo.fileData = dh->getFiles();
 
-	tskInfo.dnspeed = dh->getDownloadSpeed();
-	tskInfo.upspeed = dh->getUploadSpeed();
-	tskInfo.dnloadLength = dh->getCompletedLength();
-	tskInfo.totalLength = dh->getTotalLength();
-	tskInfo.uploadLength = dh->getUploadLength();
+		tskInfo.dnspeed = dh->getDownloadSpeed();
+		tskInfo.upspeed = dh->getUploadSpeed();
+		tskInfo.dnloadLength = dh->getCompletedLength();
+		tskInfo.totalLength = dh->getTotalLength();
+		tskInfo.uploadLength = dh->getUploadLength();
 
-	tskInfo.state = dh->getStatus();
-	tskInfo.picNums = dh->getNumPieces();
-	tskInfo.picLength = dh->getPieceLength();
-	tskInfo.fileData = dh->getFiles();
-	tskInfo.opts = dh->getOptions();
-	deleteDownloadHandle(dh);
+		tskInfo.state = dh->getStatus();
+		tskInfo.picNums = dh->getNumPieces();
+		tskInfo.picLength = dh->getPieceLength();
+		tskInfo.fileData = dh->getFiles();
+		tskInfo.opts = dh->getOptions();
+		deleteDownloadHandle(dh);
+	}
 
 	return tskInfo;
 }
@@ -383,12 +385,7 @@ void AriaDlg::mergeTask()
 			QString name;
 			A2Gid gid;
 			auto tsk = std::move(_addTasks[i]);
-			KeyVals tmpOpts;
-			{
-				//for(auto &opt : tsk->opts)
-				//	tmpOpts
-				tmpOpts.push_back(std::make_pair("gid", "111"));
-			}
+			KeyVals tmpOpts = tsk->opts;
 			switch(tsk->type){
 			case 1:
 			{

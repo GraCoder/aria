@@ -1,5 +1,6 @@
 #include "taskInfo.h"
 
+
 std::string UriTask::getUri()
 {
 	return url;
@@ -9,9 +10,6 @@ std::string UriTask::getUri()
 	//ret += url.back();
 	//return ret;
 }
-
-
-
 
 std::string BtTask::getUri()
 {

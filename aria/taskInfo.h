@@ -63,7 +63,6 @@ struct Task{
 };
 
 struct UriTask : public Task{
-	std::string cookie;
 
 	std::string url;
 	std::string getUri();
