@@ -393,7 +393,7 @@ void AriaDlg::mergeTask()
 				std::vector<std::string> url(1, ptask->url);
 				ret = aria2::addUri(_session, &gid, url, tmpOpts);
 				name = QString::fromStdString(ptask->name);
-				getTaskInfo(gid);
+				getTaskInfo(_session, gid);
 				break;
 			}
 			case 2:
