@@ -12,14 +12,26 @@
 
 char exeLang[8192];
 
-std::string optToString(const aria2::KeyVals)
+std::string optToString(const aria2::KeyVals &kvs)
 {
-
+	std::vector<std::string> opts;
+	for(auto &kv : kvs)
+		opts.push_back(kv.first + "=" + kv.second);
+	return boost::algorithm::join(opts, "|");
 }
 
-aria2::KeyVals optToKV()
+aria2::KeyVals optToKV(const std::string &opts)
 {
-
+	aria2::KeyVals ret;
+	std::vector<std::string> ops;
+	boost::algorithm::split(ops, opts, boost::is_any_of("|"));
+	for(auto &optmp : ops){
+		std::vector<std::string> opkv;
+		boost::algorithm::split(opkv, optmp, boost::is_any_of("="));
+		if(opkv.size() != 2) continue;
+		ret.push_back(std::make_pair(opkv[0], opkv[1]));
+	}
+	return ret;
 }
 
 TaskDatabase::TaskDatabase()
@@ -61,9 +73,10 @@ uint64_t TaskDatabase::addTask(Task *tsk)
 	if(_sql == nullptr)
 		return 0;
 	auto uri = tsk->getUri();
+	auto opts = optToString(tsk->opts);
 	const char lang1[] = "insert into task_table (type, name, state, link, start_time, state, options) values (%d, '%s', %d, '%s', '%s', 0, '%s');";
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-	sprintf(exeLang, lang1, tsk->type, tsk->name.c_str(), tsk->state, uri.c_str(), datatime.toLocal8Bit().data());
+	sprintf(exeLang, lang1, tsk->type, tsk->name.c_str(), tsk->state, uri.c_str(), datatime.toLocal8Bit().data(), opts.c_str());
 	if(sqlite3_exec(_sql, exeLang, nullptr, nullptr, nullptr) != SQLITE_OK)
 		return 0;
 
@@ -185,9 +198,13 @@ void TaskDatabase::initDownloadTask()
 		auto ty = sqlite3_column_int(stmt, 2);
 		auto na = sqlite3_column_text(stmt, 3);
 		auto st = sqlite3_column_int(stmt, 4);
-		std::string lk = (const char *)sqlite3_column_text(stmt, 5);
-		std::string lp = (const char *)sqlite3_column_text(stmt, 6);
-		std::string op = (const char *)sqlite3_column_text(stmt, 7);
+		std::string lk, lp, op;
+		auto chlk = sqlite3_column_text(stmt, 5);
+		if(chlk) lk = (const char *)chlk;
+		auto chlp = sqlite3_column_text(stmt, 6);
+		if(chlp) lp = (const char *)chlp;
+		auto chop = sqlite3_column_text(stmt, 7);
+		if(chop) op = (const char *)chop;
 		std::unique_ptr<Task> tsk;
 		switch(ty){
 		case 1:
@@ -198,25 +215,27 @@ void TaskDatabase::initDownloadTask()
 			break;
 		}
 		case 2:
+			auto task = std::make_unique<BtTask>();
+			task->torrent = lk;
+			tsk = std::move(task);
 			break;
 		}
 		tsk->name = (const char *)na;
 		tsk->rid = id;
 		tsk->state = st;
 		tsk->type = ty;
+		tsk->opts = optToKV(op);
 		{
-			std::vector<std::string> ops;
-			boost::algorithm::split(ops, op, boost::is_any_of("|"));
-			for(auto &optmp : ops){
-				std::vector<std::string> opkv;
-				boost::algorithm::split(opkv, optmp, boost::is_any_of("="));
-				if(opkv.size() != 2) continue;
-				tsk->opts.push_back(std::make_pair(opkv[0], opkv[1]));
-			}
 			char chgid[17] = {0}; sprintf(chgid, "%llX", gid);
 			tsk->opts.push_back(std::make_pair("gid", chgid));
 		}
 		AriaDlg::getMainDlg()->addUriTask(tsk);
+		{
+			TaskInfo tskInfo;
+			//tskInfo.totalLength = ;
+			//tskInfo.dnloadLength = ;
+			//AriaDlg::getMainDlg()->getEmitter()->updateTaskSig(id, tskInfo);
+		}
 		_idTable[gid] = id;
 	}
 	sqlite3_finalize(stmt);

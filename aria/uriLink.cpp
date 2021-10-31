@@ -39,7 +39,6 @@ URILinkWgt::getTasks()
 
 		{
 			tsk->opts.push_back(std::make_pair("dir", _downdir->text().toStdString()));
-			tsk->opts.push_back(std::make_pair("gid", "5da457d18ed1dcef"));
 		}
 		ret.push_back(std::move(tsk));
 	}
