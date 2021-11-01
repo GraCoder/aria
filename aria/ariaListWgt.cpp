@@ -271,14 +271,33 @@ void AriaListWidget::updateTaskSlt(uint64_t aid, TaskInfo tskInfo)
 
 void AriaListWidget::removeTaskSlt(uint64_t aid)
 {
-	auto listmodel = static_cast<AriaDownloadListModel*>(model());
-	if(listmodel->_taskInfos.find(aid) == listmodel->_taskInfos.end())
-		return;
-	int idx = listmodel->_tasks.indexOf(aid);
-	listmodel->beginRemoveRows(QModelIndex(), idx, idx);
-	listmodel->_tasks.removeAt(idx);
-	listmodel->_taskInfos.remove(aid);
-	listmodel->endRemoveRows();
+	if(_type == DOWNLOADING)
+	{
+		auto listmodel = static_cast<AriaDownloadListModel*>(model());
+		if(listmodel->_taskInfos.find(aid) == listmodel->_taskInfos.end())
+			return;
+		int idx = listmodel->_tasks.indexOf(aid);
+		listmodel->beginRemoveRows(QModelIndex(), idx, idx);
+		listmodel->_tasks.removeAt(idx);
+		listmodel->_taskInfos.remove(aid);
+		listmodel->endRemoveRows();
+	}
+	else if(_type ==COMPLETED || _type == TRASHCAN)
+	{
+		auto listmodel = static_cast<AriaFinishListModel*>(model());
+
+		int count = listmodel->rowCount();
+		listmodel->beginInsertRows(QModelIndex(), count, count);
+		for(int i = 0; i < count; i++)
+		{
+			if(listmodel->_taskInfos[i].id == aid)
+			{
+				listmodel->_taskInfos.remove(i);
+				break;
+			}
+		}
+		listmodel->endInsertRows();
+	}
 }
 
 void AriaListWidget::failTaskSlt(uint64_t aid)
@@ -329,6 +348,23 @@ AriaListWidget::getSelected()
 	return ids;
 }
 
+void AriaListWidget::explorerSelected()
+{
+	auto idxs = selectedIndexes();
+	for(auto &idx : idxs)
+	{
+		explorerIndexAt(idx.row());
+	}
+}
+
+void AriaListWidget::explorerIndexAt(int i)
+{
+	auto &taskInfo = ((AriaFinishListModel*)model())->_taskInfos[i];
+	QFileInfo fileInfo(taskInfo.localPath);
+	QString dir = fileInfo.absoluteDir().absolutePath();
+	QDesktopServices::openUrl(QUrl(dir));
+}
+
 void AriaListWidget::resizeEvent(QResizeEvent *ev)
 {
 	auto delegate = (AriaListDelegate*)itemDelegate();
@@ -359,10 +395,7 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 	else if(_type == COMPLETED) {
 		if(!dngate->_btnRect.contains(pt.x(), y))
 			return;
-		auto &taskInfo = ((AriaFinishListModel*)model())->_taskInfos[i];
-		QFileInfo fileInfo(taskInfo.localPath);
-		QString dir = fileInfo.absoluteDir().absolutePath();
-		QDesktopServices::openUrl(QUrl(dir));
+		explorerIndexAt(i);
 	}
 	else{
 		if(!dngate->_btnRect.contains(pt.x(), y))

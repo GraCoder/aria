@@ -57,7 +57,9 @@ set(src
 	ariaSetting.cpp
 )
 
-add_executable(${app_name} WIN32 ${hdr} ${src} ${mocfiles} ${httpserver})
+set(aria_rc "${CMAKE_CURRENT_SOURCE_DIR}/aria.rc")
+
+add_executable(${app_name} WIN32 ${hdr} ${src} ${mocfiles} ${httpserver} ${aria_rc})
 
 target_include_directories(${app_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../libaria)
 

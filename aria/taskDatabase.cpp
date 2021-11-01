@@ -1,6 +1,7 @@
 #include "taskDatabase.h"
 
 #include <QDateTime>
+#include <QFile>
 #include <sqlite3.h>
 #include <filesystem>
 
@@ -43,6 +44,8 @@ TaskDatabase::TaskDatabase()
 #else
 	sqlite3_open("d:/dev/aria/aria.db", &_sql);
 #endif
+	char lang[] = "PRAGMA foreign_keys=1";
+	sqlite3_exec(_sql, lang, nullptr, nullptr, nullptr);
 }
 
 TaskDatabase::~TaskDatabase()
@@ -137,6 +140,53 @@ void TaskDatabase::deleteTask(aria2::A2Gid gid)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 
 	addLocalTask(id, TRASHCAN);
+}
+
+void TaskDatabase::removeLocalFile(uint64_t id)
+{
+	const char lang1[] = "select type, local_path from task_table where id = %lld;";
+	sprintf(exeLang, lang1, id);
+	sqlite3_stmt *stmt;
+	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
+	if(sqlite3_step(stmt) == SQLITE_ROW){
+		auto type = sqlite3_column_int(stmt, 0);
+		auto localf = sqlite3_column_text(stmt, 1);
+		QString localfile;
+		if(localf) localfile = QString::fromLocal8Bit((const char *)localf);
+		switch(type)
+		{
+		case 1:
+			QFile(localfile).remove();
+			break;
+		}
+	}
+
+}
+
+void TaskDatabase::deleteCompleteTask(uint64_t id, bool rmLocalFile)
+{
+	if(_sql == nullptr)
+		return;
+
+	if(rmLocalFile)
+		removeLocalFile(id);
+
+	const char lang2[] = "delete from task_table where id = %lld;";
+	sprintf(exeLang, lang2, id);
+	sqlite3_exec(_sql, exeLang, 0, 0, 0);
+}
+
+void TaskDatabase::deleteTrashTask(uint64_t id, bool rmLocalFile)
+{
+	if(_sql == nullptr)
+		return;
+
+	if(rmLocalFile)
+		removeLocalFile(id);
+
+	const char lang2[] = "delete from task_table where id = %lld;";
+	sprintf(exeLang, lang2, id);
+	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
 void TaskDatabase::failTask(aria2::A2Gid gid)

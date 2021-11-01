@@ -130,5 +130,6 @@
         <file>icons/xx/delete.svg</file>
         <file>icons/xx/waiting.svg</file>
         <file>icons/xx/folder.png</file>
+        <file>icons/xx/delete-all.svg</file>
     </qresource>
 </RCC>

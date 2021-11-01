@@ -81,6 +81,14 @@ public:
 	void 		pauseSelected();
 	void 		deleteSelected();
 
+	void		deleteCompleteSelected();
+	void 		deleteAllCompleteSelected();
+	void		explorerCompleteSelected();
+
+	void 		deleteTrashSelected();
+	void 		deleteAllTrashSelected();
+	void		explorerTrashSelected();
+
 	Emitter* 		getEmitter(){return _emitter;}
 	TaskDatabase* 	getDatabase() {return _database;}
 

@@ -28,6 +28,12 @@ public:
 
 	void deleteTask(aria2::A2Gid);
 
+	void removeLocalFile(uint64_t ide);
+
+	void deleteCompleteTask(uint64_t, bool removeLocalFile = false);
+
+	void deleteTrashTask(uint64_t, bool removeLocalFile = false);
+
 	void failTask(aria2::A2Gid);
 
 	void updateTaskInfo(aria2::A2Gid, TaskInfoEx &);

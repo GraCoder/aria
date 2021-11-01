@@ -81,10 +81,9 @@ public:
 	void 	setTaskState(uint64_t, int);
 
 	QVector<uint64_t>	 getSelected();
-//signals:
-//	void 	startTasksSig(uint64_t &);
-//	void 	pauseTasksSig(uint64_t &);
-//	void 	deleteTasksSig(uint64_t &);
+
+	void 	explorerSelected();
+	void 	explorerIndexAt(int);
 protected:
 	void 	resizeEvent(QResizeEvent *ev);
 	void 	mouseMoveEvent(QMouseEvent *ev);

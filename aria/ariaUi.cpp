@@ -88,6 +88,7 @@ AriaDlg::AriaDlg()
 
 	setMinimumSize(1000, 600);
 	setContentsMargins(0, 0, 0, 0);
+	setWindowIcon(QIcon(":/aria/icons/qbittorrent.ico"));
 	{
 		setStyleSheet("QWidget{font-family:\"Microsoft YaHei UI Light\"; font-size:16px;}");
 	}
@@ -177,7 +178,6 @@ QWidget *AriaDlg::createToolBar()
 	connect(this, &AriaDlg::changeViewSig, stackWgt, &QStackedWidget::setCurrentIndex);
 	{
 		auto bar = new QToolBar;
-		bar->setContentsMargins(30, 0, 0, 0);
 		bar->setAttribute(Qt::WA_TranslucentBackground, false);
 		bar->setIconSize(QSize(32, 32));
 		bar->setStyleSheet("QToolBar{spacing:10px; padding-left:20px;}");
@@ -195,10 +195,22 @@ QWidget *AriaDlg::createToolBar()
 	}
 	{
 		auto bar = new QToolBar;
+		bar->setAttribute(Qt::WA_TranslucentBackground, false);
+		bar->setIconSize(QSize(32, 32));
+		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
+		bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteCompleteSelected, this));
+		bar->addAction(QIcon(":/aria/icons/xx/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllCompleteSelected, this));
+		bar->addAction(QIcon(":/aria/icons/xx/folder.png"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
 		stackWgt->addWidget(bar);
 	}
 	{
 		auto bar = new QToolBar;
+		bar->setAttribute(Qt::WA_TranslucentBackground, false);
+		bar->setIconSize(QSize(32, 32));
+		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
+		bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteTrashSelected, this));
+		bar->addAction(QIcon(":/aria/icons/xx/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllTrashSelected, this));
+		bar->addAction(QIcon(":/aria/icons/xx/folder.png"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
 		stackWgt->addWidget(bar);
 	}
 	return stackWgt;
@@ -282,6 +294,52 @@ void AriaDlg::deleteSelected()
 		_dnWidget->removeTaskSlt(id);
 		_database->deleteTask(id);
 	}
+}
+
+void AriaDlg::deleteCompleteSelected()
+{
+	auto ids = _cmWidget->getSelected();
+	for(auto id : ids) {
+		_cmWidget->removeTaskSlt(id);
+		_database->deleteCompleteTask(id);
+	}
+}
+
+void AriaDlg::deleteAllCompleteSelected()
+{
+	auto ids = _cmWidget->getSelected();
+	for(auto id : ids) {
+		_cmWidget->removeTaskSlt(id);
+		_database->deleteCompleteTask(id, true);
+	}
+}
+
+void AriaDlg::explorerCompleteSelected()
+{
+	_cmWidget->explorerSelected();
+}
+
+void AriaDlg::deleteTrashSelected()
+{
+	auto ids = _trWidget->getSelected();
+	for(auto id : ids){
+		_trWidget->removeTaskSlt(id);
+		_database->deleteTrashTask(id);
+	}
+}
+
+void AriaDlg::deleteAllTrashSelected()
+{
+	auto ids = _trWidget->getSelected();
+	for(auto id : ids){
+		_trWidget->removeTaskSlt(id);
+		_database->deleteTrashTask(id, true);
+	}
+}
+
+void AriaDlg::explorerTrashSelected()
+{
+	_trWidget->explorerSelected();
 }
 
 TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
