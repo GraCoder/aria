@@ -1,5 +1,6 @@
 #include "taskInfo.h"
 
+#include <filesystem>
 
 std::string UriTask::getUri()
 {
@@ -11,7 +12,17 @@ std::string UriTask::getUri()
 	//return ret;
 }
 
+std::string UriTask::getLocal()
+{
+	return std::filesystem::path(dir).append(name).string();
+}
+
 std::string BtTask::getUri()
 {
 	return torrent;
+}
+
+std::string BtTask::getLocal()
+{
+
 }

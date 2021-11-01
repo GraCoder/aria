@@ -57,8 +57,8 @@ uint64_t TaskDatabase::findTask(Task *task)
 {
 	if(_sql == nullptr)
 		return 0;
-	const char lang[] = "select rowid from task_table where (link = '%s');";
-	sprintf(exeLang, lang, task->getUri().c_str());
+	const char lang[] = "select id from task_table where (link_path = '%s' and local_path = '%s');";
+	sprintf(exeLang, lang, task->getUri().c_str(), task->getLocal().c_str());
 	sqlite3_stmt *stmt; const char *tail;
 	auto rc = sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, &tail);
 	if(rc != SQLITE_OK)
@@ -77,7 +77,7 @@ uint64_t TaskDatabase::addTask(Task *tsk)
 		return 0;
 	auto uri = tsk->getUri();
 	auto opts = optToString(tsk->opts);
-	const char lang1[] = "insert into task_table (type, name, state, link, start_time, state, options) values (%d, '%s', %d, '%s', '%s', 0, '%s');";
+	const char lang1[] = "insert into task_table (type, name, state, link_path, start_time, state, options) values (%d, '%s', %d, '%s', '%s', 0, '%s');";
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 	sprintf(exeLang, lang1, tsk->type, tsk->name.c_str(), tsk->state, uri.c_str(), datatime.toLocal8Bit().data(), opts.c_str());
 	if(sqlite3_exec(_sql, exeLang, nullptr, nullptr, nullptr) != SQLITE_OK)
@@ -239,7 +239,7 @@ void TaskDatabase::initDownloadTask()
 {
 	if(_sql == nullptr)
 		return;
-	const char lang[] = "select task_table.id, gid, type, name, state, link, local_path, options from task_table inner join dn_table on dn_table.id = task_table.id;";
+	const char lang[] = "select task_table.id, gid, type, name, state, link_path, local_path, options from task_table inner join dn_table on dn_table.id = task_table.id;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	while(sqlite3_step(stmt) == SQLITE_ROW){

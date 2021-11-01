@@ -13,6 +13,7 @@
 #include <QFileInfo>
 
 #include <regex>
+#include <filesystem>
 
 #include "ariaSetting.h"
 
@@ -36,9 +37,11 @@ URILinkWgt::getTasks()
 		tsk->url = item->data(Qt::UserRole).toUrl().toString().toStdString();
 		tsk->name = item->text().toStdString();
 		tsk->type = 1;
+		tsk->dir = _downdir->text().toStdString();;
 
 		{
-			tsk->opts.push_back(std::make_pair("dir", _downdir->text().toStdString()));
+			tsk->opts.push_back(std::make_pair("out", tsk->name));
+			tsk->opts.push_back(std::make_pair("dir", tsk->dir));
 		}
 		ret.push_back(std::move(tsk));
 	}

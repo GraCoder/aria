@@ -252,17 +252,16 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 		return;
 
 	auto tsks = wgt.getTasks();
-	//auto tsk = std::make_unique<UriTask>();
-	//tsk->type = 1;
-	//tsk->url.push_back("http://ftp.dlut.edu.cn/centos/2/centos2-scripts-v1.tar");
 	for(auto &tsk : tsks)
+	{
+		int id = _database->findTask(tsk.get());
 		addUriTask(tsk);
+	}
 }
 
 void AriaDlg::addUriTask(std::unique_ptr<Task> &tsk)
 {
-	auto rid = _database->findTask(tsk.get());
-	if(rid == 0)
+	if(tsk->rid == 0)
 		tsk->rid = _database->addTask(tsk.get());
 
 	_addLock.lock();

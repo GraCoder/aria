@@ -56,22 +56,25 @@ struct Task{
 	int state;
 	uint64_t rid;
 	std::string name;
+	std::string dir;
 
 	aria2::KeyVals opts;
 
 	virtual std::string getUri() = 0;
+	virtual std::string getLocal() = 0;
 };
 
 struct UriTask : public Task{
 
 	std::string url;
 	std::string getUri();
+	std::string getLocal();
 };
 
 struct BtTask : public Task{
 	std::string torrent;
-
 	std::string getUri();
+	std::string getLocal();
 };
 
 #endif // TASKINFO_H
