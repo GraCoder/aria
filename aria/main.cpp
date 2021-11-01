@@ -44,10 +44,12 @@ int main(int argc, char**argv)
 	auto ft = qApp->font();
 	AriaDlg dlg;
 
-//	AriaHttpServer server(&dlg);
-//	std::thread httpThread(
-//		std::bind(&AriaHttpServer::run, &server));
-//	browserIntersect();
+#ifdef NDEBUG
+	AriaHttpServer server(&dlg);
+	std::thread httpThread(
+		std::bind(&AriaHttpServer::run, &server));
+	browserIntersect();
+#endif
 
 	dlg.show();
 

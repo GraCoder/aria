@@ -45,8 +45,12 @@ ariaSetting::ariaSetting()
 	_settings["min-split-size"]= "4M";
 	_settings["piece-length"]= "1M";
 	_settings["allow-piece-length-change"]= "true";
+#ifdef NDEBUG
+	_settings["max-overall-download-limit"] = "1248K";
+#else
 	_settings["max-overall-download-limit"] = "12K";
-	//		_settings["max-download-limit"] = "10k";
+#endif
+	//_settings["max-download-limit"] = "10k";
 	_settings["optimize-concurrent-downloads"] = "false";
 	//		_settings[""]= "";
 	//		_settings[""]= "";
