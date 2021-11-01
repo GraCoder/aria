@@ -5,9 +5,11 @@
 #include <QObject>
 
 #include <map>
+#include <memory>
 
 class sqlite3;
 
+class Task;
 class AriaUi;
 
 class TaskDatabase : public QObject
@@ -26,7 +28,11 @@ public:
 
 	void completeTask(aria2::A2Gid);
 
-	void deleteTask(aria2::A2Gid);
+	void trashTask(aria2::A2Gid);
+
+	void deleteTask(uint64_t);
+
+	void restartTask(uint64_t);
 
 	void removeLocalFile(uint64_t ide);
 
@@ -39,6 +45,10 @@ public:
 	void updateTaskInfo(aria2::A2Gid, TaskInfoEx &);
 
 	void initDownloadTask();
+
+	TaskInfoEx getTaskInfo(uint64_t);
+
+	std::unique_ptr<Task> createTask(uint64_t);
 
 	void initCompleteTask();
 

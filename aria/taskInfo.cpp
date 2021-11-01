@@ -14,7 +14,8 @@ std::string UriTask::getUri()
 
 std::string UriTask::getLocal()
 {
-	return std::filesystem::path(dir).append(name).string();
+	auto path = std::filesystem::path(dir).append(name);
+	return path.generic_string();
 }
 
 std::string BtTask::getUri()

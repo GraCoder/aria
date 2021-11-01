@@ -84,6 +84,7 @@ public:
 
 	void 	explorerSelected();
 	void 	explorerIndexAt(int);
+	void 	restartTask(int);
 protected:
 	void 	resizeEvent(QResizeEvent *ev);
 	void 	mouseMoveEvent(QMouseEvent *ev);

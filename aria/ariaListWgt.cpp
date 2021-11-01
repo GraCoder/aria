@@ -15,10 +15,11 @@
 
 const int dnheight = 80;
 const int hfheight = dnheight / 5.0 * 2;
+const int iconSize = 24;
 
 void AriaListDelegate::setSize(const QSize &size)
 {
-	_btnRect = QRect(size.width() - dnheight, 10, hfheight - 10, hfheight - 10);
+	_btnRect = QRect(size.width() - dnheight, 10, iconSize, iconSize);
 }
 
 QSize AriaListDelegate::sizeHint(const QStyleOptionViewItem &opt, const QModelIndex &index) const
@@ -35,7 +36,7 @@ DownloadDelegate::DownloadDelegate()
 
 void DownloadDelegate::setSize(const QSize &size)
 {
-	_btnRect = QRect(size.width() - dnheight, 10, hfheight - 10, hfheight - 10);
+	_btnRect = QRect(size.width() - dnheight, 10, iconSize, iconSize);
 }
 
 void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt, const QModelIndex &index) const
@@ -69,19 +70,18 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	//RT---------------------------ICON-----------------------------------------------RT
 	{
 		QRect pixRect = _btnRect.translated(0, opt.rect.top());
-		bool hover = !pixRect.contains(pt);
-		QPixmap icon;  QString iconUrl = ":/aria/icons/xx/";
+		bool hover = pixRect.contains(pt);
+		QString iconUrl = ":/aria/icons/xx/";
 		if(info.state == aria2::DOWNLOAD_ACTIVE)
-			iconUrl += hover ? "pause.svg" : "pause.png";
+			iconUrl += hover ? "pause-24blue.svg" : "pause-24black.svg";
 		else if(info.state == aria2::DOWNLOAD_ERROR || info.state == aria2::DOWNLOAD_PAUSED)
-			iconUrl += hover ? "download.svg" : "download.png";
+			iconUrl += hover ? "download-24blue.svg" : "download-24black.svg";
 		else if(info.state == aria2::DOWNLOAD_WAITING)
 		{
-			//lol, what can i do, just a pargramer.
 			pixRect = QRect(pixRect.left(), pixRect.top(), 16, 16);
 			iconUrl += "waiting.svg";
 		}
-		icon = QPixmap(iconUrl);
+		QPixmap icon = QPixmap(iconUrl);
 		painter->drawPixmap(pixRect, icon, icon.rect());
 	}
 
@@ -179,10 +179,20 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 	}
 
 	{
+		bool hover = false;
 		QRect pixRect = _btnRect.translated(0, opt.rect.top());
-		QPixmap icon;
+		if(pixRect.contains(pt))
+			hover = true;
+		QString iconUrl = ":/aria/icons/xx/";
 		if(wgt->type() == COMPLETED )
-			icon = QPixmap(":/aria/icons/xx/folder.png");
+		{
+			hover ? iconUrl += "folder-24blue.svg" : iconUrl += "folder-24black.svg";
+		}
+		else if(wgt->type() == TRASHCAN)
+		{
+			hover ? iconUrl += "reload-24blue.svg" : iconUrl += "reload-24black.svg";
+		}
+		QPixmap icon(iconUrl);
 		painter->drawPixmap(pixRect, icon, icon.rect());
 	}
 }
@@ -365,6 +375,16 @@ void AriaListWidget::explorerIndexAt(int i)
 	QDesktopServices::openUrl(QUrl(dir));
 }
 
+void AriaListWidget::restartTask(int idx)
+{
+	auto listmodel = (AriaFinishListModel*)model();
+	auto &taskInfo = listmodel->_taskInfos[idx];
+	AriaDlg::getMainDlg()->getDatabase()->restartTask(taskInfo.id);
+	listmodel->beginRemoveRows(QModelIndex(), idx, idx);
+	listmodel->_taskInfos.remove(idx);
+	listmodel->endRemoveRows();
+}
+
 void AriaListWidget::resizeEvent(QResizeEvent *ev)
 {
 	auto delegate = (AriaListDelegate*)itemDelegate();
@@ -400,6 +420,7 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 	else{
 		if(!dngate->_btnRect.contains(pt.x(), y))
 			return;
+		restartTask(i);
 	}
 }
 

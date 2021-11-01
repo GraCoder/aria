@@ -60,8 +60,10 @@ struct Task{
 
 	aria2::KeyVals opts;
 
+	virtual ~Task(){}
 	virtual std::string getUri() = 0;
 	virtual std::string getLocal() = 0;
+
 };
 
 struct UriTask : public Task{

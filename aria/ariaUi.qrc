@@ -123,13 +123,21 @@
         <file>icons/completed.png</file>
         <file>icons/downloading.png</file>
         <file>icons/list-remove.png</file>
-        <file>icons/xx/download.svg</file>
+        <file>icons/xx/delete-all.svg</file>
+        <file>icons/xx/folder.svg</file>
+        <file>icons/xx/folder-24black.svg</file>
+        <file>icons/xx/folder-24blue.svg</file>
+        <file>icons/xx/reload.svg</file>
+        <file>icons/xx/reload-24black.svg</file>
+        <file>icons/xx/reload-24blue.svg</file>
         <file>icons/xx/pause.svg</file>
-        <file>icons/xx/download.png</file>
-        <file>icons/xx/pause.png</file>
+        <file>icons/xx/pause-24black.svg</file>
+        <file>icons/xx/pause-24blue.svg</file>
+        <file>icons/xx/download.svg</file>
+        <file>icons/xx/download-24black.svg</file>
+        <file>icons/xx/download-24blue.svg</file>
+        <file>icons/xx/close.svg</file>
         <file>icons/xx/delete.svg</file>
         <file>icons/xx/waiting.svg</file>
-        <file>icons/xx/folder.png</file>
-        <file>icons/xx/delete-all.svg</file>
     </qresource>
 </RCC>

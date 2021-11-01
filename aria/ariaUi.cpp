@@ -9,10 +9,12 @@
 #include <QCoreApplication>
 #include <QToolButton>
 #include <QMenu>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QStackedWidget>
 #include <QSystemTrayIcon>
+#include <QMessageBox>
 
 #include <algorithm>
 
@@ -200,7 +202,7 @@ QWidget *AriaDlg::createToolBar()
 		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
 		bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteCompleteSelected, this));
 		bar->addAction(QIcon(":/aria/icons/xx/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllCompleteSelected, this));
-		bar->addAction(QIcon(":/aria/icons/xx/folder.png"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
+		bar->addAction(QIcon(":/aria/icons/xx/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
 		stackWgt->addWidget(bar);
 	}
 	{
@@ -210,7 +212,7 @@ QWidget *AriaDlg::createToolBar()
 		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
 		bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteTrashSelected, this));
 		bar->addAction(QIcon(":/aria/icons/xx/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllTrashSelected, this));
-		bar->addAction(QIcon(":/aria/icons/xx/folder.png"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
+		bar->addAction(QIcon(":/aria/icons/xx/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
 		stackWgt->addWidget(bar);
 	}
 	return stackWgt;
@@ -254,7 +256,19 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 	auto tsks = wgt.getTasks();
 	for(auto &tsk : tsks)
 	{
-		int id = _database->findTask(tsk.get());
+		auto id = _database->findTask(tsk.get());
+		if(id > 0 && QMessageBox::question(this, "", tr("already have a same task, override?")) == QMessageBox::No)
+			continue;
+		else
+		{
+			auto filePath = QString::fromStdString(tsk->getLocal());
+			QFileInfo fileInfo(filePath);
+			if(fileInfo.isFile())
+				QFile(filePath).remove();
+			else
+				QDir(filePath).removeRecursively();
+			_database->deleteTask(id);
+		}
 		addUriTask(tsk);
 	}
 }
@@ -291,7 +305,7 @@ void AriaDlg::deleteSelected()
 	for(auto id : ids){
 		removeDownload(_session, id);
 		_dnWidget->removeTaskSlt(id);
-		_database->deleteTask(id);
+		_database->trashTask(id);
 	}
 }
 
