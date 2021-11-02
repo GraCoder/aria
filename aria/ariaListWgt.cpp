@@ -71,7 +71,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	{
 		QRect pixRect = _btnRect.translated(0, opt.rect.top());
 		bool hover = pixRect.contains(pt);
-		QString iconUrl = ":/aria/icons/xx/";
+		QString iconUrl = ":/aria/icons/";
 		if(info.state == aria2::DOWNLOAD_ACTIVE)
 			iconUrl += hover ? "pause-24blue.svg" : "pause-24black.svg";
 		else if(info.state == aria2::DOWNLOAD_ERROR || info.state == aria2::DOWNLOAD_PAUSED)
@@ -183,7 +183,7 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 		QRect pixRect = _btnRect.translated(0, opt.rect.top());
 		if(pixRect.contains(pt))
 			hover = true;
-		QString iconUrl = ":/aria/icons/xx/";
+		QString iconUrl = ":/aria/icons/";
 		if(wgt->type() == COMPLETED )
 		{
 			hover ? iconUrl += "folder-24blue.svg" : iconUrl += "folder-24black.svg";

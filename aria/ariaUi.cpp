@@ -187,9 +187,9 @@ QWidget *AriaDlg::createToolBar()
 			bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), std::bind(&AriaDlg::addUri, this, QString(), QString()));
 		}
 		{
-			bar->addAction(QIcon(":/aria/icons/xx/download.svg"), tr("start"), std::bind(&AriaDlg::startSelected, this));
-			bar->addAction(QIcon(":/aria/icons/xx/pause.svg"), tr("pause"), std::bind(&AriaDlg::pauseSelected, this));
-			bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteSelected, this));
+			bar->addAction(QIcon(":/aria/icons/download.svg"), tr("start"), std::bind(&AriaDlg::startSelected, this));
+			bar->addAction(QIcon(":/aria/icons/pause.svg"), tr("pause"), std::bind(&AriaDlg::pauseSelected, this));
+			bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteSelected, this));
 		}
 		bar->addAction(tr("test"), this, &AriaDlg::test);
 
@@ -200,9 +200,9 @@ QWidget *AriaDlg::createToolBar()
 		bar->setAttribute(Qt::WA_TranslucentBackground, false);
 		bar->setIconSize(QSize(32, 32));
 		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
-		bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteCompleteSelected, this));
-		bar->addAction(QIcon(":/aria/icons/xx/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllCompleteSelected, this));
-		bar->addAction(QIcon(":/aria/icons/xx/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
+		bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteCompleteSelected, this));
+		bar->addAction(QIcon(":/aria/icons/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllCompleteSelected, this));
+		bar->addAction(QIcon(":/aria/icons/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
 		stackWgt->addWidget(bar);
 	}
 	{
@@ -210,9 +210,9 @@ QWidget *AriaDlg::createToolBar()
 		bar->setAttribute(Qt::WA_TranslucentBackground, false);
 		bar->setIconSize(QSize(32, 32));
 		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
-		bar->addAction(QIcon(":/aria/icons/xx/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteTrashSelected, this));
-		bar->addAction(QIcon(":/aria/icons/xx/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllTrashSelected, this));
-		bar->addAction(QIcon(":/aria/icons/xx/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
+		bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteTrashSelected, this));
+		bar->addAction(QIcon(":/aria/icons/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllTrashSelected, this));
+		bar->addAction(QIcon(":/aria/icons/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
 		stackWgt->addWidget(bar);
 	}
 	return stackWgt;
