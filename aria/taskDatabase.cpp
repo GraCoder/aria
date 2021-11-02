@@ -93,6 +93,11 @@ uint64_t TaskDatabase::addTask(Task *tsk)
 	return ret;
 }
 
+aria2::A2Gid TaskDatabase::getGid(uint64_t)
+{
+
+}
+
 void TaskDatabase::downloadTask(uint64_t id, aria2::A2Gid gid)
 {
 	if(_sql == nullptr)

@@ -24,13 +24,15 @@ public:
 
 	uint64_t addTask(Task *);
 
+	aria2::A2Gid getGid(uint64_t);
+
 	void downloadTask(uint64_t, aria2::A2Gid);
 
 	void completeTask(aria2::A2Gid);
 
 	void trashTask(aria2::A2Gid);
 
-	void deleteTask(uint64_t);
+	void deleteTask(aria2::A2Gid);
 
 	void restartTask(uint64_t);
 
