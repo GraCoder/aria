@@ -267,6 +267,15 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 				QFile(filePath).remove();
 			else
 				QDir(filePath).removeRecursively();
+			auto gid = _database->getGid(id);
+			if(gid) {
+				_dnWidget->removeTaskSlt(gid);
+				aria2::removeDownload(_session, gid);
+			}
+			else{
+				_cmWidget->removeTaskSlt(id);
+				_trWidget->removeTaskSlt(id);
+			}
 			_database->deleteTask(id);
 		}
 		addUriTask(tsk);

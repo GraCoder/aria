@@ -93,9 +93,14 @@ uint64_t TaskDatabase::addTask(Task *tsk)
 	return ret;
 }
 
-aria2::A2Gid TaskDatabase::getGid(uint64_t)
+aria2::A2Gid TaskDatabase::getGid(uint64_t id)
 {
-
+	for(auto iter = _idTable.begin(); iter != _idTable.end(); iter++)
+	{
+		if(iter->second == id)
+			return iter->first;
+	}
+	return 0;
 }
 
 void TaskDatabase::downloadTask(uint64_t id, aria2::A2Gid gid)
@@ -128,6 +133,8 @@ void TaskDatabase::completeTask(aria2::A2Gid gid)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 
 	addLocalTask(id, COMPLETED);
+
+	_idTable.erase(gid);
 }
 
 void TaskDatabase::trashTask(aria2::A2Gid gid)
@@ -154,6 +161,14 @@ void TaskDatabase::deleteTask(uint64_t id)
 	const char lang[] = "delete from task_table where id = %lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
+
+	for(auto iter = _idTable.begin(); iter != _idTable.end(); iter++){
+		if(iter->second == id)
+		{
+			_idTable.erase(iter);
+			break;
+		}
+	}
 }
 
 void TaskDatabase::restartTask(uint64_t id)
