@@ -75,6 +75,12 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		std::cerr << "ERROR" << " [" << aria2::gidToHex(gid) << "] ";
 		break;
 	}
+	case aria2::EVENT_ON_SAVE_SESSION:
+	{
+		auto dlg = (AriaDlg*)userData;
+		auto tskInfo = dlg->getTaskInfo(session, gid);
+		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
+	}
 	default:
 		return 0;
 	}
@@ -147,11 +153,11 @@ AriaDlg::~AriaDlg()
 	_threadRunning = false;
 	_thread.join();
 
-	if(_database)
-		delete _database;
-
 	aria2::sessionFinal(_session);
 	aria2::libraryDeinit();
+
+	if(_database)
+		delete _database;
 }
 
 AriaDlg *AriaDlg::getMainDlg()
@@ -257,18 +263,33 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 	for(auto &tsk : tsks)
 	{
 		auto id = _database->findTask(tsk.get());
-		if(id > 0 && QMessageBox::question(this, "", tr("already have a same task, override?")) == QMessageBox::No)
+		if(id == 0){
+			addUriTask(tsk);
 			continue;
-		else
-		{
-			auto filePath = QString::fromStdString(tsk->getLocal());
-			QFileInfo fileInfo(filePath);
-			if(fileInfo.isFile())
-				QFile(filePath).remove();
-			else
-				QDir(filePath).removeRecursively();
-			_database->deleteTask(id);
 		}
+		auto gid = _database->getGid(id);
+		if(gid)
+		{
+			QMessageBox::warning(this, "", tr("already have a same task is running."));
+			continue;
+		}
+		if(QMessageBox::question(this, "", tr("already have a same task, override?")) == QMessageBox::No)
+			continue;
+
+		auto filePath = QString::fromStdString(tsk->getLocal());
+		QFileInfo fileInfo(filePath);
+		if(fileInfo.isFile())
+		{
+			QFile(filePath).remove();
+			QFile(filePath + ".aria2").remove();
+		}
+		else
+			QDir(filePath).removeRecursively();
+
+		_cmWidget->removeTaskSlt(id);
+		_trWidget->removeTaskSlt(id);
+
+		_database->deleteTask(id);
 		addUriTask(tsk);
 	}
 }
@@ -464,7 +485,6 @@ void AriaDlg::mergeTask()
 				std::vector<std::string> url(1, ptask->url);
 				ret = aria2::addUri(_session, &gid, url, tmpOpts);
 				name = QString::fromStdString(ptask->name);
-				getTaskInfo(_session, gid);
 				break;
 			}
 			case 2:
@@ -480,6 +500,9 @@ void AriaDlg::mergeTask()
 			if(ret == 0)
 			{
 				addTask(gid, tsk.get());
+				auto taskInfo = getTaskInfo(gid);
+				taskInfo.totalLength = tsk->size;
+				_emitter->updateTaskSig(gid, taskInfo);
 			}
 			else
 			{

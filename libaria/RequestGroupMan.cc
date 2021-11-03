@@ -1060,6 +1060,14 @@ void RequestGroupMan::decreaseNumActive()
 	--numActive_;
 }
 
+void RequestGroupMan::notifySaveSessions()
+{
+	for(auto &rg : requestGroups_)
+	{
+		notifyDownloadEvent(EVENT_ON_SAVE_SESSION, rg);
+	}
+}
+
 int RequestGroupMan::optimizeConcurrentDownloads()
 {
 	// gauge the current speed

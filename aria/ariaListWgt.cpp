@@ -297,7 +297,7 @@ void AriaListWidget::removeTaskSlt(uint64_t aid)
 		auto listmodel = static_cast<AriaFinishListModel*>(model());
 
 		int count = listmodel->rowCount();
-		listmodel->beginInsertRows(QModelIndex(), count, count);
+		listmodel->beginRemoveRows(QModelIndex(), count, count);
 		for(int i = 0; i < count; i++)
 		{
 			if(listmodel->_taskInfos[i].id == aid)
@@ -306,7 +306,7 @@ void AriaListWidget::removeTaskSlt(uint64_t aid)
 				break;
 			}
 		}
-		listmodel->endInsertRows();
+		listmodel->endRemoveRows();
 	}
 }
 
@@ -349,11 +349,21 @@ QVector<uint64_t>
 AriaListWidget::getSelected()
 {
 	QVector<uint64_t> ids;
-	auto idxs = selectedIndexes();
-	auto listmodel = static_cast<AriaDownloadListModel*>(model());
-	for(auto &idx : idxs){
-		auto id = listmodel->_tasks[idx.row()];
-		ids.push_back(id);
+	if(_type == DOWNLOADING){
+		auto idxs = selectedIndexes();
+		auto listmodel = static_cast<AriaDownloadListModel*>(model());
+		for(auto &idx : idxs){
+			auto id = listmodel->_tasks[idx.row()];
+			ids.push_back(id);
+		}
+	}
+	else{
+		auto idxs = selectedIndexes();
+		auto listmodel = static_cast<AriaFinishListModel*>(model());
+		for(auto &idx : idxs){
+			auto id = listmodel->_taskInfos[idx.row()].id;
+			ids.push_back(id);
+		}
 	}
 	return ids;
 }
@@ -369,7 +379,10 @@ void AriaListWidget::explorerSelected()
 
 void AriaListWidget::explorerIndexAt(int i)
 {
-	auto &taskInfo = ((AriaFinishListModel*)model())->_taskInfos[i];
+	auto listmodel = (AriaFinishListModel*)model();
+	if(listmodel->_taskInfos.size() <= i)
+		return;
+	auto &taskInfo = listmodel->_taskInfos[i];
 	QFileInfo fileInfo(taskInfo.localPath);
 	QString dir = fileInfo.absoluteDir().absolutePath();
 	QDesktopServices::openUrl(QUrl(dir));
@@ -378,6 +391,8 @@ void AriaListWidget::explorerIndexAt(int i)
 void AriaListWidget::restartTask(int idx)
 {
 	auto listmodel = (AriaFinishListModel*)model();
+	if(listmodel->_taskInfos.size() <= idx)
+		return;
 	auto &taskInfo = listmodel->_taskInfos[idx];
 	AriaDlg::getMainDlg()->getDatabase()->restartTask(taskInfo.id);
 	listmodel->beginRemoveRows(QModelIndex(), idx, idx);

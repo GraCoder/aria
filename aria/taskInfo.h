@@ -55,6 +55,7 @@ struct Task{
 	int type; //1-url
 	int state;
 	uint64_t rid;
+	uint64_t size;
 	std::string name;
 	std::string dir;
 

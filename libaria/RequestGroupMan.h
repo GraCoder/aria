@@ -64,308 +64,310 @@ class OpenedFileCounter;
 
 typedef IndexedList<a2_gid_t, std::shared_ptr<RequestGroup>> RequestGroupList;
 typedef IndexedList<a2_gid_t, std::shared_ptr<DownloadResult>>
-    DownloadResultList;
+DownloadResultList;
 
 class RequestGroupMan {
 private:
-  RequestGroupList requestGroups_;
-  RequestGroupList reservedGroups_;
-  DownloadResultList downloadResults_;
-  // This includes download result which did not finish, and deleted
-  // from downloadResults_.  This is used to save them in
-  // SessionSerializer.
-  std::vector<std::shared_ptr<DownloadResult>> unfinishedDownloadResults_;
+	RequestGroupList requestGroups_;
+	RequestGroupList reservedGroups_;
+	DownloadResultList downloadResults_;
+	// This includes download result which did not finish, and deleted
+	// from downloadResults_.  This is used to save them in
+	// SessionSerializer.
+	std::vector<std::shared_ptr<DownloadResult>> unfinishedDownloadResults_;
 
-  int maxConcurrentDownloads_;
+	int maxConcurrentDownloads_;
 
-  bool optimizeConcurrentDownloads_;
-  double optimizeConcurrentDownloadsCoeffA_;
-  double optimizeConcurrentDownloadsCoeffB_;
-  int optimizationSpeed_;
-  Timer optimizationSpeedTimer_;
+	bool optimizeConcurrentDownloads_;
+	double optimizeConcurrentDownloadsCoeffA_;
+	double optimizeConcurrentDownloadsCoeffB_;
+	int optimizationSpeed_;
+	Timer optimizationSpeedTimer_;
 
-  // The number of simultaneous active downloads, excluding seed only
-  // item if PREF_BT_DETACH_SEED_ONLY is true.  We rely on this
-  // variable to maintain the number of concurrent downloads.  If
-  // PREF_BT_DETACH_SEED_ONLY is false, this variable is equal to
-  // requestGroups_.size().
-  size_t numActive_;
+	// The number of simultaneous active downloads, excluding seed only
+	// item if PREF_BT_DETACH_SEED_ONLY is true.  We rely on this
+	// variable to maintain the number of concurrent downloads.  If
+	// PREF_BT_DETACH_SEED_ONLY is false, this variable is equal to
+	// requestGroups_.size().
+	size_t numActive_;
 
-  const Option* option_;
+	const Option* option_;
 
-  std::shared_ptr<ServerStatMan> serverStatMan_;
+	std::shared_ptr<ServerStatMan> serverStatMan_;
 
-  int maxOverallDownloadSpeedLimit_;
+	int maxOverallDownloadSpeedLimit_;
 
-  int maxOverallUploadSpeedLimit_;
+	int maxOverallUploadSpeedLimit_;
 
-  NetStat netStat_;
+	NetStat netStat_;
 
-  // true if download engine should keep running even if there is no
-  // download to perform.
-  bool keepRunning_;
+	// true if download engine should keep running even if there is no
+	// download to perform.
+	bool keepRunning_;
 
-  bool queueCheck_;
+	bool queueCheck_;
 
-  // The number of error DownloadResult removed because of upper limit
-  // of the queue
-  int removedErrorResult_;
+	// The number of error DownloadResult removed because of upper limit
+	// of the queue
+	int removedErrorResult_;
 
-  // The last error of removed DownloadResult
-  error_code::Value removedLastErrorResult_;
+	// The last error of removed DownloadResult
+	error_code::Value removedLastErrorResult_;
 
-  size_t maxDownloadResult_;
+	size_t maxDownloadResult_;
 
-  // UriListParser for deferred input.
-  std::shared_ptr<UriListParser> uriListParser_;
+	// UriListParser for deferred input.
+	std::shared_ptr<UriListParser> uriListParser_;
 
-  std::unique_ptr<WrDiskCache> wrDiskCache_;
+	std::unique_ptr<WrDiskCache> wrDiskCache_;
 
-  std::shared_ptr<OpenedFileCounter> openedFileCounter_;
+	std::shared_ptr<OpenedFileCounter> openedFileCounter_;
 
-  // The number of stopped downloads so far in total, including
-  // evicted DownloadResults.
-  size_t numStoppedTotal_;
+	// The number of stopped downloads so far in total, including
+	// evicted DownloadResults.
+	size_t numStoppedTotal_;
 
-  // SHA1 hash value of the content of last session serialization.
-  std::string lastSessionHash_;
+	// SHA1 hash value of the content of last session serialization.
+	std::string lastSessionHash_;
 
-  void formatDownloadResultFull(
-      OutputFile& out, const char* status,
-      const std::shared_ptr<DownloadResult>& downloadResult) const;
+	void formatDownloadResultFull(
+			OutputFile& out, const char* status,
+			const std::shared_ptr<DownloadResult>& downloadResult) const;
 
-  std::string formatDownloadResult(
-      const char* status,
-      const std::shared_ptr<DownloadResult>& downloadResult) const;
+	std::string formatDownloadResult(
+			const char* status,
+			const std::shared_ptr<DownloadResult>& downloadResult) const;
 
-  void configureRequestGroup(
-      const std::shared_ptr<RequestGroup>& requestGroup) const;
+	void configureRequestGroup(
+			const std::shared_ptr<RequestGroup>& requestGroup) const;
 
-  void addRequestGroupIndex(const std::shared_ptr<RequestGroup>& group);
-  void addRequestGroupIndex(
-      const std::vector<std::shared_ptr<RequestGroup>>& groups);
+	void addRequestGroupIndex(const std::shared_ptr<RequestGroup>& group);
+	void addRequestGroupIndex(
+			const std::vector<std::shared_ptr<RequestGroup>>& groups);
 
-  int optimizeConcurrentDownloads();
+	int optimizeConcurrentDownloads();
 
 public:
-  RequestGroupMan(std::vector<std::shared_ptr<RequestGroup>> requestGroups,
-                  int maxConcurrentDownloads, const Option* option);
+	RequestGroupMan(std::vector<std::shared_ptr<RequestGroup>> requestGroups,
+					int maxConcurrentDownloads, const Option* option);
 
-  ~RequestGroupMan();
+	~RequestGroupMan();
 
-  bool downloadFinished();
+	bool downloadFinished();
 
-  void save();
+	void save();
 
-  void closeFile();
+	void closeFile();
 
-  void halt();
+	void halt();
 
-  void forceHalt();
+	void forceHalt();
 
-  void removeStoppedGroup(DownloadEngine* e);
+	void removeStoppedGroup(DownloadEngine* e);
 
-  void fillRequestGroupFromReserver(DownloadEngine* e);
+	void fillRequestGroupFromReserver(DownloadEngine* e);
 
-  // Note that this method does not call addRequestGroupIndex(). This
-  // method should be considered as private, but exposed for unit
-  // testing purpose.
-  void addRequestGroup(const std::shared_ptr<RequestGroup>& group);
+	// Note that this method does not call addRequestGroupIndex(). This
+	// method should be considered as private, but exposed for unit
+	// testing purpose.
+	void addRequestGroup(const std::shared_ptr<RequestGroup>& group);
 
-  void
-  addReservedGroup(const std::vector<std::shared_ptr<RequestGroup>>& groups);
+	void
+	addReservedGroup(const std::vector<std::shared_ptr<RequestGroup>>& groups);
 
-  void addReservedGroup(const std::shared_ptr<RequestGroup>& group);
+	void addReservedGroup(const std::shared_ptr<RequestGroup>& group);
 
-  void
-  insertReservedGroup(size_t pos,
-                      const std::vector<std::shared_ptr<RequestGroup>>& groups);
+	void
+	insertReservedGroup(size_t pos,
+						const std::vector<std::shared_ptr<RequestGroup>>& groups);
 
-  void insertReservedGroup(size_t pos,
-                           const std::shared_ptr<RequestGroup>& group);
+	void insertReservedGroup(size_t pos,
+							 const std::shared_ptr<RequestGroup>& group);
 
-  size_t countRequestGroup() const;
+	size_t countRequestGroup() const;
 
-  const RequestGroupList& getRequestGroups() const { return requestGroups_; }
+	const RequestGroupList& getRequestGroups() const { return requestGroups_; }
 
-  const RequestGroupList& getReservedGroups() const { return reservedGroups_; }
+	const RequestGroupList& getReservedGroups() const { return reservedGroups_; }
 
-  // Returns RequestGroup object whose gid is gid. This method returns
-  // RequestGroup either in requestGroups_ or reservedGroups_.
-  std::shared_ptr<RequestGroup> findGroup(a2_gid_t gid) const;
+	// Returns RequestGroup object whose gid is gid. This method returns
+	// RequestGroup either in requestGroups_ or reservedGroups_.
+	std::shared_ptr<RequestGroup> findGroup(a2_gid_t gid) const;
 
-  // Changes the position of download denoted by gid.  If how is
-  // POS_SET, it moves the download to a position relative to the
-  // beginning of the queue.  If how is POS_CUR, it moves the download
-  // to a position relative to the current position. If how is
-  // POS_END, it moves the download to a position relative to the end
-  // of the queue. If the destination position is less than 0 or
-  // beyond the end of the queue, it moves the download to the
-  // beginning or the end of the queue respectively.  Returns the
-  // destination position.
-  size_t changeReservedGroupPosition(a2_gid_t gid, int pos, OffsetMode how);
+	// Changes the position of download denoted by gid.  If how is
+	// POS_SET, it moves the download to a position relative to the
+	// beginning of the queue.  If how is POS_CUR, it moves the download
+	// to a position relative to the current position. If how is
+	// POS_END, it moves the download to a position relative to the end
+	// of the queue. If the destination position is less than 0 or
+	// beyond the end of the queue, it moves the download to the
+	// beginning or the end of the queue respectively.  Returns the
+	// destination position.
+	size_t changeReservedGroupPosition(a2_gid_t gid, int pos, OffsetMode how);
 
-  bool removeReservedGroup(a2_gid_t gid);
+	bool removeReservedGroup(a2_gid_t gid);
 
-  bool getOptimizeConcurrentDownloads() const
-  {
-    return optimizeConcurrentDownloads_;
-  }
+	bool getOptimizeConcurrentDownloads() const
+	{
+		return optimizeConcurrentDownloads_;
+	}
 
-  bool setupOptimizeConcurrentDownloads();
+	bool setupOptimizeConcurrentDownloads();
 
-  void showDownloadResults(OutputFile& o, bool full) const;
+	void showDownloadResults(OutputFile& o, bool full) const;
 
-  bool isSameFileBeingDownloaded(RequestGroup* requestGroup) const;
+	bool isSameFileBeingDownloaded(RequestGroup* requestGroup) const;
 
-  TransferStat calculateStat();
+	TransferStat calculateStat();
 
-  class DownloadStat {
-  private:
-    int error_;
-    int inProgress_;
-    int waiting_;
-    error_code::Value lastErrorResult_;
+	class DownloadStat {
+	private:
+		int error_;
+		int inProgress_;
+		int waiting_;
+		error_code::Value lastErrorResult_;
 
-  public:
-    DownloadStat(int error, int inProgress, int waiting,
-                 error_code::Value lastErrorResult = error_code::FINISHED)
-        : error_(error),
-          inProgress_(inProgress),
-          waiting_(waiting),
-          lastErrorResult_(lastErrorResult)
-    {
-    }
+	public:
+		DownloadStat(int error, int inProgress, int waiting,
+					 error_code::Value lastErrorResult = error_code::FINISHED)
+			: error_(error),
+			  inProgress_(inProgress),
+			  waiting_(waiting),
+			  lastErrorResult_(lastErrorResult)
+		{
+		}
 
-    error_code::Value getLastErrorResult() const { return lastErrorResult_; }
+		error_code::Value getLastErrorResult() const { return lastErrorResult_; }
 
-    bool allCompleted() const
-    {
-      return error_ == 0 && inProgress_ == 0 && waiting_ == 0;
-    }
+		bool allCompleted() const
+		{
+			return error_ == 0 && inProgress_ == 0 && waiting_ == 0;
+		}
 
-    int getInProgress() const { return inProgress_; }
-  };
+		int getInProgress() const { return inProgress_; }
+	};
 
-  DownloadStat getDownloadStat() const;
+	DownloadStat getDownloadStat() const;
 
-  const DownloadResultList& getDownloadResults() const
-  {
-    return downloadResults_;
-  }
+	const DownloadResultList& getDownloadResults() const
+	{
+		return downloadResults_;
+	}
 
-  std::shared_ptr<DownloadResult> findDownloadResult(a2_gid_t gid) const;
+	std::shared_ptr<DownloadResult> findDownloadResult(a2_gid_t gid) const;
 
-  // Removes all download results.
-  void purgeDownloadResult();
+	// Removes all download results.
+	void purgeDownloadResult();
 
-  // Removes download result of given gid. Returns true if download
-  // result was removed. Otherwise returns false.
-  bool removeDownloadResult(a2_gid_t gid);
+	// Removes download result of given gid. Returns true if download
+	// result was removed. Otherwise returns false.
+	bool removeDownloadResult(a2_gid_t gid);
 
-  void addDownloadResult(const std::shared_ptr<DownloadResult>& downloadResult);
+	void addDownloadResult(const std::shared_ptr<DownloadResult>& downloadResult);
 
-  const std::vector<std::shared_ptr<DownloadResult>>&
-  getUnfinishedDownloadResult() const
-  {
-    return unfinishedDownloadResults_;
-  }
+	const std::vector<std::shared_ptr<DownloadResult>>&
+	getUnfinishedDownloadResult() const
+	{
+		return unfinishedDownloadResults_;
+	}
 
-  std::shared_ptr<ServerStat> findServerStat(const std::string& hostname,
-                                             const std::string& protocol) const;
+	std::shared_ptr<ServerStat> findServerStat(const std::string& hostname,
+											   const std::string& protocol) const;
 
-  std::shared_ptr<ServerStat>
-  getOrCreateServerStat(const std::string& hostname,
-                        const std::string& protocol);
+	std::shared_ptr<ServerStat>
+	getOrCreateServerStat(const std::string& hostname,
+						  const std::string& protocol);
 
-  bool addServerStat(const std::shared_ptr<ServerStat>& serverStat);
+	bool addServerStat(const std::shared_ptr<ServerStat>& serverStat);
 
-  bool loadServerStat(const std::string& filename);
+	bool loadServerStat(const std::string& filename);
 
-  bool saveServerStat(const std::string& filename) const;
+	bool saveServerStat(const std::string& filename) const;
 
-  void removeStaleServerStat(const std::chrono::seconds& timeout);
+	void removeStaleServerStat(const std::chrono::seconds& timeout);
 
-  // Returns true if current download speed exceeds
-  // maxOverallDownloadSpeedLimit_.  Always returns false if
-  // maxOverallDownloadSpeedLimit_ == 0.  Otherwise returns false.
-  bool doesOverallDownloadSpeedExceed();
+	// Returns true if current download speed exceeds
+	// maxOverallDownloadSpeedLimit_.  Always returns false if
+	// maxOverallDownloadSpeedLimit_ == 0.  Otherwise returns false.
+	bool doesOverallDownloadSpeedExceed();
 
-  void setMaxOverallDownloadSpeedLimit(int speed)
-  {
-    maxOverallDownloadSpeedLimit_ = speed;
-  }
+	void setMaxOverallDownloadSpeedLimit(int speed)
+	{
+		maxOverallDownloadSpeedLimit_ = speed;
+	}
 
-  int getMaxOverallDownloadSpeedLimit() const
-  {
-    return maxOverallDownloadSpeedLimit_;
-  }
+	int getMaxOverallDownloadSpeedLimit() const
+	{
+		return maxOverallDownloadSpeedLimit_;
+	}
 
-  // Returns true if current upload speed exceeds
-  // maxOverallUploadSpeedLimit_. Always returns false if
-  // maxOverallUploadSpeedLimit_ == 0. Otherwise returns false.
-  bool doesOverallUploadSpeedExceed();
+	// Returns true if current upload speed exceeds
+	// maxOverallUploadSpeedLimit_. Always returns false if
+	// maxOverallUploadSpeedLimit_ == 0. Otherwise returns false.
+	bool doesOverallUploadSpeedExceed();
 
-  void setMaxOverallUploadSpeedLimit(int speed)
-  {
-    maxOverallUploadSpeedLimit_ = speed;
-  }
+	void setMaxOverallUploadSpeedLimit(int speed)
+	{
+		maxOverallUploadSpeedLimit_ = speed;
+	}
 
-  int getMaxOverallUploadSpeedLimit() const
-  {
-    return maxOverallUploadSpeedLimit_;
-  }
+	int getMaxOverallUploadSpeedLimit() const
+	{
+		return maxOverallUploadSpeedLimit_;
+	}
 
-  void setMaxConcurrentDownloads(int max) { maxConcurrentDownloads_ = max; }
+	void setMaxConcurrentDownloads(int max) { maxConcurrentDownloads_ = max; }
 
-  // Call this function if requestGroups_ queue should be maintained.
-  // This function is added to reduce the call of maintenance, but at
-  // the same time, it provides fast maintenance reaction.
-  void requestQueueCheck() { queueCheck_ = true; }
+	// Call this function if requestGroups_ queue should be maintained.
+	// This function is added to reduce the call of maintenance, but at
+	// the same time, it provides fast maintenance reaction.
+	void requestQueueCheck() { queueCheck_ = true; }
 
-  void clearQueueCheck() { queueCheck_ = false; }
+	void clearQueueCheck() { queueCheck_ = false; }
 
-  bool queueCheckRequested() const { return queueCheck_; }
+	bool queueCheckRequested() const { return queueCheck_; }
 
-  // Returns currently used hosts and its use count.
-  void getUsedHosts(std::vector<std::pair<size_t, std::string>>& usedHosts);
+	// Returns currently used hosts and its use count.
+	void getUsedHosts(std::vector<std::pair<size_t, std::string>>& usedHosts);
 
-  const std::shared_ptr<ServerStatMan>& getServerStatMan() const
-  {
-    return serverStatMan_;
-  }
+	const std::shared_ptr<ServerStatMan>& getServerStatMan() const
+	{
+		return serverStatMan_;
+	}
 
-  void setMaxDownloadResult(size_t v) { maxDownloadResult_ = v; }
+	void setMaxDownloadResult(size_t v) { maxDownloadResult_ = v; }
 
-  void setUriListParser(const std::shared_ptr<UriListParser>& uriListParser);
+	void setUriListParser(const std::shared_ptr<UriListParser>& uriListParser);
 
-  NetStat& getNetStat() { return netStat_; }
+	NetStat& getNetStat() { return netStat_; }
 
-  WrDiskCache* getWrDiskCache() const { return wrDiskCache_.get(); }
+	WrDiskCache* getWrDiskCache() const { return wrDiskCache_.get(); }
 
-  // Initializes WrDiskCache according to PREF_DISK_CACHE option.  If
-  // its value is 0, cache storage will not be initialized.
-  void initWrDiskCache();
+	// Initializes WrDiskCache according to PREF_DISK_CACHE option.  If
+	// its value is 0, cache storage will not be initialized.
+	void initWrDiskCache();
 
-  void setKeepRunning(bool flag) { keepRunning_ = flag; }
+	void setKeepRunning(bool flag) { keepRunning_ = flag; }
 
-  bool getKeepRunning() const { return keepRunning_; }
+	bool getKeepRunning() const { return keepRunning_; }
 
-  size_t getNumStoppedTotal() const { return numStoppedTotal_; }
+	size_t getNumStoppedTotal() const { return numStoppedTotal_; }
 
-  void setLastSessionHash(std::string lastSessionHash)
-  {
-    lastSessionHash_ = std::move(lastSessionHash);
-  }
+	void setLastSessionHash(std::string lastSessionHash)
+	{
+		lastSessionHash_ = std::move(lastSessionHash);
+	}
 
-  const std::string& getLastSessionHash() const { return lastSessionHash_; }
+	const std::string& getLastSessionHash() const { return lastSessionHash_; }
 
-  const std::shared_ptr<OpenedFileCounter>& getOpenedFileCounter() const
-  {
-    return openedFileCounter_;
-  }
+	const std::shared_ptr<OpenedFileCounter>& getOpenedFileCounter() const
+	{
+		return openedFileCounter_;
+	}
 
-  void decreaseNumActive();
+	void decreaseNumActive();
+
+	void notifySaveSessions();
 };
 
 } // namespace aria2

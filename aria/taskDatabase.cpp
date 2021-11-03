@@ -93,9 +93,14 @@ uint64_t TaskDatabase::addTask(Task *tsk)
 	return ret;
 }
 
-aria2::A2Gid TaskDatabase::getGid(uint64_t)
+aria2::A2Gid TaskDatabase::getGid(uint64_t id)
 {
-
+	for(auto iter = _idTable.begin(); iter != _idTable.end(); iter++)
+	{
+		if(iter->second == id)
+			return iter->first;
+	}
+	return 0;
 }
 
 void TaskDatabase::downloadTask(uint64_t id, aria2::A2Gid gid)
@@ -128,6 +133,8 @@ void TaskDatabase::completeTask(aria2::A2Gid gid)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 
 	addLocalTask(id, COMPLETED);
+
+	_idTable.erase(gid);
 }
 
 void TaskDatabase::trashTask(aria2::A2Gid gid)
@@ -154,6 +161,14 @@ void TaskDatabase::deleteTask(uint64_t id)
 	const char lang[] = "delete from task_table where id = %lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
+
+	for(auto iter = _idTable.begin(); iter != _idTable.end(); iter++){
+		if(iter->second == id)
+		{
+			_idTable.erase(iter);
+			break;
+		}
+	}
 }
 
 void TaskDatabase::restartTask(uint64_t id)
@@ -283,7 +298,7 @@ void TaskDatabase::initDownloadTask()
 std::unique_ptr<Task>
 TaskDatabase::createTask(uint64_t id)
 {
-	const char lang[] = "select id, gid, type, name, state, link_path, local_path, options from task_table where id=%lld;";
+	const char lang[] = "select id, gid, type, name, state, total_size, link_path, local_path, options from task_table where id=%lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
@@ -294,12 +309,13 @@ TaskDatabase::createTask(uint64_t id)
 		auto ty = sqlite3_column_int(stmt, 2);
 		auto na = sqlite3_column_text(stmt, 3);
 		auto st = sqlite3_column_int(stmt, 4);
+		auto sz = sqlite3_column_int64(stmt, 5);
 		std::string lk, lp, op;
-		auto chlk = sqlite3_column_text(stmt, 5);
+		auto chlk = sqlite3_column_text(stmt, 6);
 		if(chlk) lk = (const char *)chlk;
-		auto chlp = sqlite3_column_text(stmt, 6);
+		auto chlp = sqlite3_column_text(stmt, 7);
 		if(chlp) lp = (const char *)chlp;
-		auto chop = sqlite3_column_text(stmt, 7);
+		auto chop = sqlite3_column_text(stmt, 8);
 		if(chop) op = (const char *)chop;
 		switch(ty){
 		case 1:
@@ -319,6 +335,7 @@ TaskDatabase::createTask(uint64_t id)
 		tsk->rid = id;
 		tsk->state = st;
 		tsk->type = ty;
+		tsk->size = sz;
 		tsk->opts = optToKV(op);
 		{
 			char chgid[17] = {0}; sprintf(chgid, "%llX", gid);

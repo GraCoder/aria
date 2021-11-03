@@ -128,6 +128,8 @@ enum DownloadEvent {
    * continue to perform seeding.
    */
 	EVENT_ON_BT_DOWNLOAD_COMPLETE,
+
+	EVENT_ON_SAVE_SESSION,
 };
 
 /**
