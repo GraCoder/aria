@@ -17,6 +17,11 @@ const int dnheight = 80;
 const int hfheight = dnheight / 5.0 * 2;
 const int iconSize = 24;
 
+AriaListDelegate::AriaListDelegate()
+{
+	_alias["msi"] = "exe";
+}
+
 void AriaListDelegate::setSize(const QSize &size)
 {
 	_btnRect = QRect(size.width() - dnheight, 10, iconSize, iconSize);
@@ -30,6 +35,10 @@ QSize AriaListDelegate::sizeHint(const QStyleOptionViewItem &opt, const QModelIn
 QPixmap &AriaListDelegate::getPixmap(const QString &fileName) const
 {
 	auto suf = QFileInfo(fileName).suffix();
+	auto ater = _alias.find(suf);
+	if(ater != _alias.end())
+		suf = *ater;
+
 	auto iter = _pixMap.find(suf);
 	if(iter != _pixMap.end())
 		return *iter;

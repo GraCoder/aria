@@ -533,8 +533,10 @@ void AriaDlg::addUriTask(UriTask *tsk)
 	}
 	_emitter->addTaskSig(gid, name);
 	auto taskInfo = getTaskInfo(gid);
-	taskInfo.totalLength = tsk->size;
 	taskInfo.state = tsk->state;
+	taskInfo.totalLength = tsk->to_size;
+	taskInfo.dnloadLength = tsk->dn_size;
+	taskInfo.uploadLength = tsk->up_size;
 	_emitter->updateTaskSig(gid, taskInfo);
 
 }

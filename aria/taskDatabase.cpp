@@ -196,6 +196,8 @@ void TaskDatabase::initDownloadTask()
 	std::vector<std::unique_ptr<Task>> tasks;
 	for(auto id : ids){
 		auto tsk = createTask(id);
+		if(tsk == nullptr)
+			continue;
 		tasks.push_back(std::move(tsk));
 	}
 	AriaDlg::getMainDlg()->addTask(tasks);
@@ -204,7 +206,8 @@ void TaskDatabase::initDownloadTask()
 std::unique_ptr<Task>
 TaskDatabase::createTask(aria2::A2Gid id)
 {
-	const char lang[] = "select type, name, state, total_size, link_path, local_path, options from task_table where gid=%lld;";
+	const char lang[] = "select type, name, state, total_size, down_size, up_size,"
+						"link_path, local_path, options from task_table where gid=%lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
@@ -214,12 +217,14 @@ TaskDatabase::createTask(aria2::A2Gid id)
 		auto na = sqlite3_column_text(stmt, 1);
 		auto st = sqlite3_column_int(stmt, 2);
 		auto sz = sqlite3_column_int64(stmt, 3);
+		auto dz = sqlite3_column_int64(stmt, 4);
+		auto uz = sqlite3_column_int64(stmt, 5);
 		std::string lk, lp, op;
-		auto chlk = sqlite3_column_text(stmt, 4);
+		auto chlk = sqlite3_column_text(stmt, 6);
 		if(chlk) lk = (const char *)chlk;
-		auto chlp = sqlite3_column_text(stmt, 5);
+		auto chlp = sqlite3_column_text(stmt, 7);
 		if(chlp) lp = (const char *)chlp;
-		auto chop = sqlite3_column_text(stmt, 6);
+		auto chop = sqlite3_column_text(stmt, 8);
 		if(chop) op = (const char *)chop;
 		switch(ty){
 		case 1:
@@ -239,7 +244,9 @@ TaskDatabase::createTask(aria2::A2Gid id)
 		tsk->name = (const char *)na;
 		tsk->state = st;
 		tsk->type = ty;
-		tsk->size = sz;
+		tsk->to_size = sz;
+		tsk->dn_size = dz;
+		tsk->up_size = uz;
 		tsk->opts = optToKV(op);
 		{
 			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(id)));

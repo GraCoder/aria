@@ -57,7 +57,9 @@ struct Task{
 	uint64_t id;
 	int type; //1-url
 	int state;
-	uint64_t size;
+	uint64_t to_size;
+	uint64_t dn_size;
+	uint64_t up_size;
 	std::string name;
 	std::string dir;
 

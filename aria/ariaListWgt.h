@@ -13,6 +13,7 @@ enum AriListViewType{
 class AriaListDelegate: public QAbstractItemDelegate{
 	friend class AriaListWidget;
 public:
+	AriaListDelegate();
 	virtual void setSize(const QSize &);
 protected:
 	QSize sizeHint(const QStyleOptionViewItem &opt, const QModelIndex &index) const;
@@ -21,8 +22,8 @@ protected:
 
 protected:
 	QRect _btnRect;
-
-	mutable QMap<QString, QPixmap> _pixMap;
+	QMap<QString, QString>				_alias;
+	mutable QMap<QString, QPixmap> 		_pixMap;
 };
 
 //--------------------------------------------------------------------------------
