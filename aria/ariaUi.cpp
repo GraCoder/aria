@@ -264,7 +264,7 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 	{
 		auto id = _database->findTask(tsk.get());
 		if(id == 0){
-			addUriTask(tsk);
+			addTask(tsk);
 			continue;
 		}
 		auto gid = _database->getGid(id);
@@ -290,17 +290,28 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 		_trWidget->removeTaskSlt(id);
 
 		_database->deleteTask(id);
-		addUriTask(tsk);
+		addTask(tsk);
 	}
 }
 
-void AriaDlg::addUriTask(std::unique_ptr<Task> &tsk)
+void AriaDlg::addTask(std::unique_ptr<Task> &tsk)
 {
 	if(tsk->rid == 0)
 		tsk->rid = _database->addTask(tsk.get());
 
 	_addLock.lock();
 	_addTasks.push_back(std::move(tsk));
+	_addLock.unlock();
+}
+
+void AriaDlg::addTask(std::vector<std::unique_ptr<Task> > &tsks)
+{
+	_addLock.lock();
+	for(auto &tsk : tsks){
+		if(tsk->rid == 0)
+			tsk->rid = _database->addTask(tsk.get());
+		_addTasks.push_back(std::move(tsk));
+	}
 	_addLock.unlock();
 }
 
@@ -469,45 +480,19 @@ void AriaDlg::download()
 
 void AriaDlg::mergeTask()
 {
-	using namespace aria2;
-
 	if(_addLock.try_lock()) {
 		for(int i = 0; i < _addTasks.size(); i++){
-			int ret = 0;
-			QString name;
-			A2Gid gid;
-			auto tsk = std::move(_addTasks[i]);
-			KeyVals tmpOpts = tsk->opts;
-			switch(tsk->type){
-			case 1:
-			{
-				auto ptask = static_cast<UriTask*>(tsk.get());
-				std::vector<std::string> url(1, ptask->url);
-				ret = aria2::addUri(_session, &gid, url, tmpOpts);
-				name = QString::fromStdString(ptask->name);
-				break;
+			auto &tsk = _addTasks[i];
+			if(tsk->type == 1){
+				auto ptsk = static_cast<UriTask*>(tsk.get());
+				addUriTask(ptsk);
 			}
-			case 2:
-			{
-				auto ptask = static_cast<BtTask*>(tsk.get());
-				ret = aria2::addTorrent(_session, &gid, ptask->torrent, tmpOpts);
-				name = QString::fromStdString(ptask->name);
-				break;
-			}
-			default:
-				break;
-			}
-			if(ret == 0)
-			{
-				addTask(gid, tsk.get());
-				auto taskInfo = getTaskInfo(gid);
-				taskInfo.totalLength = tsk->size;
-				_emitter->updateTaskSig(gid, taskInfo);
-			}
-			else
-			{
-				//errTask();
-			}
+			else if(tsk->type == 2) {
+				//auto ptask = static_cast<BtTask*>(tsk.get());
+				//ret = aria2::addTorrent(_session, &gid, ptask->torrent, tmpOpts);
+				//name = QString::fromStdString(ptask->name);
+				//break;
+			}	
 		}
 		_addTasks.clear();
 		_addLock.unlock();
@@ -521,10 +506,37 @@ void AriaDlg::errorTask(aria2::A2Gid id)
 	aria2::deleteDownloadHandle(dh);
 }
 
-void AriaDlg::addTask(aria2::A2Gid id, Task *tsk)
+void AriaDlg::addUriTask(UriTask *tsk)
 {
-	_database->downloadTask(tsk->rid, id);
-	_emitter->addTaskSig(id, QString::fromStdString(tsk->name));
+	using namespace aria2;
+
+	A2Gid gid;
+	QString name = QString::fromStdString(tsk->name);
+	if(tsk->state == DOWNLOAD_ERROR)
+	{
+		_emitter->addTaskSig(-1, name);
+		//_emitter->updateTaskSig();
+		return;
+	}
+
+	KeyVals tmpOpts = tsk->opts;
+	std::vector<std::string> url(1, tsk->url);
+	int ret = aria2::addUri(_session, &gid, url, tmpOpts);
+	if(ret != 0)
+		return;
+
+	_database->downloadTask(tsk->rid, gid);
+	_emitter->addTaskSig(gid, QString::fromStdString(tsk->name));
+	auto taskInfo = getTaskInfo(gid);
+	taskInfo.totalLength = tsk->size;
+	taskInfo.state = tsk->state;
+	_emitter->updateTaskSig(gid, taskInfo);
+
+}
+
+void AriaDlg::addBtTask(aria2::A2Gid, Task *)
+{
+
 }
 
 void AriaDlg::updateTask(aria2::A2Gid id)

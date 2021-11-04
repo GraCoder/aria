@@ -27,6 +27,22 @@ QSize AriaListDelegate::sizeHint(const QStyleOptionViewItem &opt, const QModelIn
 	return QSize(100, dnheight);
 }
 
+QPixmap &AriaListDelegate::getPixmap(const QString &fileName) const
+{
+	auto suf = QFileInfo(fileName).suffix();
+	auto iter = _pixMap.find(suf);
+	if(iter != _pixMap.end())
+		return *iter;
+	const QString iconPrefix = ":/aria/icons/filetype2";
+	QString filepath = iconPrefix + "/" + suf + ".png";
+	auto &px = _pixMap[suf];
+	if(QFile(filepath).exists())
+		px = QPixmap(filepath);
+	else
+		px = QFileIconProvider().icon(QFileIconProvider::File).pixmap(32, 32);
+	return px;
+}
+
 //--------------------------------------------------------------------------------
 
 DownloadDelegate::DownloadDelegate()
@@ -51,8 +67,8 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 
 	const int popSize = dnheight / 5.0 * 2;
 
-	auto ico = QFileIconProvider().icon(QFileIconProvider::File).pixmap(32, 32);
-	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico, QRect(0, 0, 32, 32));	
+	const QPixmap& ico = getPixmap(info.name);
+	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico);
 
 	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
 	ft.setBold(true);
@@ -156,8 +172,8 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 
 	const int popSize = dnheight / 5.0 * 2;
 
-	auto ico = QFileIconProvider().icon(QFileIconProvider::File).pixmap(32, 32);
-	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico, QRect(0, 0, 32, 32));
+	const QPixmap& ico = getPixmap(info.name);
+	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico);
 
 	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
 	ft.setBold(true);

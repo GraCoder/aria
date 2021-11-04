@@ -29,7 +29,11 @@ ariaSetting::ariaSetting()
 		//_settings["input-file"]= path;
 		_settings["save-session"]= path;
 	}
+#ifdef NDEBUG
+	_settings["log"] = "log.txt";
+#else
 	_settings["log"] = "-";
+#endif
 
 	_settings["save-session-interval"]= "20"; //session
 

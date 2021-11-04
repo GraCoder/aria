@@ -129,7 +129,7 @@
 /* #undef HAVE_FCNTL_H */
 
 /* Define to 1 if you have the <float.h> header file. */
-/* #undef HAVE_FLOAT_H */
+#define HAVE_FLOAT_H 1
 
 /* Define to 1 if you have the `fork' function. */
 /* #undef HAVE_FORK */
@@ -157,6 +157,8 @@
 
 /* Define to 1 if you have the `getpagesize' function. */
 /* #undef HAVE_GETPAGESIZE */
+
+#define HAVE_IPHLPAPI_H 1
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #define HAVE_GETTEXT 1

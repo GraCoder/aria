@@ -18,5 +18,5 @@ target_include_directories(${lib_name} PUBLIC ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(${lib_name} ${LIBXML2_LIBRARY} sqlite3 ssh2 cares)
 target_link_libraries(${lib_name} gmp ssl z intl iconv)
 target_link_libraries(${lib_name} crypt32 secur32 advapi32)
-target_link_libraries(${lib_name} ws2_32 wsock32 gdi32 winmm psapi)
+target_link_libraries(${lib_name} ws2_32 wsock32 gdi32 winmm psapi iphlpapi)
 

@@ -57,8 +57,8 @@ uint64_t TaskDatabase::findTask(Task *task)
 {
 	if(_sql == nullptr)
 		return 0;
-	const char lang[] = "select id from task_table where (link_path = '%s' and local_path = '%s');";
-	sprintf(exeLang, lang, task->getUri().c_str(), task->getLocal().c_str());
+	const char lang[] = "select id from task_table where (local_path = '%s');";
+	sprintf(exeLang, lang, task->getLocal().c_str());
 	sqlite3_stmt *stmt; const char *tail;
 	auto rc = sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, &tail);
 	if(rc != SQLITE_OK)
@@ -107,6 +107,8 @@ void TaskDatabase::downloadTask(uint64_t id, aria2::A2Gid gid)
 {
 	if(_sql == nullptr)
 		return;
+	_idTable[gid] = id;
+
 	const char lang1[] = "update task_table set gid = %lld, state=%d where id = %d;";
 	sprintf(exeLang, lang1, gid, aria2::DOWNLOAD_WAITING, id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
@@ -114,8 +116,6 @@ void TaskDatabase::downloadTask(uint64_t id, aria2::A2Gid gid)
 	const char lang2[] = "insert into dn_table(id) values(%lld);";
 	sprintf(exeLang, lang2, id);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
-	_idTable[gid] = id;
 }
 
 void TaskDatabase::completeTask(aria2::A2Gid gid)
@@ -123,6 +123,7 @@ void TaskDatabase::completeTask(aria2::A2Gid gid)
 	if(_sql == nullptr)
 		return;
 	auto id = _idTable[gid];
+	_idTable.erase(gid);
 
 	const char lang1[] = "delete from dn_table where id = %lld;";
 	sprintf(exeLang, lang1, id);
@@ -133,8 +134,6 @@ void TaskDatabase::completeTask(aria2::A2Gid gid)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 
 	addLocalTask(id, COMPLETED);
-
-	_idTable.erase(gid);
 }
 
 void TaskDatabase::trashTask(aria2::A2Gid gid)
@@ -142,6 +141,7 @@ void TaskDatabase::trashTask(aria2::A2Gid gid)
 	if(_sql == nullptr)
 		return;
 	auto id = _idTable[gid];
+	_idTable.erase(gid);
 
 	const char lang1[] = "delete from dn_table where id = %lld;";
 	sprintf(exeLang, lang1, id);
@@ -181,7 +181,7 @@ void TaskDatabase::restartTask(uint64_t id)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 
 	auto tsk = createTask(id);
-	AriaDlg::getMainDlg()->addUriTask(tsk);
+	AriaDlg::getMainDlg()->addTask(tsk);
 }
 
 void TaskDatabase::removeLocalFile(uint64_t id)
@@ -289,10 +289,12 @@ void TaskDatabase::initDownloadTask()
 		ids.push_back(id);
 	}
 	sqlite3_finalize(stmt);
+	std::vector<std::unique_ptr<Task>> tasks;
 	for(auto id : ids){
 		auto tsk = createTask(id);
-		AriaDlg::getMainDlg()->addUriTask(tsk);
+		tasks.push_back(std::move(tsk));
 	}
+	AriaDlg::getMainDlg()->addTask(tasks);
 }
 
 std::unique_ptr<Task>

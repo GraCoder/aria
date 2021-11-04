@@ -19,6 +19,7 @@
 
 URILinkWgt::URILinkWgt(const QString &url)
 {
+	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 	createWidgets();
 	connect(_edit, &QPlainTextEdit::textChanged, this, &URILinkWgt::uriChangedSlt);
 

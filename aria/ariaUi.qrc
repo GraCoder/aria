@@ -23,5 +23,54 @@
         <file>icons/reload-24black.svg</file>
         <file>icons/reload-24blue.svg</file>
         <file>icons/waiting.svg</file>
+        <file>icons/filetype2/3gp.png</file>
+        <file>icons/filetype2/7z.png</file>
+        <file>icons/filetype2/ae.png</file>
+        <file>icons/filetype2/ai.png</file>
+        <file>icons/filetype2/apk.png</file>
+        <file>icons/filetype2/asf.png</file>
+        <file>icons/filetype2/avi.png</file>
+        <file>icons/filetype2/bak.png</file>
+        <file>icons/filetype2/bmp.png</file>
+        <file>icons/filetype2/cdr.png</file>
+        <file>icons/filetype2/css.png</file>
+        <file>icons/filetype2/csv.png</file>
+        <file>icons/filetype2/divx.png</file>
+        <file>icons/filetype2/dll.png</file>
+        <file>icons/filetype2/doc.png</file>
+        <file>icons/filetype2/docx.png</file>
+        <file>icons/filetype2/dw.png</file>
+        <file>icons/filetype2/dwg.png</file>
+        <file>icons/filetype2/eps.png</file>
+        <file>icons/filetype2/exe.png</file>
+        <file>icons/filetype2/flv.png</file>
+        <file>icons/filetype2/fw.png</file>
+        <file>icons/filetype2/gif.png</file>
+        <file>icons/filetype2/gz.png</file>
+        <file>icons/filetype2/html.png</file>
+        <file>icons/filetype2/ico.png</file>
+        <file>icons/filetype2/iso.png</file>
+        <file>icons/filetype2/jar.png</file>
+        <file>icons/filetype2/jpg.png</file>
+        <file>icons/filetype2/js.png</file>
+        <file>icons/filetype2/mov.png</file>
+        <file>icons/filetype2/mp3.png</file>
+        <file>icons/filetype2/mp4.png</file>
+        <file>icons/filetype2/mpeg.png</file>
+        <file>icons/filetype2/pdf.png</file>
+        <file>icons/filetype2/php.png</file>
+        <file>icons/filetype2/png.png</file>
+        <file>icons/filetype2/ppt.png</file>
+        <file>icons/filetype2/ps.png</file>
+        <file>icons/filetype2/psd.png</file>
+        <file>icons/filetype2/rar.png</file>
+        <file>icons/filetype2/svg.png</file>
+        <file>icons/filetype2/swf.png</file>
+        <file>icons/filetype2/sys.png</file>
+        <file>icons/filetype2/tar.png</file>
+        <file>icons/filetype2/tiff.png</file>
+        <file>icons/filetype2/txt.png</file>
+        <file>icons/filetype2/wav.png</file>
+        <file>icons/filetype2/zip.png</file>
     </qresource>
 </RCC>
