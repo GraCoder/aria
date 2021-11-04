@@ -52,8 +52,10 @@ ariaSetting::ariaSetting()
 #endif
 	//_settings["max-download-limit"] = "10k";
 	_settings["optimize-concurrent-downloads"] = "false";
-	//		_settings[""]= "";
-	//		_settings[""]= "";
+
+	//-bt--------------------------------------------------------
+	_settings["listen-port"]= "51413";
+	_settings["dht-listen-port"]= "6881-6999";
 	//		_settings[""]= "";
 	//		_settings[""]= "";
 	//		_settings[""]= "";
