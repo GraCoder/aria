@@ -20,7 +20,10 @@ struct TaskInfo{
 		if(!other.name.isEmpty())
 			name = other.name;
 
-		memcpy(&dnspeed, &other.dnspeed, offsetof(TaskInfo, xx) - offsetof(TaskInfo, dnspeed));
+		memcpy(&dnspeed, &other.dnspeed, offsetof(TaskInfo, totalLength) - offsetof(TaskInfo, dnspeed));
+
+		if(other.totalLength > 0)
+			memcpy(&totalLength, &other.totalLength, sizeof(int64_t) * 3);
 	}
 
 	QString name;
@@ -28,14 +31,13 @@ struct TaskInfo{
 	int dnspeed;
 	int upspeed;
 
-	int64_t totalLength;
-	int64_t uploadLength;
-	int64_t dnloadLength;
-
 	int 	state;
 	int 	picNums;
 	int 	picLength;
-	int 	xx;
+
+	int64_t totalLength;
+	int64_t dnloadLength;
+	int64_t uploadLength;
 };
 
 struct TaskInfoEx : public TaskInfo{
@@ -52,9 +54,9 @@ struct FinishTaskInfo{
 };
 
 struct Task{
+	uint64_t id;
 	int type; //1-url
 	int state;
-	uint64_t rid;
 	uint64_t size;
 	std::string name;
 	std::string dir;

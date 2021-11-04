@@ -187,6 +187,11 @@ A2Gid hexToGid(const std::string& hex)
 
 bool isNull(A2Gid gid) { return gid == 0; }
 
+void placeHold(A2Gid gid)
+{
+	GroupId::holdplace(gid);
+}
+
 namespace {
 template <typename InputIterator, typename Pred>
 void apiGatherOption(InputIterator first, InputIterator last, Pred pred,

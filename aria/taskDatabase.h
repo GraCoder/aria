@@ -20,13 +20,7 @@ public:
 
 	~TaskDatabase();
 
-	uint64_t findTask(Task *);
-
-	uint64_t addTask(Task *);
-
-	aria2::A2Gid getGid(uint64_t);
-
-	void downloadTask(uint64_t, aria2::A2Gid);
+	aria2::A2Gid addTask(Task *);
 
 	void completeTask(aria2::A2Gid);
 
@@ -34,13 +28,11 @@ public:
 
 	void deleteTask(aria2::A2Gid);
 
-	void restartTask(uint64_t);
+	void restartTask(aria2::A2Gid);
 
-	void removeLocalFile(uint64_t ide);
+	void removeLocalFile(aria2::A2Gid ide);
 
-	void deleteCompleteTask(uint64_t, bool removeLocalFile = false);
-
-	void deleteTrashTask(uint64_t, bool removeLocalFile = false);
+	void deleteFinishTask(aria2::A2Gid, bool removeLocalFile = false);
 
 	void failTask(aria2::A2Gid);
 
@@ -48,21 +40,22 @@ public:
 
 	void initDownloadTask();
 
-	TaskInfoEx getTaskInfo(uint64_t);
+	TaskInfoEx getTaskInfo(aria2::A2Gid);
 
-	std::unique_ptr<Task> createTask(uint64_t);
+	std::unique_ptr<Task> createTask(aria2::A2Gid);
 
 	void initCompleteTask();
 
 	void initTrashTask();
 
-	void addLocalTask(uint64_t, int);
+	void addLocalTask(aria2::A2Gid, int);
+
+
+	std::unique_ptr<Task> findTask(const std::string &local, const std::string &uri = "");
 
 protected:
 private:
 	sqlite3 *_sql;
-
-	std::map<uint64_t, uint64_t> _idTable;
 };
 
 #endif // TASKDATABASE_H

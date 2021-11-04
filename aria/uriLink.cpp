@@ -35,6 +35,7 @@ URILinkWgt::getTasks()
 	{
 		auto item = _downList->item(i, 0);
 		auto tsk = std::make_unique<UriTask>();
+		tsk->id = 0;
 		tsk->url = item->data(Qt::UserRole).toUrl().toString().toStdString();
 		tsk->name = item->text().toStdString();
 		tsk->type = 1;

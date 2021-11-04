@@ -11,6 +11,8 @@
 #include "ariaListWgt.h"
 #include "ariaSetting.h"
 
+#include "aria2/aria2.h"
+
 char exeLang[8192];
 
 std::string optToString(const aria2::KeyVals &kvs)
@@ -53,122 +55,44 @@ TaskDatabase::~TaskDatabase()
 	sqlite3_close(_sql);
 }
 
-uint64_t TaskDatabase::findTask(Task *task)
-{
-	if(_sql == nullptr)
-		return 0;
-	const char lang[] = "select id from task_table where (local_path = '%s');";
-	sprintf(exeLang, lang, task->getLocal().c_str());
-	sqlite3_stmt *stmt; const char *tail;
-	auto rc = sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, &tail);
-	if(rc != SQLITE_OK)
-		return 0;
-	rc = sqlite3_step(stmt);
-	uint64_t ret = 0;
-	if(rc == SQLITE_ROW)
-		ret = sqlite3_column_int64(stmt, 0);
-	sqlite3_finalize(stmt);
-	return ret;
-}
-
-uint64_t TaskDatabase::addTask(Task *tsk)
+aria2::A2Gid TaskDatabase::addTask(Task *tsk)
 {
 	if(_sql == nullptr)
 		return 0;
 	auto uri = tsk->getUri();
 	auto opts = optToString(tsk->opts);
-	const char lang1[] = "insert into task_table (type, name, state, link_path, start_time, state, options) values (%d, '%s', %d, '%s', '%s', 0, '%s');";
+	const char lang1[] = "insert into task_table (gid, type, name, state, link_path, start_time, state, options) values (%lld, %d, '%s', %d, '%s', '%s', 0, '%s');";
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-	sprintf(exeLang, lang1, tsk->type, tsk->name.c_str(), tsk->state, uri.c_str(), datatime.toLocal8Bit().data(), opts.c_str());
+	sprintf(exeLang, lang1, tsk->id, tsk->type, tsk->name.c_str(), tsk->state, uri.c_str(), datatime.toLocal8Bit().data(), opts.c_str());
 	if(sqlite3_exec(_sql, exeLang, nullptr, nullptr, nullptr) != SQLITE_OK)
 		return 0;
-
-	sqlite3_stmt *stmt;
-	const char lang2[] = "select last_insert_rowid();";
-	sqlite3_prepare_v2(_sql, lang2, -1, &stmt, 0);
-	uint64_t ret = 0;
-	if(sqlite3_step(stmt) == SQLITE_ROW)
-		ret = sqlite3_column_int64(stmt, 0);
-	sqlite3_finalize(stmt);
-	return ret;
-}
-
-aria2::A2Gid TaskDatabase::getGid(uint64_t id)
-{
-	for(auto iter = _idTable.begin(); iter != _idTable.end(); iter++)
-	{
-		if(iter->second == id)
-			return iter->first;
-	}
-	return 0;
-}
-
-void TaskDatabase::downloadTask(uint64_t id, aria2::A2Gid gid)
-{
-	if(_sql == nullptr)
-		return;
-	_idTable[gid] = id;
-
-	const char lang1[] = "update task_table set gid = %lld, state=%d where id = %d;";
-	sprintf(exeLang, lang1, gid, aria2::DOWNLOAD_WAITING, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
-	const char lang2[] = "insert into dn_table(id) values(%lld);";
-	sprintf(exeLang, lang2, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
+	return tsk->id;
 }
 
 void TaskDatabase::completeTask(aria2::A2Gid gid)
 {
 	if(_sql == nullptr)
 		return;
-	auto id = _idTable[gid];
-	_idTable.erase(gid);
 
-	const char lang1[] = "delete from dn_table where id = %lld;";
-	sprintf(exeLang, lang1, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
-	const char lang2[] = "insert into cm_table values (%lld);";
-	sprintf(exeLang, lang2, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
-	addLocalTask(id, COMPLETED);
+	addLocalTask(gid, COMPLETED);
 }
 
 void TaskDatabase::trashTask(aria2::A2Gid gid)
 {
 	if(_sql == nullptr)
 		return;
-	auto id = _idTable[gid];
-	_idTable.erase(gid);
 
-	const char lang1[] = "delete from dn_table where id = %lld;";
-	sprintf(exeLang, lang1, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
-	const char lang2[] = "insert into tr_table values (%lld);";
-	sprintf(exeLang, lang2, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
-	addLocalTask(id, TRASHCAN);
+	addLocalTask(gid, TRASHCAN);
 }
 
-void TaskDatabase::deleteTask(uint64_t id)
+void TaskDatabase::deleteTask(aria2::A2Gid gid)
 {
 	if(_sql == nullptr)
 		return;
-	const char lang[] = "delete from task_table where id = %lld;";
-	sprintf(exeLang, lang, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 
-	for(auto iter = _idTable.begin(); iter != _idTable.end(); iter++){
-		if(iter->second == id)
-		{
-			_idTable.erase(iter);
-			break;
-		}
-	}
+	const char lang[] = "delete from task_table where gid = %lld;";
+	sprintf(exeLang, lang, gid);
+	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
 void TaskDatabase::restartTask(uint64_t id)
@@ -176,18 +100,14 @@ void TaskDatabase::restartTask(uint64_t id)
 	if(_sql == nullptr)
 		return;
 
-	const char lang1[] = "delete from tr_table where id = %lld;";
-	sprintf(exeLang, lang1, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-
 	auto tsk = createTask(id);
 	AriaDlg::getMainDlg()->addTask(tsk);
 }
 
-void TaskDatabase::removeLocalFile(uint64_t id)
+void TaskDatabase::removeLocalFile(uint64_t gid)
 {
-	const char lang1[] = "select type, local_path from task_table where id = %lld;";
-	sprintf(exeLang, lang1, id);
+	const char lang1[] = "select type, local_path from task_table where gid = %lld;";
+	sprintf(exeLang, lang1, gid);
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
 	if(sqlite3_step(stmt) == SQLITE_ROW){
@@ -204,29 +124,16 @@ void TaskDatabase::removeLocalFile(uint64_t id)
 	}
 }
 
-void TaskDatabase::deleteCompleteTask(uint64_t id, bool rmLocalFile)
+void TaskDatabase::deleteFinishTask(aria2::A2Gid gid, bool rmLocalFile)
 {
 	if(_sql == nullptr)
 		return;
 
 	if(rmLocalFile)
-		removeLocalFile(id);
+		removeLocalFile(gid);
 
-	const char lang2[] = "delete from task_table where id = %lld;";
-	sprintf(exeLang, lang2, id);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
-}
-
-void TaskDatabase::deleteTrashTask(uint64_t id, bool rmLocalFile)
-{
-	if(_sql == nullptr)
-		return;
-
-	if(rmLocalFile)
-		removeLocalFile(id);
-
-	const char lang2[] = "delete from task_table where id = %lld;";
-	sprintf(exeLang, lang2, id);
+	const char lang2[] = "delete from task_table where gid = %lld;";
+	sprintf(exeLang, lang2, gid);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
@@ -234,11 +141,10 @@ void TaskDatabase::failTask(aria2::A2Gid gid)
 {
 	if(_sql == nullptr)
 		return;
-	auto id = _idTable[gid];
 
-	const char lang[] = "update task_table set state=%d,end_time='%s' where id=%lld;";
+	const char lang[] = "update task_table set state=%d,end_time='%s' where gid=%lld;";
 	QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-	sprintf(exeLang, lang, aria2::DOWNLOAD_ERROR , datatime.toLocal8Bit().data(), id);
+	sprintf(exeLang, lang, aria2::DOWNLOAD_ERROR , datatime.toLocal8Bit().data(), gid);
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
@@ -247,7 +153,6 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 	if(_sql == nullptr)
 		return;
 
-	auto id = _idTable[gid];
 	auto &filedata = taskInfo.fileData;
 	std::string filepath;
 	if(filedata.size() == 1) {
@@ -261,16 +166,15 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 		vals.push_back(keyval.first + "=" + keyval.second);
 	std::string opts = boost::algorithm::join(vals, "|");
 
-	if(filepath.empty())
-	{
-		const char lang[] = "update task_table set state=%d, total_size=%lld, options='%s' where id=%lld;";
-		sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, opts.c_str(), id);
-	} else{
+	if(filepath.empty() && taskInfo.totalLength) {
+		const char lang[] = "update task_table set state=%d, total_size=%lld, down_size=%lld, options='%s' where gid=%lld;";
+		sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, taskInfo.dnloadLength, opts.c_str(), gid);
+	}  else{
 		std::filesystem::path lpath(filepath);
 		std::string filename = lpath.filename().string();
 		QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-		const char lang[] = "update task_table set name='%s', state=%d, total_size=%lld, end_time='%s', local_path='%s', options='%s' where id=%lld;";
-		sprintf(exeLang, lang, filename.c_str(), taskInfo.state, taskInfo.totalLength, datatime.toLocal8Bit().data(), filepath.c_str(), opts.c_str(), id);
+		const char lang[] = "update task_table set name='%s', state=%d, total_size=%lld, down_size=%lld, end_time='%s', local_path='%s', options='%s' where gid=%lld;";
+		sprintf(exeLang, lang, filename.c_str(), taskInfo.state, taskInfo.totalLength, taskInfo.dnloadLength, datatime.toLocal8Bit().data(), filepath.c_str(), opts.c_str(), gid);
 
 	}
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
@@ -280,7 +184,7 @@ void TaskDatabase::initDownloadTask()
 {
 	if(_sql == nullptr)
 		return;
-	const char lang[] = "select id from dn_table;";
+	const char lang[] = "select gid, state from task_table;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	std::vector<uint64_t> ids;
@@ -298,26 +202,24 @@ void TaskDatabase::initDownloadTask()
 }
 
 std::unique_ptr<Task>
-TaskDatabase::createTask(uint64_t id)
+TaskDatabase::createTask(aria2::A2Gid id)
 {
-	const char lang[] = "select id, gid, type, name, state, total_size, link_path, local_path, options from task_table where id=%lld;";
+	const char lang[] = "select type, name, state, total_size, link_path, local_path, options from task_table where gid=%lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
 	std::unique_ptr<Task> tsk;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
-		auto id = sqlite3_column_int64(stmt, 0);
-		auto gid = sqlite3_column_int64(stmt, 1);
-		auto ty = sqlite3_column_int(stmt, 2);
-		auto na = sqlite3_column_text(stmt, 3);
-		auto st = sqlite3_column_int(stmt, 4);
-		auto sz = sqlite3_column_int64(stmt, 5);
+		auto ty = sqlite3_column_int(stmt, 0);
+		auto na = sqlite3_column_text(stmt, 1);
+		auto st = sqlite3_column_int(stmt, 2);
+		auto sz = sqlite3_column_int64(stmt, 3);
 		std::string lk, lp, op;
-		auto chlk = sqlite3_column_text(stmt, 6);
+		auto chlk = sqlite3_column_text(stmt, 4);
 		if(chlk) lk = (const char *)chlk;
-		auto chlp = sqlite3_column_text(stmt, 7);
+		auto chlp = sqlite3_column_text(stmt, 5);
 		if(chlp) lp = (const char *)chlp;
-		auto chop = sqlite3_column_text(stmt, 8);
+		auto chop = sqlite3_column_text(stmt, 6);
 		if(chop) op = (const char *)chop;
 		switch(ty){
 		case 1:
@@ -333,18 +235,15 @@ TaskDatabase::createTask(uint64_t id)
 			tsk = std::move(task);
 			break;
 		}
+		tsk->id = id;
 		tsk->name = (const char *)na;
-		tsk->rid = id;
 		tsk->state = st;
 		tsk->type = ty;
 		tsk->size = sz;
 		tsk->opts = optToKV(op);
 		{
-			char chgid[17] = {0}; sprintf(chgid, "%llX", gid);
-			tsk->opts.push_back(std::make_pair("gid", chgid));
+			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(id)));
 		}
-
-		_idTable[gid] = id;
 	}
 	sqlite3_finalize(stmt);
 	return tsk;
@@ -355,7 +254,7 @@ void TaskDatabase::initCompleteTask()
 	if(_sql == nullptr)
 		return;
 
-	const char lang[] = "select id from cm_table;";
+	const char lang[] = "select gid from task_table;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	while(sqlite3_step(stmt) == SQLITE_ROW){
@@ -370,7 +269,7 @@ void TaskDatabase::initTrashTask()
 	if(_sql == nullptr)
 		return;
 
-	const char lang[] = "select id from tr_table;";
+	const char lang[] = "select gid from task_table;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	while(sqlite3_step(stmt) == SQLITE_ROW){
@@ -382,7 +281,7 @@ void TaskDatabase::initTrashTask()
 
 void TaskDatabase::addLocalTask(uint64_t id, int wgtType)
 {
-	const char lang[] = "select name, total_size, end_time, local_path from task_table where id = %lld;";
+	const char lang[] = "select name, total_size, end_time, local_path from task_table where gid = %lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
@@ -408,4 +307,24 @@ void TaskDatabase::addLocalTask(uint64_t id, int wgtType)
 		}
 	}
 	sqlite3_finalize(stmt);
+}
+
+std::unique_ptr<Task>
+TaskDatabase::findTask(const std::string &local, const std::string &uri)
+{
+	if(_sql == nullptr)
+		return 0;
+	const char lang[] = "select gid from task_table where (local_path = '%s');";
+	sprintf(exeLang, lang, local.c_str());
+	sqlite3_stmt *stmt; const char *tail;
+	auto rc = sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, &tail);
+	if(rc != SQLITE_OK)
+		return 0;
+	rc = sqlite3_step(stmt);
+	uint64_t ret = 0;
+	if(rc == SQLITE_ROW)
+		ret = sqlite3_column_int64(stmt, 0);
+	sqlite3_finalize(stmt);
+
+	return createTask(ret);
 }

@@ -278,6 +278,13 @@ bool isNull(A2Gid gid);
 /**
  * @function
  *
+ * take place for gid be unique.
+ */
+void placeHold(A2Gid gid);
+
+/**
+ * @function
+ *
  * Adds new HTTP(S)/FTP/BitTorrent Magnet URI.  On successful return,
  * if the |gid| is not ``NULL``, the GID of added download will be
  * assigned to the |*gid|.  The |uris| includes URI to be downloaded.

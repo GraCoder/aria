@@ -128,7 +128,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 		}
 	}
 	{
-		texRect = QRect(opt.rect.width() / 2.0, dnheight - popSize + opt.rect.top(), opt.rect.width() / 2.0 - 20, hfheight);
+		texRect = QRect(opt.rect.width() / 2.0, dnheight - popSize + opt.rect.top(), opt.rect.width() / 2.0 - 40, hfheight);
 		texOpt.setAlignment(Qt::AlignRight | Qt::AlignTop);
 		if(info.state == aria2::DOWNLOAD_ACTIVE) {
 			auto dnspeed = opt.locale.formattedDataSize(info.dnspeed, 2, opt.locale.DataSizeTraditionalFormat);

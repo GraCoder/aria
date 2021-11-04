@@ -65,6 +65,11 @@ std::shared_ptr<GroupId> GroupId::import(a2_gid_t n)
 	return res;
 }
 
+void GroupId::holdplace(a2_gid_t n)
+{
+	set_.insert(n);
+}
+
 void GroupId::clear() { set_.clear(); }
 
 int GroupId::expandUnique(a2_gid_t& n, const char* hex)
