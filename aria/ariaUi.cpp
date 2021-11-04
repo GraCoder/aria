@@ -141,6 +141,8 @@ AriaDlg::AriaDlg()
 
 	_database = new TaskDatabase;
 	_database->initDownloadTask();
+	_database->initCompleteTask();
+	_database->initTrashTask();
 
 	connect(_emitter, &Emitter::completeTaskSig, _database, &TaskDatabase::completeTask, Qt::QueuedConnection);
 	//connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::deleteTask, Qt::QueuedConnection);
