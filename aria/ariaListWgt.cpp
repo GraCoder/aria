@@ -103,7 +103,6 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 			iconUrl += hover ? "download-24blue.svg" : "download-24black.svg";
 		else if(info.state == aria2::DOWNLOAD_WAITING)
 		{
-			pixRect = QRect(pixRect.left(), pixRect.top(), 16, 16);
 			iconUrl += "waiting.svg";
 		}
 		QPixmap icon = QPixmap(iconUrl);
@@ -130,7 +129,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	{
 		if(info.state == aria2::DOWNLOAD_ACTIVE) {
 			int secs = (info.totalLength - info.dnloadLength) / (info.dnspeed + 0.0001);
-			texRect.translate(opt.rect.width() / 5, 0);
+			texRect.translate(opt.rect.width() / 4, 0);
 			auto tm = QTime(0, 0).addSecs(secs);
 			if(tm.isValid())
 				painter->drawText(texRect, tr("remain:") + opt.locale.toString(tm), texOpt);

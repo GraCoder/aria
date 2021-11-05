@@ -7,8 +7,8 @@ ariaSetting::ariaSetting()
 {
 	_appPath = QCoreApplication::applicationDirPath().toStdString();
 
-	_settings["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-			AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52";
+	_settings["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+				"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36 Edg/93.0.961.52";
 	_settings["dir"] = "d:/thunder";
 	_settings["disable-ipv6"] = "true";
 	_settings["check-certificate"] = "false";
@@ -29,11 +29,7 @@ ariaSetting::ariaSetting()
 		//_settings["input-file"]= path;
 		_settings["save-session"]= path;
 	}
-#ifdef NDEBUG
 	_settings["log"] = "log.txt";
-#else
-	_settings["log"] = "-";
-#endif
 
 	_settings["save-session-interval"]= "20"; //session
 
@@ -60,9 +56,16 @@ ariaSetting::ariaSetting()
 	//-bt--------------------------------------------------------
 	_settings["listen-port"]= "51413";
 	_settings["dht-listen-port"]= "6881-6999";
-	//		_settings[""]= "";
-	//		_settings[""]= "";
-	//		_settings[""]= "";
+	_settings["enable-dht"]= "true";
+	_settings["enable_dht6"]= "false";
+	_settings["dht-file-path"]= _appPath + "/dht.dat";
+	_settings["dht-entry-point"]= "dht.transmissionbt.com:6881";
+	_settings["enable-peer-exchange"]= "true";
+	_settings["bt-max-peers"]= "60";
+	_settings["bt-request-peer-speed-limit"]= "5M";
+	_settings["max-overall-upload-limit"]= "2M";
+	_settings["max-upload-limit"]= "0";
+	_settings["seed-ratio"]= "2.0";
 }
 
 ariaSetting &ariaSetting::instance()

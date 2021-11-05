@@ -280,7 +280,14 @@ bool isNull(A2Gid gid);
  *
  * take place for gid be unique.
  */
-void placeHold(A2Gid gid);
+void holdPlace(A2Gid gid);
+
+/**
+ * @function
+ *
+ * remove hold
+ */
+void removePlace(A2Gid gid);
 
 /**
  * @function

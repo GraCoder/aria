@@ -33,8 +33,8 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		std::cout << "START" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
 	{
 		auto dlg = (AriaDlg*)userData;
-		//auto tskInfo = dlg->getTaskInfo(session, gid);
-		//dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
+		auto tskInfo = dlg->getTaskInfo(session, gid);
+		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
 		dlg->getEmitter()->startTaskSig(gid);
 		break;
 	}
@@ -139,10 +139,9 @@ AriaDlg::AriaDlg()
 	connect(_emitter, &Emitter::removeTaskSig, _dnWidget, &AriaListWidget::removeTaskSlt, Qt::QueuedConnection);
 
 
-	_database = new TaskDatabase;
-	_database->initDownloadTask();
-	_database->initCompleteTask();
 	_database->initTrashTask();
+	_database->initCompleteTask();
+	_database->initDownloadTask();
 
 	connect(_emitter, &Emitter::completeTaskSig, _database, &TaskDatabase::completeTask, Qt::QueuedConnection);
 	//connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::deleteTask, Qt::QueuedConnection);
@@ -440,7 +439,11 @@ void AriaDlg::initAria()
 
 	aria2::libraryInit();
 
+	_database = new TaskDatabase;
+	auto ss = _database->getSettings();
+
 	auto &opTmps = ariaSetting::instance().setting();
+	opTmps.insert(ss.begin(), ss.end());
 	KeyVals options;
 	for(auto &iter : opTmps)
 		options.push_back(std::make_pair(iter.first, iter.second));

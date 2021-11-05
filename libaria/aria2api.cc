@@ -187,9 +187,14 @@ A2Gid hexToGid(const std::string& hex)
 
 bool isNull(A2Gid gid) { return gid == 0; }
 
-void placeHold(A2Gid gid)
+void holdPlace(A2Gid gid)
 {
-	GroupId::holdplace(gid);
+	GroupId::holdPlace(gid);
+}
+
+void removePlace(A2Gid gid)
+{
+	GroupId::removePlace(gid);
 }
 
 namespace {
@@ -876,14 +881,14 @@ DownloadHandle* getDownloadHandle(Session* session, A2Gid gid)
 {
 	auto& e = session->context->reqinfo->getDownloadEngine();
 	auto& rgman = e->getRequestGroupMan();
-	std::shared_ptr<RequestGroup> group = rgman->findGroup(gid);
-	if (group) {
-		return new RequestGroupDH(group);
+	std::shared_ptr<DownloadResult> ds = rgman->findDownloadResult(gid);
+	if (ds) {
+		return new DownloadResultDH(ds);
 	}
-	else {
-		std::shared_ptr<DownloadResult> ds = rgman->findDownloadResult(gid);
-		if (ds) {
-			return new DownloadResultDH(ds);
+	else{
+		std::shared_ptr<RequestGroup> group = rgman->findGroup(gid);
+		if (group) {
+			return new RequestGroupDH(group);
 		}
 	}
 	return nullptr;

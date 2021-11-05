@@ -101,6 +101,8 @@ void TaskDatabase::restartTask(uint64_t id)
 		return;
 
 	auto tsk = createTask(id);
+	tsk->state = aria2::DOWNLOAD_ACTIVE;
+	aria2::removePlace(id);
 	AriaDlg::getMainDlg()->addTask(tsk);
 }
 
@@ -161,30 +163,38 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 
 	}
 
-	std::vector<std::string> vals;
-	for(auto &keyval : taskInfo.opts)
-		vals.push_back(keyval.first + "=" + keyval.second);
-	std::string opts = boost::algorithm::join(vals, "|");
+	char *errmsg = nullptr;
+	sqlite3_exec(_sql, "begin transaction", 0, 0, &errmsg);
 
-	if(filepath.empty() && taskInfo.totalLength) {
-		const char lang[] = "update task_table set state=%d, total_size=%lld, down_size=%lld, options='%s' where gid=%lld;";
-		sprintf(exeLang, lang, taskInfo.state, taskInfo.totalLength, taskInfo.dnloadLength, opts.c_str(), gid);
-	}  else{
+	{
+		std::string opts = optToString(taskInfo.opts);
+		const char lang[] = "update task_table set state=%d, options='%s' where gid = %lld;";
+		sprintf(exeLang, lang, taskInfo.state, opts.c_str(), gid);
+		sqlite3_exec(_sql, exeLang, 0, 0, 0);
+	}
+
+	if(taskInfo.totalLength > 0) {
+		const char lang[] = "update task_table set total_size=%lld, down_size=%lld where gid=%lld;";
+		sprintf(exeLang, lang, taskInfo.totalLength, taskInfo.dnloadLength, gid);
+		sqlite3_exec(_sql, exeLang, 0, 0, 0);
+	}
+
+	if(!filepath.empty()) {
 		std::filesystem::path lpath(filepath);
 		std::string filename = lpath.filename().string();
 		QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-		const char lang[] = "update task_table set name='%s', state=%d, total_size=%lld, down_size=%lld, end_time='%s', local_path='%s', options='%s' where gid=%lld;";
-		sprintf(exeLang, lang, filename.c_str(), taskInfo.state, taskInfo.totalLength, taskInfo.dnloadLength, datatime.toLocal8Bit().data(), filepath.c_str(), opts.c_str(), gid);
-
+		const char lang[] = "update task_table set name='%s', end_time='%s', local_path='%s' where gid=%lld;";
+		sprintf(exeLang, lang, filename.c_str(), datatime.toLocal8Bit().data(), filepath.c_str(), gid);
+		sqlite3_exec(_sql, exeLang, 0, 0, 0);
 	}
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
+	 sqlite3_exec(_sql, "commit transaction" , 0, 0, &errmsg);
 }
 
 void TaskDatabase::initDownloadTask()
 {
 	if(_sql == nullptr)
 		return;
-	const char lang[] = "select gid, state from task_table;";
+	const char lang[] = "select gid, state from task_table where state = 0 or state = 1 or state = 2 or state = 4;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	std::vector<uint64_t> ids;
@@ -261,11 +271,12 @@ void TaskDatabase::initCompleteTask()
 	if(_sql == nullptr)
 		return;
 
-	const char lang[] = "select gid from task_table;";
+	const char lang[] = "select gid from task_table where state = 3;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		auto id = sqlite3_column_int64(stmt, 0);
+		aria2::holdPlace(id);
 		addLocalTask(id, COMPLETED);
 	}
 	sqlite3_finalize(stmt);
@@ -276,11 +287,12 @@ void TaskDatabase::initTrashTask()
 	if(_sql == nullptr)
 		return;
 
-	const char lang[] = "select gid from task_table;";
+	const char lang[] = "select gid from task_table where state = 5;";
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		auto id = sqlite3_column_int64(stmt, 0);
+		aria2::holdPlace(id);
 		addLocalTask(id, TRASHCAN);
 	}
 	sqlite3_finalize(stmt);
@@ -334,4 +346,22 @@ TaskDatabase::findTask(const std::string &local, const std::string &uri)
 	sqlite3_finalize(stmt);
 
 	return createTask(ret);
+}
+
+std::map<std::string, std::string> TaskDatabase::getSettings()
+{
+	std::map<std::string, std::string> ret;
+	if(_sql == nullptr)
+		return ret;
+	const char lang[] = "select * from setting;";
+	sqlite3_stmt *stmt;
+	sqlite3_prepare_v2(_sql, lang, -1, &stmt, 0);
+	while(sqlite3_step(stmt) == SQLITE_ROW){
+		std::string ky = (const char *)sqlite3_column_text(stmt, 0);
+		std::string ve = (const char *)sqlite3_column_text(stmt, 1);
+		//sqlite3_column_text(stmt, 2);
+		ret[ky] = ve;
+	}
+	sqlite3_finalize(stmt);
+	return ret;
 }

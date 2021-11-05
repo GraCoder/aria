@@ -53,6 +53,8 @@ public:
 
 	std::unique_ptr<Task> findTask(const std::string &local, const std::string &uri = "");
 
+	std::map<std::string, std::string> getSettings();
+
 protected:
 private:
 	sqlite3 *_sql;
