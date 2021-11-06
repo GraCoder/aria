@@ -51,6 +51,7 @@ URILinkWgt::getTasks()
 	for(int i = 0; i < _btFiles.size(); i++)
 	{
 		auto tsk = std::make_unique<BtTask>();
+		tsk->id = 0;
 		tsk->torrent = _btFiles[i].toStdString();
 		tsk->name = QFileInfo(_btFiles[i]).fileName().toStdString();
 		tsk->type = 2;

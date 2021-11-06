@@ -25,5 +25,6 @@ std::string BtTask::getUri()
 
 std::string BtTask::getLocal()
 {
-
+	auto path = std::filesystem::path(dir).append(name);
+	return path.generic_string();
 }

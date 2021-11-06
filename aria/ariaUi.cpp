@@ -494,10 +494,8 @@ void AriaDlg::mergeTask()
 				addUriTask(ptsk);
 			}
 			else if(tsk->type == 2) {
-				//auto ptask = static_cast<BtTask*>(tsk.get());
-				//ret = aria2::addTorrent(_session, &gid, ptask->torrent, tmpOpts);
-				//name = QString::fromStdString(ptask->name);
-				//break;
+				auto ptsk = static_cast<BtTask*>(tsk.get());
+				addBtTask(ptsk);
 			}	
 		}
 		_addTasks.clear();
@@ -526,7 +524,7 @@ void AriaDlg::addUriTask(UriTask *tsk)
 		return;
 	}
 
-	KeyVals tmpOpts = tsk->opts;
+	KeyVals &tmpOpts = tsk->opts;
 	std::vector<std::string> url(1, tsk->url);
 	int ret = aria2::addUri(_session, &gid, url, tmpOpts);
 	if(ret != 0)
@@ -546,9 +544,16 @@ void AriaDlg::addUriTask(UriTask *tsk)
 
 }
 
-void AriaDlg::addBtTask(aria2::A2Gid, Task *)
+void AriaDlg::addBtTask(BtTask *tsk)
 {
+	using namespace aria2;
 
+	A2Gid gid = tsk->id;
+	KeyVals tmpOpts = tsk->opts;
+
+	int ret = addTorrent(_session, &gid, tsk->torrent, tmpOpts);
+				//name = QString::fromStdString(ptask->name);
+				//break;
 }
 
 void AriaDlg::updateTask(aria2::A2Gid id)

@@ -105,7 +105,7 @@ private:
 	void 		errorTask(aria2::A2Gid);
 
 	void 		addUriTask(UriTask *tsk);
-	void 		addBtTask(aria2::A2Gid, Task *);
+	void 		addBtTask(BtTask *tsk);
 	void 		updateTask(aria2::A2Gid);
 	void 		completeTask(aria2::A2Gid);
 

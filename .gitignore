@@ -10,6 +10,7 @@ CMakeLists.txt.user
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+*.db
 
 # Build results
 [Dd]ebug/
