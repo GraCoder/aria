@@ -382,6 +382,8 @@ std::vector<A2Gid> getActiveDownload(Session* session);
  */
 int removeDownload(Session* session, A2Gid gid, bool force = false);
 
+int removeDownloadResult(Session *session, A2Gid gid);
+
 /**
  * @function
  *
@@ -747,7 +749,9 @@ enum DownloadStatus {
 	/**
    * Indicating removed by user's discretion.
    */
-	DOWNLOAD_REMOVED
+	DOWNLOAD_REMOVED,
+
+	DOWNLOAD_REMOVING
 };
 
 /**

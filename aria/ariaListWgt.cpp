@@ -101,7 +101,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 			iconUrl += hover ? "pause-24blue.svg" : "pause-24black.svg";
 		else if(info.state == aria2::DOWNLOAD_ERROR || info.state == aria2::DOWNLOAD_PAUSED)
 			iconUrl += hover ? "download-24blue.svg" : "download-24black.svg";
-		else if(info.state == aria2::DOWNLOAD_WAITING)
+		else if(info.state == aria2::DOWNLOAD_WAITING || info.state == aria2::DOWNLOAD_REMOVING)
 		{
 			iconUrl += "waiting.svg";
 		}
@@ -298,6 +298,8 @@ void AriaListWidget::updateTaskSlt(uint64_t aid, TaskInfo tskInfo)
 	auto listmodel = static_cast<AriaDownloadListModel*>(model());
 	if(listmodel->_taskInfos.find(aid) == listmodel->_taskInfos.end())
 		return;
+	if(listmodel->_taskInfos[aid].state == aria2::DOWNLOAD_REMOVING)
+		return;
 	listmodel->_taskInfos[aid] = tskInfo;
 	auto idx = listmodel->createIndex(listmodel->_tasks.indexOf(aid), 0);
 	listmodel->dataChanged(idx, idx);
@@ -418,7 +420,7 @@ void AriaListWidget::restartTask(int idx)
 	if(listmodel->_taskInfos.size() <= idx)
 		return;
 	auto &taskInfo = listmodel->_taskInfos[idx];
-	AriaDlg::getMainDlg()->getDatabase()->restartTask(taskInfo.id);
+	AriaDlg::getMainDlg()->restartTask(taskInfo.id);
 	listmodel->beginRemoveRows(QModelIndex(), idx, idx);
 	listmodel->_taskInfos.remove(idx);
 	listmodel->endRemoveRows();

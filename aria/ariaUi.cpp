@@ -52,7 +52,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		auto dlg = (AriaDlg*)userData;
 		auto tskInfo = dlg->getTaskInfo(session, gid);
 		dlg->getDatabase()->updateTaskInfo(gid, tskInfo);
-		//dlg->getEmitter()->removeTaskSig(gid);
+		dlg->getEmitter()->removeTaskSig(gid);
 		std::cout << "STOP" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
 		break;
 	}
@@ -144,7 +144,7 @@ AriaDlg::AriaDlg()
 	_database->initDownloadTask();
 
 	connect(_emitter, &Emitter::completeTaskSig, _database, &TaskDatabase::completeTask, Qt::QueuedConnection);
-	//connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::deleteTask, Qt::QueuedConnection);
+	connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::trashTask, Qt::QueuedConnection);
 
 	_thread = std::thread(std::bind(&AriaDlg::download, this));
 }
@@ -196,7 +196,7 @@ QWidget *AriaDlg::createToolBar()
 		{
 			bar->addAction(QIcon(":/aria/icons/download.svg"), tr("start"), std::bind(&AriaDlg::startSelected, this));
 			bar->addAction(QIcon(":/aria/icons/pause.svg"), tr("pause"), std::bind(&AriaDlg::pauseSelected, this));
-			bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteSelected, this));
+			bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::removeSelected, this));
 		}
 		bar->addAction(tr("test"), this, &AriaDlg::test);
 
@@ -333,13 +333,12 @@ void AriaDlg::pauseSelected()
 	}
 }
 
-void AriaDlg::deleteSelected()
+void AriaDlg::removeSelected()
 {
 	auto ids = _dnWidget->getSelected();
 	for(auto id : ids){
 		removeDownload(_session, id);
-		_dnWidget->removeTaskSlt(id);
-		_database->trashTask(id);
+		_dnWidget->setTaskState(id, aria2::DOWNLOAD_REMOVING);
 	}
 }
 
@@ -349,6 +348,7 @@ void AriaDlg::deleteCompleteSelected()
 	for(auto id : ids) {
 		_cmWidget->removeTaskSlt(id);
 		_database->deleteFinishTask(id);
+		aria2::removeDownloadResult(_session, id);
 	}
 }
 
@@ -358,6 +358,7 @@ void AriaDlg::deleteAllCompleteSelected()
 	for(auto id : ids) {
 		_cmWidget->removeTaskSlt(id);
 		_database->deleteFinishTask(id);
+		aria2::removeDownloadResult(_session, id);
 	}
 }
 
@@ -372,6 +373,7 @@ void AriaDlg::deleteTrashSelected()
 	for(auto id : ids){
 		_trWidget->removeTaskSlt(id);
 		_database->deleteFinishTask(id);
+		aria2::removeDownloadResult(_session, id);
 	}
 }
 
@@ -381,12 +383,22 @@ void AriaDlg::deleteAllTrashSelected()
 	for(auto id : ids){
 		_trWidget->removeTaskSlt(id);
 		_database->deleteFinishTask(id, true);
+		aria2::removeDownloadResult(_session, id);
 	}
 }
 
 void AriaDlg::explorerTrashSelected()
 {
 	_trWidget->explorerSelected();
+}
+
+void AriaDlg::restartTask(aria2::A2Gid id)
+{
+	auto tsk = _database->createTask(id, true);
+	_database->deleteTask(id);
+	aria2::removePlace(id);
+	aria2::removeDownloadResult(_session, id);
+	AriaDlg::getMainDlg()->addTask(tsk);
 }
 
 TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
@@ -549,11 +561,31 @@ void AriaDlg::addBtTask(BtTask *tsk)
 	using namespace aria2;
 
 	A2Gid gid = tsk->id;
-	KeyVals tmpOpts = tsk->opts;
+	QString name = QString::fromStdString(tsk->name);
+	if(tsk->state == DOWNLOAD_ERROR)
+	{
+		_emitter->addTaskSig(gid, name);
+		auto tskInfo = getTaskInfo(gid);
+		_emitter->updateTaskSig(gid, tskInfo);
+		return;
+	}
 
-	int ret = addTorrent(_session, &gid, tsk->torrent, tmpOpts);
-				//name = QString::fromStdString(ptask->name);
-				//break;
+	KeyVals &tmpOpts = tsk->opts;
+	int ret = aria2::addTorrent(_session, &gid, tsk->torrent, tmpOpts);
+	if(ret != 0)
+		return;
+
+	if(tsk->id != gid) {
+		tsk->id = gid;
+		_database->addTask(tsk);
+	}
+	_emitter->addTaskSig(gid, name);
+	auto taskInfo = getTaskInfo(gid);
+	taskInfo.state = tsk->state;
+	taskInfo.totalLength = tsk->to_size;
+	taskInfo.dnloadLength = tsk->dn_size;
+	taskInfo.uploadLength = tsk->up_size;
+	_emitter->updateTaskSig(gid, taskInfo);
 }
 
 void AriaDlg::updateTask(aria2::A2Gid id)

@@ -95,17 +95,6 @@ void TaskDatabase::deleteTask(aria2::A2Gid gid)
 	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
-void TaskDatabase::restartTask(uint64_t id)
-{
-	if(_sql == nullptr)
-		return;
-
-	auto tsk = createTask(id);
-	tsk->state = aria2::DOWNLOAD_ACTIVE;
-	aria2::removePlace(id);
-	AriaDlg::getMainDlg()->addTask(tsk);
-}
-
 void TaskDatabase::removeLocalFile(uint64_t gid)
 {
 	const char lang1[] = "select type, local_path from task_table where gid = %lld;";
@@ -214,7 +203,7 @@ void TaskDatabase::initDownloadTask()
 }
 
 std::unique_ptr<Task>
-TaskDatabase::createTask(aria2::A2Gid id)
+TaskDatabase::createTask(aria2::A2Gid id, bool fresh)
 {
 	const char lang[] = "select type, name, state, total_size, down_size, up_size,"
 						"link_path, local_path, options from task_table where gid=%lld;";
@@ -252,13 +241,17 @@ TaskDatabase::createTask(aria2::A2Gid id)
 		}
 		tsk->id = id;
 		tsk->name = (const char *)na;
-		tsk->state = st;
 		tsk->type = ty;
 		tsk->to_size = sz;
 		tsk->dn_size = dz;
 		tsk->up_size = uz;
 		tsk->opts = optToKV(op);
-		{
+
+		if(fresh) {
+			tsk->id = 0;
+			tsk->state = aria2::DOWNLOAD_WAITING;
+		}else {
+			tsk->state = st;
 			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(id)));
 		}
 	}

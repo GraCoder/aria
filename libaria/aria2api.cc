@@ -405,6 +405,13 @@ int removeDownload(Session* session, A2Gid gid, bool force)
 	return 0;
 }
 
+int removeDownloadResult(Session *session, A2Gid gid)
+{
+	auto& e = session->context->reqinfo->getDownloadEngine();
+	bool ret = e->getRequestGroupMan()->removeDownloadResult(gid);
+	return ret ? 0 : -1;
+}
+
 int pauseDownload(Session* session, A2Gid gid, bool force)
 {
 	auto& e = session->context->reqinfo->getDownloadEngine();

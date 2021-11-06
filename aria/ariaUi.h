@@ -80,7 +80,7 @@ public:
 
 	void		startSelected();
 	void 		pauseSelected();
-	void 		deleteSelected();
+	void 		removeSelected();
 
 	void		deleteCompleteSelected();
 	void 		deleteAllCompleteSelected();
@@ -89,6 +89,8 @@ public:
 	void 		deleteTrashSelected();
 	void 		deleteAllTrashSelected();
 	void		explorerTrashSelected();
+
+	void 		restartTask(aria2::A2Gid);
 
 	Emitter* 		getEmitter(){return _emitter;}
 	TaskDatabase* 	getDatabase() {return _database;}

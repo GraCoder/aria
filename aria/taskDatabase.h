@@ -28,8 +28,6 @@ public:
 
 	void deleteTask(aria2::A2Gid);
 
-	void restartTask(aria2::A2Gid);
-
 	void removeLocalFile(aria2::A2Gid ide);
 
 	void deleteFinishTask(aria2::A2Gid, bool removeLocalFile = false);
@@ -42,7 +40,7 @@ public:
 
 	TaskInfoEx getTaskInfo(aria2::A2Gid);
 
-	std::unique_ptr<Task> createTask(aria2::A2Gid);
+	std::unique_ptr<Task> createTask(aria2::A2Gid, bool fresh = false);
 
 	void initCompleteTask();
 
