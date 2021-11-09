@@ -47,7 +47,7 @@ class Emitter : public QObject{
 public:
 signals:
 	void addTaskSig(uint64_t, QString);
-	void updateTaskSig(uint64_t, TaskInfo);
+	void updateTaskSig(uint64_t, TaskInfo, bool sys = true);
 	void completeTaskSig(uint64_t);
 	void removeTaskSig(uint64_t);
 	void startTaskSig(uint64_t);

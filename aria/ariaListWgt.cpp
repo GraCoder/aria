@@ -100,7 +100,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 			iconUrl += hover ? "pause-24blue.svg" : "pause-24black.svg";
 		else if(info.state == aria2::DOWNLOAD_ERROR || info.state == aria2::DOWNLOAD_PAUSED)
 			iconUrl += hover ? "download-24blue.svg" : "download-24black.svg";
-		else if(info.state == aria2::DOWNLOAD_WAITING || info.state == aria2::DOWNLOAD_REMOVING)
+		else if(info.state == aria2::DOWNLOAD_WAITING || info.state == aria2::DOWNLOAD_REMOVING || info.state == aria2::DOWNLOAD_PAUSING)
 		{
 			iconUrl += "waiting.svg";
 		}
@@ -455,9 +455,12 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 	int i = pt.y() / dnheight;
 	int y = pt.y() % dnheight;
 	if(_type == DOWNLOADING) {
+		auto mdl = (AriaDownloadListModel*)model();
+		if(i >= mdl->_tasks.size())
+			return;
 		if(!dngate->_btnRect.contains(pt.x(), y))
 			return;
-		auto gid = ((AriaDownloadListModel*)model())->_tasks[i];
+		auto gid = mdl->_tasks[i];
 		changeTaskState(gid);
 	}
 	else if(_type == COMPLETED) {

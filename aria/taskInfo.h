@@ -48,13 +48,14 @@ struct TaskInfo{
 	int 	dnspeed;
 	int 	upspeed;
 
-	int 	state;
 	int 	picNums;
 	int 	picLength;
 
 	int64_t totalLength;
 	int64_t dnloadLength;
 	int64_t uploadLength;
+
+	int 	state;
 };
 
 struct TaskInfoEx : public TaskInfo{

@@ -193,6 +193,7 @@ URILinkWgt::parseBtFile(const QString &file)
 	tsk->id = 0;
 	tsk->type = 2;
 	tsk->name = taskName.toUtf8().toStdString();
+	tsk->torrent = file.toUtf8().toStdString();
 	{
 		tsk->opts.push_back(std::make_pair("dir", _downdir->text().toUtf8().toStdString()));
 	}

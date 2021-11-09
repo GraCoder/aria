@@ -320,7 +320,8 @@ void AriaDlg::startSelected()
 {
 	auto ids = _dnWidget->getSelected();
 	for(auto id : ids){
-		unpauseDownload(_session, id);
+		if(unpauseDownload(_session, id))
+			_dnWidget->setTaskState(id, aria2::DOWNLOAD_WAITING);
 	}
 }
 
@@ -328,7 +329,8 @@ void AriaDlg::pauseSelected()
 {
 	auto ids = _dnWidget->getSelected();
 	for(auto id : ids){
-		pauseDownload(_session, id);
+		if(pauseDownload(_session, id))
+			_dnWidget->setTaskState(id, aria2::DOWNLOAD_PAUSING);
 	}
 }
 
@@ -576,17 +578,6 @@ void AriaDlg::addBtTask(BtTask *tsk)
 		auto tskInfo = getTaskInfo(gid);
 		_emitter->updateTaskSig(gid, tskInfo);
 		return;
-	}
-
-	{
-		std::string torrentDir = ariaSetting::instance().appPath();
-		auto torrentPath = std::filesystem::path(torrentDir).append("tmp/torrents");
-		if(!std::filesystem::exists(torrentPath))
-			std::filesystem::create_directories(torrentPath);
-		std::filesystem::path oriPath(tsk->torrent);
-		auto dstPath = torrentPath.append(oriPath.filename().string());
-		if(oriPath != dstPath && std::filesystem::copy_file(oriPath, dstPath))
-			tsk->torrent = dstPath.string();
 	}
 
 	KeyVals &tmpOpts = tsk->opts;

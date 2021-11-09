@@ -751,7 +751,9 @@ enum DownloadStatus {
    */
 	DOWNLOAD_REMOVED,
 
-	DOWNLOAD_REMOVING
+	DOWNLOAD_REMOVING,
+
+	DOWNLOAD_PAUSING
 };
 
 /**
