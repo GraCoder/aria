@@ -26,10 +26,27 @@ struct TaskInfo{
 			memcpy(&totalLength, &other.totalLength, sizeof(int64_t) * 3);
 	}
 
-	QString name;
+	static int surfixToInt(const QString &suf)
+	{
+		std::string suffix(4, 0);
+		suffix = suf.toStdString().substr(0, 4);
+		int ret;
+		memcpy(&ret, suffix.c_str(), 4);
+		return ret;
+	}
 
-	int dnspeed;
-	int upspeed;
+	static QString intToSurfix(int iconType)
+	{
+		char ch[5] = {0};
+		memcpy(ch, &iconType, 4);
+		return QString(ch);
+	}
+
+	QString name;
+	int 	iconType;
+
+	int 	dnspeed;
+	int 	upspeed;
 
 	int 	state;
 	int 	picNums;
@@ -41,6 +58,7 @@ struct TaskInfo{
 };
 
 struct TaskInfoEx : public TaskInfo{
+	aria2::BtMetaInfoData metaInfo;
 	std::vector<aria2::FileData> fileData;
 	aria2::KeyVals opts;
 };
@@ -48,6 +66,7 @@ struct TaskInfoEx : public TaskInfo{
 struct FinishTaskInfo{
 	uint64_t id;
 	QString name;
+	int 	iconType;
 	int64_t size;
 	QString datetime;
 	QString localPath;

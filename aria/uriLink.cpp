@@ -17,6 +17,11 @@
 
 #include "ariaSetting.h"
 
+#include "ValueBase.h"
+#include "bitfield.h"
+#include "ValueBaseBencodeParser.h"
+#include "GenericParser.h"
+
 URILinkWgt::URILinkWgt(const QString &url)
 {
 	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
@@ -36,10 +41,10 @@ URILinkWgt::getTasks()
 		auto item = _downList->item(i, 0);
 		auto tsk = std::make_unique<UriTask>();
 		tsk->id = 0;
-		tsk->url = item->data(Qt::UserRole).toUrl().toString().toStdString();
-		tsk->name = item->text().toStdString();
+		tsk->url = item->data(Qt::UserRole).toUrl().toString().toUtf8().toStdString();
+		tsk->name = item->text().toUtf8().toStdString();
 		tsk->type = 1;
-		tsk->dir = _downdir->text().toStdString();;
+		tsk->dir = _downdir->text().toUtf8().toStdString();
 
 		{
 			tsk->opts.push_back(std::make_pair("out", tsk->name));
@@ -52,11 +57,11 @@ URILinkWgt::getTasks()
 	{
 		auto tsk = std::make_unique<BtTask>();
 		tsk->id = 0;
-		tsk->torrent = _btFiles[i].toStdString();
-		tsk->name = QFileInfo(_btFiles[i]).fileName().toStdString();
+		tsk->torrent = _btFiles[i].toUtf8().toStdString();
+		tsk->name = QFileInfo(_btFiles[i]).fileName().toUtf8().toStdString();
 		tsk->type = 2;
 		{
-			tsk->opts.push_back(std::make_pair("dir", _downdir->text().toStdString()));
+			tsk->opts.push_back(std::make_pair("dir", _downdir->text().toUtf8().toStdString()));
 		}
 		ret.push_back(std::move(tsk));
 	}
@@ -142,6 +147,8 @@ void URILinkWgt::addBtSlt()
 	if(files.isEmpty())
 		return;
 
+	parseBtInfo();
+
 	_btFiles = files;
 
 	accept();
@@ -155,6 +162,16 @@ void URILinkWgt::downloadDirSlt()
 		dir = QString::fromStdString(ariaSetting::instance().downloadPath());
 	}
 	_downdir->setText(dir);
+}
+
+void URILinkWgt::parseBtInfo()
+{
+	using namespace aria2;
+
+	std::unique_ptr<ValueBase> torrent;
+	bittorrent::ValueBaseBencodeParser parser;
+	torrent = parseFile(parser, "C:\\Users\\t\\Downloads\\PornWorld.21.11.06.Rebecca.Volpetti.Cherry.Kiss.And.Candie.Luciani.XXX.2160p.MP4-WRB-[rarbg.to].torrent");
+	printf("");
 }
 
 void URILinkWgt::createWidgets()

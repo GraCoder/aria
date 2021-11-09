@@ -111,7 +111,6 @@ private:
 	void 		updateTask(aria2::A2Gid);
 	void 		completeTask(aria2::A2Gid);
 
-	void 		test();
 private:
 	AriaListWidget *_dnWidget, *_cmWidget, *_trWidget;
 

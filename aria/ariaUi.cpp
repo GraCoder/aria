@@ -17,6 +17,7 @@
 #include <QMessageBox>
 
 #include <algorithm>
+#include <filesystem>
 
 #include "ariaSys.h"
 #include "ariaPanel.h"
@@ -94,7 +95,7 @@ AriaDlg::AriaDlg()
 {
 	mainDlg = this;
 
-	setMinimumSize(1000, 600);
+	setMinimumSize(1200, 800);
 	setContentsMargins(0, 0, 0, 0);
 	setWindowIcon(QIcon(":/aria/icons/qbittorrent.ico"));
 	{
@@ -137,7 +138,6 @@ AriaDlg::AriaDlg()
 	connect(_emitter, &Emitter::failTaskSig, _dnWidget, &AriaListWidget::failTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::completeTaskSig, _dnWidget, &AriaListWidget::removeTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::removeTaskSig, _dnWidget, &AriaListWidget::removeTaskSlt, Qt::QueuedConnection);
-
 
 	_database->initTrashTask();
 	_database->initCompleteTask();
@@ -198,7 +198,6 @@ QWidget *AriaDlg::createToolBar()
 			bar->addAction(QIcon(":/aria/icons/pause.svg"), tr("pause"), std::bind(&AriaDlg::pauseSelected, this));
 			bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::removeSelected, this));
 		}
-		bar->addAction(tr("test"), this, &AriaDlg::test);
 
 		stackWgt->addWidget(bar);
 	}
@@ -337,8 +336,13 @@ void AriaDlg::removeSelected()
 {
 	auto ids = _dnWidget->getSelected();
 	for(auto id : ids){
-		removeDownload(_session, id);
-		_dnWidget->setTaskState(id, aria2::DOWNLOAD_REMOVING);
+		if(removeDownload(_session, id) == 0)
+			_dnWidget->setTaskState(id, aria2::DOWNLOAD_REMOVING);
+		else{
+			_dnWidget->removeTaskSlt(id);
+			_database->trashTask(id);
+			aria2::removeDownloadResult(_session, id);
+		}
 	}
 }
 
@@ -437,8 +441,11 @@ TaskInfoEx AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 		tskInfo.state = dh->getStatus();
 		tskInfo.picNums = dh->getNumPieces();
 		tskInfo.picLength = dh->getPieceLength();
+
 		tskInfo.fileData = dh->getFiles();
 		tskInfo.opts = dh->getOptions();
+		tskInfo.metaInfo = dh->getBtMetaInfo();
+
 		deleteDownloadHandle(dh);
 	}
 
@@ -527,7 +534,7 @@ void AriaDlg::addUriTask(UriTask *tsk)
 	using namespace aria2;
 
 	A2Gid gid = tsk->id;
-	QString name = QString::fromStdString(tsk->name);
+	QString name = QString::fromUtf8(tsk->name.c_str());
 	if(tsk->state == DOWNLOAD_ERROR)
 	{
 		_emitter->addTaskSig(gid, name);
@@ -552,6 +559,7 @@ void AriaDlg::addUriTask(UriTask *tsk)
 	taskInfo.totalLength = tsk->to_size;
 	taskInfo.dnloadLength = tsk->dn_size;
 	taskInfo.uploadLength = tsk->up_size;
+	taskInfo.iconType = taskInfo.surfixToInt(QFileInfo(name).suffix());
 	_emitter->updateTaskSig(gid, taskInfo);
 
 }
@@ -570,6 +578,17 @@ void AriaDlg::addBtTask(BtTask *tsk)
 		return;
 	}
 
+	{
+		std::string torrentDir = ariaSetting::instance().appPath();
+		auto torrentPath = std::filesystem::path(torrentDir).append("tmp/torrents");
+		if(!std::filesystem::exists(torrentPath))
+			std::filesystem::create_directories(torrentPath);
+		std::filesystem::path oriPath(tsk->torrent);
+		auto dstPath = torrentPath.append(oriPath.filename().string());
+		if(oriPath != dstPath && std::filesystem::copy_file(oriPath, dstPath))
+			tsk->torrent = dstPath.string();
+	}
+
 	KeyVals &tmpOpts = tsk->opts;
 	int ret = aria2::addTorrent(_session, &gid, tsk->torrent, tmpOpts);
 	if(ret != 0)
@@ -585,6 +604,7 @@ void AriaDlg::addBtTask(BtTask *tsk)
 	taskInfo.totalLength = tsk->to_size;
 	taskInfo.dnloadLength = tsk->dn_size;
 	taskInfo.uploadLength = tsk->up_size;
+	taskInfo.iconType = 2;
 	_emitter->updateTaskSig(gid, taskInfo);
 }
 
@@ -597,10 +617,4 @@ void AriaDlg::updateTask(aria2::A2Gid id)
 void AriaDlg::completeTask(aria2::A2Gid id)
 {
 	_emitter->completeTaskSig(id);
-}
-
-void AriaDlg::test()
-{
-	auto tks = getActiveDownload(_session);
-	printf("");
 }

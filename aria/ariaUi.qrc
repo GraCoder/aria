@@ -72,5 +72,7 @@
         <file>icons/filetype2/txt.png</file>
         <file>icons/filetype2/wav.png</file>
         <file>icons/filetype2/zip.png</file>
+        <file>icons/filetype2/bt.png</file>
+        <file>icons/filetype2/file.png</file>
     </qresource>
 </RCC>

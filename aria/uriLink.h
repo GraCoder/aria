@@ -25,6 +25,8 @@ public:
 	void addBtSlt();
 
 	void downloadDirSlt();
+
+	void parseBtInfo();
 protected:
 	void createWidgets();
 

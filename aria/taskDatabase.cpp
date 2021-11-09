@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 #include <QFile>
+#include <QFileInfo>
 #include <sqlite3.h>
 #include <filesystem>
 
@@ -74,6 +75,7 @@ void TaskDatabase::completeTask(aria2::A2Gid gid)
 	if(_sql == nullptr)
 		return;
 
+	setState(gid, aria2::DOWNLOAD_COMPLETE);
 	addLocalTask(gid, COMPLETED);
 }
 
@@ -82,6 +84,7 @@ void TaskDatabase::trashTask(aria2::A2Gid gid)
 	if(_sql == nullptr)
 		return;
 
+	setState(gid, aria2::DOWNLOAD_REMOVED);
 	addLocalTask(gid, TRASHCAN);
 }
 
@@ -144,14 +147,6 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 	if(_sql == nullptr)
 		return;
 
-	auto &filedata = taskInfo.fileData;
-	std::string filepath;
-	if(filedata.size() == 1) {
-		filepath = filedata[0].path;
-	}else{
-
-	}
-
 	char *errmsg = nullptr;
 	sqlite3_exec(_sql, "begin transaction", 0, 0, &errmsg);
 
@@ -168,15 +163,30 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 		sqlite3_exec(_sql, exeLang, 0, 0, 0);
 	}
 
-	if(!filepath.empty()) {
-		std::filesystem::path lpath(filepath);
-		std::string filename = lpath.filename().string();
-		QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-		const char lang[] = "update task_table set name='%s', end_time='%s', local_path='%s' where gid=%lld;";
-		sprintf(exeLang, lang, filename.c_str(), datatime.toLocal8Bit().data(), filepath.c_str(), gid);
-		sqlite3_exec(_sql, exeLang, 0, 0, 0);
+	if(taskInfo.state == aria2::DOWNLOAD_ACTIVE || taskInfo.state == aria2::DOWNLOAD_COMPLETE ||
+			taskInfo.state == aria2::DOWNLOAD_ERROR || taskInfo.state == aria2::DOWNLOAD_PAUSED)
+	{
+		auto &filedata = taskInfo.fileData;
+		std::string filepath;
+		std::string filename = taskInfo.metaInfo.name;
+		if(filedata.size() == 1) {
+			filepath = filedata[0].path;
+			filename = std::filesystem::path(filepath).filename().string();
+		}else{
+			filepath = filedata[0].path;
+			filepath = std::filesystem::path(filepath).parent_path().string();
+			filename = taskInfo.metaInfo.name;
+		}
+
+		if(!filepath.empty()) {
+			QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+			const char lang[] = "update task_table set name='%s', end_time='%s', local_path='%s' where gid=%lld;";
+			sprintf(exeLang, lang, filename.c_str(), datatime.toLocal8Bit().data(), filepath.c_str(), gid);
+			sqlite3_exec(_sql, exeLang, 0, 0, 0);
+		}
 	}
-	 sqlite3_exec(_sql, "commit transaction" , 0, 0, &errmsg);
+
+	sqlite3_exec(_sql, "commit transaction" , 0, 0, &errmsg);
 }
 
 void TaskDatabase::initDownloadTask()
@@ -293,21 +303,25 @@ void TaskDatabase::initTrashTask()
 
 void TaskDatabase::addLocalTask(uint64_t id, int wgtType)
 {
-	const char lang[] = "select name, total_size, end_time, local_path from task_table where gid = %lld;";
+	const char lang[] = "select name, type, total_size, end_time, local_path from task_table where gid = %lld;";
 	sprintf(exeLang, lang, id);
 	sqlite3_stmt *stmt;
 	sqlite3_prepare_v2(_sql, exeLang, -1, &stmt, 0);
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		auto na = sqlite3_column_text(stmt, 0);
-		auto sz = sqlite3_column_int64(stmt, 1);
-		auto tm = sqlite3_column_text(stmt, 2);
-		auto lp = sqlite3_column_text(stmt, 3);
+		auto ty = sqlite3_column_int(stmt, 1);
+		auto sz = sqlite3_column_int64(stmt, 2);
+		auto tm = sqlite3_column_text(stmt, 3);
+		auto lp = sqlite3_column_text(stmt, 4);
 		QString name = QString::fromLocal8Bit((char *)na);
-		QDateTime dt = QDateTime::fromString((char *)tm);
 		FinishTaskInfo info; info.id = id;
 		info.name = name; info.size = sz;
-		info.localPath = QString((const char *)lp);
-		info.datetime = AriaDlg::getMainDlg()->locale().toString(dt);
+		info.localPath = (const char *)lp;
+		info.datetime = (const char *)tm;
+		if(ty == 1)
+			info.iconType = TaskInfo::surfixToInt(QFileInfo(name).suffix());
+		else
+			info.iconType = ty;
 		if(wgtType == COMPLETED)
 		{
 			auto wgt = AriaDlg::getMainDlg()->getCompleteWgt();
@@ -357,4 +371,11 @@ std::map<std::string, std::string> TaskDatabase::getSettings()
 	}
 	sqlite3_finalize(stmt);
 	return ret;
+}
+
+void TaskDatabase::setState(aria2::A2Gid id, int state)
+{
+	const char lang[] = "update task_table set state = %d where gid = %lld";
+	sprintf(exeLang, lang, state, id);
+	sqlite3_exec(_sql, exeLang, nullptr, nullptr, nullptr);
 }

@@ -17,9 +17,11 @@ const int dnheight = 80;
 const int hfheight = dnheight / 5.0 * 2;
 const int iconSize = 24;
 
+const QString iconPrefix = ":/aria/icons/filetype2";
+
 AriaListDelegate::AriaListDelegate()
 {
-	_alias["msi"] = "exe";
+	_pixMap[2] = QPixmap(iconPrefix + "/bt.png");
 }
 
 void AriaListDelegate::setSize(const QSize &size)
@@ -32,23 +34,19 @@ QSize AriaListDelegate::sizeHint(const QStyleOptionViewItem &opt, const QModelIn
 	return QSize(100, dnheight);
 }
 
-QPixmap &AriaListDelegate::getPixmap(const QString &fileName) const
+QPixmap &AriaListDelegate::getPixmap(int iconType) const
 {
-	auto suf = QFileInfo(fileName).suffix();
-	auto ater = _alias.find(suf);
-	if(ater != _alias.end())
-		suf = *ater;
-
-	auto iter = _pixMap.find(suf);
+	auto iter = _pixMap.find(iconType);
 	if(iter != _pixMap.end())
 		return *iter;
-	const QString iconPrefix = ":/aria/icons/filetype2";
+
+	auto suf = TaskInfo::intToSurfix(iconType);
 	QString filepath = iconPrefix + "/" + suf + ".png";
-	auto &px = _pixMap[suf];
+	auto &px = _pixMap[iconType];
 	if(QFile(filepath).exists())
 		px = QPixmap(filepath);
 	else
-		px = QFileIconProvider().icon(QFileIconProvider::File).pixmap(32, 32);
+		px = QPixmap(iconPrefix + "/file.png");
 	return px;
 }
 
@@ -76,7 +74,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 
 	const int popSize = dnheight / 5.0 * 2;
 
-	const QPixmap& ico = getPixmap(info.name);
+	const QPixmap& ico = getPixmap(info.iconType);
 	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico);
 
 	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
@@ -85,8 +83,9 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 
 	QTextOption texOpt;
 	texOpt.setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+	texOpt.setWrapMode(QTextOption::NoWrap);
 	painter->setPen(QColor(25, 25, 25));
-	QRect texRect(dnheight, opt.rect.top(), opt.rect.width(), popSize);
+	QRect texRect(dnheight, opt.rect.top(), opt.rect.width() / 3.0 * 2, popSize);
 	painter->drawText(texRect, info.name, texOpt);
 
 	auto pt = QCursor::pos();
@@ -129,7 +128,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	{
 		if(info.state == aria2::DOWNLOAD_ACTIVE) {
 			int secs = (info.totalLength - info.dnloadLength) / (info.dnspeed + 0.0001);
-			texRect.translate(opt.rect.width() / 4, 0);
+			texRect.translate(opt.rect.width() / 5, 0);
 			auto tm = QTime(0, 0).addSecs(secs);
 			if(tm.isValid())
 				painter->drawText(texRect, tr("remain:") + opt.locale.toString(tm), texOpt);
@@ -180,7 +179,7 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 
 	const int popSize = dnheight / 5.0 * 2;
 
-	const QPixmap& ico = getPixmap(info.name);
+	const QPixmap& ico = getPixmap(info.iconType);
 	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico);
 
 	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
@@ -189,8 +188,9 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 
 	QTextOption texOpt;
 	texOpt.setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+	texOpt.setWrapMode(QTextOption::NoWrap);
 	painter->setPen(QColor(25, 25, 25));
-	QRect texRect(dnheight, opt.rect.top(), opt.rect.width(), popSize);
+	QRect texRect(dnheight, opt.rect.top(), opt.rect.width() / 3.0 * 2, popSize);
 	painter->drawText(texRect, info.name, texOpt);
 
 	auto pt = QCursor::pos();
@@ -200,6 +200,11 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 		texRect.translate(0, hfheight);
 		auto filesize = opt.locale.formattedDataSize(info.size, 2, opt.locale.DataSizeTraditionalFormat);
 		painter->drawText(texRect, filesize, texOpt);
+	}
+
+	{
+		texRect.translate(opt.rect.width() / 5.0, 0);
+		painter->drawText(texRect, info.datetime, texOpt);
 	}
 
 	{
@@ -380,6 +385,8 @@ AriaListWidget::getSelected()
 		auto listmodel = static_cast<AriaDownloadListModel*>(model());
 		for(auto &idx : idxs){
 			auto id = listmodel->_tasks[idx.row()];
+			if(listmodel->_taskInfos[id].state == aria2::DOWNLOAD_REMOVING)
+				continue;
 			ids.push_back(id);
 		}
 	}

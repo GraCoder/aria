@@ -31,7 +31,7 @@ ariaSetting::ariaSetting()
 	}
 	_settings["log"] = "log.txt";
 
-	_settings["save-session-interval"]= "20"; //session
+	_settings["save-session-interval"]= "5"; //session
 
 	_settings["auto-save-interval"]= "10"; //control
 
@@ -46,9 +46,9 @@ ariaSetting::ariaSetting()
 	_settings["piece-length"]= "1M";
 	_settings["allow-piece-length-change"]= "true";
 #ifdef NDEBUG
-	_settings["max-overall-download-limit"] = "1248K";
+	_settings["max-overall-download-limit"] = "4096K";
 #else
-	_settings["max-overall-download-limit"] = "120K";
+	_settings["max-overall-download-limit"] = "12K";
 #endif
 	//_settings["max-download-limit"] = "10k";
 	_settings["optimize-concurrent-downloads"] = "false";

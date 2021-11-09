@@ -54,6 +54,7 @@ public:
 	std::map<std::string, std::string> getSettings();
 
 protected:
+	void setState(aria2::A2Gid, int);
 private:
 	sqlite3 *_sql;
 };

@@ -18,12 +18,11 @@ public:
 protected:
 	QSize sizeHint(const QStyleOptionViewItem &opt, const QModelIndex &index) const;
 
-	QPixmap &getPixmap(const QString &fileName) const;
+	QPixmap &getPixmap(int) const;
 
 protected:
 	QRect _btnRect;
-	QMap<QString, QString>				_alias;
-	mutable QMap<QString, QPixmap> 		_pixMap;
+	mutable QMap<int, QPixmap> 		_pixMap;
 };
 
 //--------------------------------------------------------------------------------
