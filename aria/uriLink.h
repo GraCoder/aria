@@ -15,6 +15,7 @@ class QTableWidgetItem;
 class URILinkWgt : public FramelessDlg{
 public:
 	URILinkWgt(const QString &url);
+	~URILinkWgt();
 
 	std::vector<std::unique_ptr<Task>> getTasks();
 
@@ -26,7 +27,7 @@ public:
 
 	void downloadDirSlt();
 
-	void parseBtInfo();
+	std::unique_ptr<Task> parseBtFile(const QString &file);
 protected:
 	void createWidgets();
 
@@ -39,7 +40,7 @@ private:
 	QLineEdit		*_downdir;
 	QPushButton *_dnBtn, *_btBtn, *_dnDirBtn;
 
-	QList<QString>  _btFiles;
+	std::vector<std::unique_ptr<Task>> _btTasks;
 };
 
 #endif // URILINK_H

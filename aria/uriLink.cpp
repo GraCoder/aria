@@ -31,6 +31,11 @@ URILinkWgt::URILinkWgt(const QString &url)
 	_edit->setPlainText(url);
 }
 
+URILinkWgt::~URILinkWgt()
+{
+
+}
+
 std::vector<std::unique_ptr<Task> >
 URILinkWgt::getTasks()
 {
@@ -53,18 +58,8 @@ URILinkWgt::getTasks()
 		ret.push_back(std::move(tsk));
 	}
 
-	for(int i = 0; i < _btFiles.size(); i++)
-	{
-		auto tsk = std::make_unique<BtTask>();
-		tsk->id = 0;
-		tsk->torrent = _btFiles[i].toUtf8().toStdString();
-		tsk->name = QFileInfo(_btFiles[i]).fileName().toUtf8().toStdString();
-		tsk->type = 2;
-		{
-			tsk->opts.push_back(std::make_pair("dir", _downdir->text().toUtf8().toStdString()));
-		}
+	for(auto &tsk : _btTasks)
 		ret.push_back(std::move(tsk));
-	}
 
 	return ret;
 }
@@ -147,9 +142,13 @@ void URILinkWgt::addBtSlt()
 	if(files.isEmpty())
 		return;
 
-	parseBtInfo();
+	hide();
 
-	_btFiles = files;
+	for(auto &file : files)
+	{
+		auto tsk = parseBtFile(file);
+		_btTasks.push_back(std::move(tsk));
+	}
 
 	accept();
 }
@@ -164,14 +163,40 @@ void URILinkWgt::downloadDirSlt()
 	_downdir->setText(dir);
 }
 
-void URILinkWgt::parseBtInfo()
+std::unique_ptr<Task>
+URILinkWgt::parseBtFile(const QString &file)
 {
 	using namespace aria2;
 
 	std::unique_ptr<ValueBase> torrent;
 	bittorrent::ValueBaseBencodeParser parser;
-	torrent = parseFile(parser, "C:\\Users\\t\\Downloads\\PornWorld.21.11.06.Rebecca.Volpetti.Cherry.Kiss.And.Candie.Luciani.XXX.2160p.MP4-WRB-[rarbg.to].torrent");
-	printf("");
+	torrent = parseFile(parser, file.toUtf8().toStdString());
+	const Dict* torrentDict = downcast<Dict>(torrent);
+	const Dict* torrentInfo = downcast<Dict>(torrentDict->get("info"));
+	if(torrentInfo == nullptr)
+		return nullptr;
+	auto pName = downcast<String>(torrentInfo->get("name"));
+	QString taskName;
+	if(pName)
+		taskName = QString::fromUtf8(pName->s().c_str());
+	else
+		taskName = QFileInfo(file).fileName();
+	QStringList fileList;
+	auto pFiles = downcast<List>(torrentInfo->get("files"));
+	if(pFiles){
+
+	}else{
+
+	}
+
+	auto tsk = std::make_unique<BtTask>();
+	tsk->id = 0;
+	tsk->type = 2;
+	tsk->name = taskName.toUtf8().toStdString();
+	{
+		tsk->opts.push_back(std::make_pair("dir", _downdir->text().toUtf8().toStdString()));
+	}
+	return tsk;
 }
 
 void URILinkWgt::createWidgets()

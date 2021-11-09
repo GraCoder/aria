@@ -12,7 +12,7 @@
 #include "ariaListWgt.h"
 #include "ariaSetting.h"
 
-#include "aria2/aria2.h"
+#include "aria2.h"
 
 char exeLang[8192];
 
@@ -163,25 +163,20 @@ void TaskDatabase::updateTaskInfo(aria2::A2Gid gid, TaskInfoEx &taskInfo)
 		sqlite3_exec(_sql, exeLang, 0, 0, 0);
 	}
 
-	if(taskInfo.state == aria2::DOWNLOAD_ACTIVE || taskInfo.state == aria2::DOWNLOAD_COMPLETE ||
-			taskInfo.state == aria2::DOWNLOAD_ERROR || taskInfo.state == aria2::DOWNLOAD_PAUSED)
 	{
 		auto &filedata = taskInfo.fileData;
 		std::string filepath;
-		std::string filename = taskInfo.metaInfo.name;
 		if(filedata.size() == 1) {
 			filepath = filedata[0].path;
-			filename = std::filesystem::path(filepath).filename().string();
 		}else{
 			filepath = filedata[0].path;
 			filepath = std::filesystem::path(filepath).parent_path().string();
-			filename = taskInfo.metaInfo.name;
 		}
 
 		if(!filepath.empty()) {
 			QString datatime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-			const char lang[] = "update task_table set name='%s', end_time='%s', local_path='%s' where gid=%lld;";
-			sprintf(exeLang, lang, filename.c_str(), datatime.toLocal8Bit().data(), filepath.c_str(), gid);
+			const char lang[] = "update task_table set end_time='%s', local_path='%s' where gid=%lld;";
+			sprintf(exeLang, lang, datatime.toLocal8Bit().data(), filepath.c_str(), gid);
 			sqlite3_exec(_sql, exeLang, 0, 0, 0);
 		}
 	}

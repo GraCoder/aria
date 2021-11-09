@@ -6,7 +6,7 @@
 #include <QDialog>
 #include <QHash>
 
-#include "aria2/aria2.h"
+#include "aria2.h"
 
 #include "frameless.h"
 #include "taskInfo.h"

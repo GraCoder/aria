@@ -39,7 +39,7 @@
 
 #include <memory>
 
-#include "aria2/aria2.h"
+#include "aria2.h"
 
 namespace aria2 {
 
