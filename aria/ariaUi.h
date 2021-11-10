@@ -78,6 +78,10 @@ public:
 	void 		addTask(std::unique_ptr<Task> &);
 	void 		addTask(std::vector<std::unique_ptr<Task>>&);
 
+	void		startTask(aria2::A2Gid);
+	void 		pauseTask(aria2::A2Gid);
+	void 		removeTask(aria2::A2Gid);
+
 	void		startSelected();
 	void 		pauseSelected();
 	void 		removeSelected();
@@ -90,7 +94,7 @@ public:
 	void 		deleteAllTrashSelected();
 	void		explorerTrashSelected();
 
-	void 		restartTask(aria2::A2Gid);
+	void 		restartTask(aria2::A2Gid, bool createNew = true);
 
 	Emitter* 		getEmitter(){return _emitter;}
 	TaskDatabase* 	getDatabase() {return _database;}

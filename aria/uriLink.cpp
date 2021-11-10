@@ -45,13 +45,15 @@ URILinkWgt::getTasks()
 	{
 		auto item = _downList->item(i, 0);
 		auto tsk = std::make_unique<UriTask>();
-		tsk->id = 0;
+		tsk->id = aria2::genId();
 		tsk->url = item->data(Qt::UserRole).toUrl().toString().toUtf8().toStdString();
 		tsk->name = item->text().toUtf8().toStdString();
 		tsk->type = 1;
+		tsk->state = aria2::DOWNLOAD_WAITING;
 		tsk->dir = _downdir->text().toUtf8().toStdString();
 
 		{
+			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(tsk->id)));
 			tsk->opts.push_back(std::make_pair("out", tsk->name));
 			tsk->opts.push_back(std::make_pair("dir", tsk->dir));
 		}
@@ -181,20 +183,23 @@ URILinkWgt::parseBtFile(const QString &file)
 		taskName = QString::fromUtf8(pName->s().c_str());
 	else
 		taskName = QFileInfo(file).fileName();
-	QStringList fileList;
+	std::vector<std::tuple<QString, uint64_t>> fileList;
 	auto pFiles = downcast<List>(torrentInfo->get("files"));
 	if(pFiles){
 
 	}else{
-
+		uint64_t sz = downcast<Integer>(torrentInfo->get("length"))->i();
+		fileList.push_back(std::make_tuple(taskName, sz));
 	}
 
 	auto tsk = std::make_unique<BtTask>();
-	tsk->id = 0;
+	tsk->id = aria2::genId();
 	tsk->type = 2;
 	tsk->name = taskName.toUtf8().toStdString();
 	tsk->torrent = file.toUtf8().toStdString();
+	tsk->state = aria2::DOWNLOAD_WAITING;
 	{
+		tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(tsk->id)));
 		tsk->opts.push_back(std::make_pair("dir", _downdir->text().toUtf8().toStdString()));
 	}
 	return tsk;

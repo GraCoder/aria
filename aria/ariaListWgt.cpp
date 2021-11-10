@@ -305,7 +305,8 @@ void AriaListWidget::updateTaskSlt(uint64_t aid, TaskInfo tskInfo)
 		return;
 	if(listmodel->_taskInfos[aid].state == aria2::DOWNLOAD_REMOVING)
 		return;
-	listmodel->_taskInfos[aid] = tskInfo;
+	auto &taskInfo = listmodel->_taskInfos[aid];
+	taskInfo = tskInfo;
 	auto idx = listmodel->createIndex(listmodel->_tasks.indexOf(aid), 0);
 	listmodel->dataChanged(idx, idx);
 }
@@ -424,13 +425,9 @@ void AriaListWidget::explorerIndexAt(int i)
 void AriaListWidget::restartTask(int idx)
 {
 	auto listmodel = (AriaFinishListModel*)model();
-	if(listmodel->_taskInfos.size() <= idx)
-		return;
-	auto &taskInfo = listmodel->_taskInfos[idx];
-	AriaDlg::getMainDlg()->restartTask(taskInfo.id);
-	listmodel->beginRemoveRows(QModelIndex(), idx, idx);
-	listmodel->_taskInfos.remove(idx);
-	listmodel->endRemoveRows();
+	auto id = listmodel->_taskInfos[idx].id;
+	removeTaskSlt(id);
+	AriaDlg::getMainDlg()->restartTask(id);
 }
 
 void AriaListWidget::resizeEvent(QResizeEvent *ev)
@@ -493,12 +490,15 @@ void AriaListWidget::changeTaskState(uint64_t id)
 {
 	auto &taskInfo = ((AriaDownloadListModel*)model())->_taskInfos[id];
 	if(taskInfo.state == aria2::DOWNLOAD_PAUSED)  {
-		AriaDlg::getMainDlg()->startSelected();
+		setTaskState(id, aria2::DOWNLOAD_WAITING);
+		AriaDlg::getMainDlg()->startTask(id);
 	}
 	else if(taskInfo.state == aria2::DOWNLOAD_ACTIVE) {
-		AriaDlg::getMainDlg()->pauseSelected();
+		setTaskState(id, aria2::DOWNLOAD_WAITING);
+		AriaDlg::getMainDlg()->pauseTask(id);
 	}else if(taskInfo.state == aria2::DOWNLOAD_ERROR) {
-		printf("1111");
+		setTaskState(id, aria2::DOWNLOAD_WAITING);
+		AriaDlg::getMainDlg()->restartTask(id, false);
 	}
 }
 

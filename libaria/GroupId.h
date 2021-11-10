@@ -51,6 +51,7 @@ public:
 	static std::shared_ptr<GroupId> import(a2_gid_t n);
 	static void holdPlace(a2_gid_t n);
 	static void removePlace(a2_gid_t n);
+	static a2_gid_t createId();
 	static void clear();
 	enum { ERR_NOT_UNIQUE = -1, ERR_NOT_FOUND = -2, ERR_INVALID = -3 };
 	static int expandUnique(a2_gid_t& n, const char* hex);

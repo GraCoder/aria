@@ -44,13 +44,7 @@ std::set<a2_gid_t> GroupId::set_;
 
 std::shared_ptr<GroupId> GroupId::create()
 {
-	a2_gid_t n;
-	for (;;) {
-		util::generateRandomData(reinterpret_cast<unsigned char*>(&n), sizeof(n));
-		if (n != 0 && set_.count(n) == 0) {
-			break;
-		}
-	}
+	a2_gid_t n = createId();
 	std::shared_ptr<GroupId> res(new GroupId(n));
 	return res;
 }
@@ -73,6 +67,18 @@ void GroupId::holdPlace(a2_gid_t n)
 void GroupId::removePlace(a2_gid_t n)
 {
 	set_.erase(n);
+}
+
+a2_gid_t GroupId::createId()
+{
+	a2_gid_t n;
+	for (;;) {
+		util::generateRandomData(reinterpret_cast<unsigned char*>(&n), sizeof(n));
+		if (n != 0 && set_.count(n) == 0) {
+			break;
+		}
+	}
+	return n;
 }
 
 void GroupId::clear() { set_.clear(); }

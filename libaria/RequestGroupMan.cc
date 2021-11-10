@@ -92,6 +92,19 @@
 namespace aria2 {
 
 namespace {
+
+void notifyDownloadEvent(DownloadEvent event,
+			 const std::shared_ptr<RequestGroup>& group)
+{
+	// Check NULL to make unit test easier.
+	if (SingletonHolder<Notifier>::instance()) {
+		SingletonHolder<Notifier>::instance()->notifyDownloadEvent(event, group);
+	}
+}
+
+} // namespace
+
+namespace {
 template <typename InputIterator>
 void appendReservedGroup(RequestGroupList& list, InputIterator first,
 			 InputIterator last)
@@ -234,21 +247,10 @@ size_t RequestGroupMan::changeReservedGroupPosition(a2_gid_t gid, int pos,
 
 bool RequestGroupMan::removeReservedGroup(a2_gid_t gid)
 {
+	auto group = reservedGroups_.get(gid);
+	notifyDownloadEvent(EVENT_ON_DOWNLOAD_STOP, group);
 	return reservedGroups_.remove(gid);
 }
-
-namespace {
-
-void notifyDownloadEvent(DownloadEvent event,
-			 const std::shared_ptr<RequestGroup>& group)
-{
-	// Check NULL to make unit test easier.
-	if (SingletonHolder<Notifier>::instance()) {
-		SingletonHolder<Notifier>::instance()->notifyDownloadEvent(event, group);
-	}
-}
-
-} // namespace
 
 namespace {
 

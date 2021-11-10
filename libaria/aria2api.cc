@@ -197,6 +197,11 @@ void removePlace(A2Gid gid)
 	GroupId::removePlace(gid);
 }
 
+A2Gid genId()
+{
+	return GroupId::createId();
+}
+
 namespace {
 template <typename InputIterator, typename Pred>
 void apiGatherOption(InputIterator first, InputIterator last, Pred pred,

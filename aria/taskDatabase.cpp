@@ -202,6 +202,8 @@ void TaskDatabase::initDownloadTask()
 		auto tsk = createTask(id);
 		if(tsk == nullptr)
 			continue;
+		AriaDlg::getMainDlg()->getDownloadWgt()
+				->addTaskSlt(id, QString::fromUtf8(tsk->name.c_str()));
 		tasks.push_back(std::move(tsk));
 	}
 	AriaDlg::getMainDlg()->addTask(tasks);
@@ -253,8 +255,9 @@ TaskDatabase::createTask(aria2::A2Gid id, bool fresh)
 		tsk->opts = optToKV(op);
 
 		if(fresh) {
-			tsk->id = 0;
+			tsk->id = aria2::genId();
 			tsk->state = aria2::DOWNLOAD_WAITING;
+			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(tsk->id)));
 		}else {
 			tsk->state = st;
 			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(id)));
