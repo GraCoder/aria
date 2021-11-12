@@ -73,8 +73,8 @@ public:
 	AriaListWidget(AriListViewType type);
 	AriListViewType type() const {return _type;}
 
-	void 	addTaskSlt(uint64_t, QString);
-	void 	updateTaskSlt(uint64_t, TaskInfo);
+	void 	addTaskSlt(uint64_t, Task*);
+	void 	updateTaskSlt(uint64_t, TaskUpdateInfo);
 	void 	removeTaskSlt(uint64_t);
 	void 	failTaskSlt(uint64_t);
 	void 	startTaskSlt(uint64_t);
@@ -83,8 +83,6 @@ public:
 	void 	addFinishTaskSlt(uint64_t, FinishTaskInfo &);
 
 	void 	setTaskState(uint64_t, int);
-
-	void 	setTaskIcon(uint64_t, int);
 
 	QVector<uint64_t>	 getSelected();
 
@@ -99,6 +97,8 @@ protected:
 	void 	showEvent(QShowEvent *ev);
 
 	void 	changeTaskState(uint64_t);
+
+	void 	setTaskIcon(TaskInfo *);
 private:
 	AriListViewType _type;
 };
@@ -111,8 +111,8 @@ public:
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	Qt::ItemFlags flags(const QModelIndex &index) const;
 private:
-	QVector<uint64_t>			_tasks;
-	QHash<uint64_t, TaskInfo> 	_taskInfos;
+	QVector<uint64_t>				_tasks;
+	QHash<uint64_t, TaskInfoEx> 	_taskInfos;
 };
 
 class AriaFinishListModel : public QAbstractListModel{

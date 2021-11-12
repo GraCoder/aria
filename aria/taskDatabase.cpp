@@ -88,10 +88,13 @@ void TaskDatabase::trashTask(aria2::A2Gid gid)
 	addLocalTask(gid, TRASHCAN);
 }
 
-void TaskDatabase::deleteTask(aria2::A2Gid gid)
+void TaskDatabase::deleteTask(aria2::A2Gid gid, bool deleteLocalFile)
 {
 	if(_sql == nullptr)
 		return;
+
+	if(deleteLocalFile)
+		removeLocalFile(gid);
 
 	const char lang[] = "delete from task_table where gid = %lld;";
 	sprintf(exeLang, lang, gid);
@@ -111,24 +114,12 @@ void TaskDatabase::removeLocalFile(uint64_t gid)
 		if(localf) localfile = QString::fromLocal8Bit((const char *)localf);
 		switch(type)
 		{
-		case 1:
+		case enTaskType_Uri:
 			QFile(localfile).remove();
+			QFile(localfile + ".aria2").remove();
 			break;
 		}
 	}
-}
-
-void TaskDatabase::deleteFinishTask(aria2::A2Gid gid, bool rmLocalFile)
-{
-	if(_sql == nullptr)
-		return;
-
-	if(rmLocalFile)
-		removeLocalFile(gid);
-
-	const char lang2[] = "delete from task_table where gid = %lld;";
-	sprintf(exeLang, lang2, gid);
-	sqlite3_exec(_sql, exeLang, 0, 0, 0);
 }
 
 void TaskDatabase::failTask(aria2::A2Gid gid)
@@ -202,8 +193,7 @@ void TaskDatabase::initDownloadTask()
 		auto tsk = createTask(id);
 		if(tsk == nullptr)
 			continue;
-		AriaDlg::getMainDlg()->getDownloadWgt()
-				->addTaskSlt(id, QString::fromUtf8(tsk->name.c_str()));
+		AriaDlg::getMainDlg()->getDownloadWgt() ->addTaskSlt(id, tsk.get());
 		tasks.push_back(std::move(tsk));
 	}
 	AriaDlg::getMainDlg()->addTask(tasks);
@@ -261,6 +251,8 @@ TaskDatabase::createTask(aria2::A2Gid id, bool fresh)
 		}else {
 			tsk->state = st;
 			tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(id)));
+			if(st == aria2::DOWNLOAD_PAUSED)
+				tsk->opts.push_back(std::make_pair("pause", "true"));
 		}
 	}
 	sqlite3_finalize(stmt);
@@ -312,14 +304,11 @@ void TaskDatabase::addLocalTask(uint64_t id, int wgtType)
 		auto tm = sqlite3_column_text(stmt, 3);
 		auto lp = sqlite3_column_text(stmt, 4);
 		QString name = QString::fromLocal8Bit((char *)na);
-		FinishTaskInfo info; info.id = id;
+		FinishTaskInfo info;
+		info.id = id; info.type = ty;
 		info.name = name; info.size = sz;
 		info.localPath = (const char *)lp;
 		info.datetime = (const char *)tm;
-		if(ty == 1)
-			info.iconType = TaskInfo::surfixToInt(QFileInfo(name).suffix());
-		else
-			info.iconType = ty;
 		if(wgtType == COMPLETED)
 		{
 			auto wgt = AriaDlg::getMainDlg()->getCompleteWgt();
@@ -331,6 +320,11 @@ void TaskDatabase::addLocalTask(uint64_t id, int wgtType)
 		}
 	}
 	sqlite3_finalize(stmt);
+}
+
+std::string TaskDatabase::getLocalFile(aria2::A2Gid)
+{
+	return std::string();
 }
 
 std::unique_ptr<Task>

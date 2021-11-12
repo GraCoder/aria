@@ -5,8 +5,13 @@
 
 #include "aria2.h"
 
-struct TaskInfo{
-	TaskInfo()
+enum TaskType{
+	enTaskType_Uri = 1,
+	enTaskType_Bt
+};
+
+struct TaskUpdateInfo{
+	TaskUpdateInfo()
 	{
 		dnspeed = 0;
 		upspeed = 0;
@@ -15,35 +20,27 @@ struct TaskInfo{
 		dnloadLength = 0;
 	}
 
-	void operator=(const TaskInfo &other)
+	void operator=(const TaskUpdateInfo &other)
 	{
-		if(!other.name.isEmpty())
-			name = other.name;
-
-		memcpy(&dnspeed, &other.dnspeed, offsetof(TaskInfo, totalLength) - offsetof(TaskInfo, dnspeed));
+		memcpy(&dnspeed, &other.dnspeed, offsetof(TaskUpdateInfo, totalLength) - offsetof(TaskUpdateInfo, dnspeed));
 
 		if(other.totalLength > 0)
 			memcpy(&totalLength, &other.totalLength, sizeof(int64_t) * 3);
 	}
 
-	static int surfixToInt(const QString &suf)
+	static int surfixToInt(std::string &suf)
 	{
-		std::string suffix(4, 0);
-		suffix = suf.toStdString().substr(0, 4);
-		int ret;
-		memcpy(&ret, suffix.c_str(), 4);
+		int ret; suf.resize(4, 0);
+		memcpy(&ret, suf.c_str(), 4);
 		return ret;
 	}
 
-	static QString intToSurfix(int iconType)
+	static std::string intToSurfix(int iconType)
 	{
-		char ch[5] = {0};
-		memcpy(ch, &iconType, 4);
-		return QString(ch);
+		std::string ret(4, 0);
+		memcpy(ret.data(), &iconType, 4);
+		return ret;
 	}
-
-	QString name;
-	int 	iconType;
 
 	int 	dnspeed;
 	int 	upspeed;
@@ -58,16 +55,26 @@ struct TaskInfo{
 	int 	state;
 };
 
-struct TaskInfoEx : public TaskInfo{
+struct TaskInfo{
+	uint64_t 	id;
+	QString 	name;
+	int			type;
+	int 		iconType;
+};
+
+struct TaskInfoEx : public TaskInfo, public TaskUpdateInfo{
+
 	aria2::BtMetaInfoData metaInfo;
 	std::vector<aria2::FileData> fileData;
 	aria2::KeyVals opts;
+
+	void operator=(const TaskUpdateInfo &other)
+	{
+		TaskUpdateInfo::operator=(other);
+	}
 };
 
-struct FinishTaskInfo{
-	uint64_t id;
-	QString name;
-	int 	iconType;
+struct FinishTaskInfo : public TaskInfo{
 	int64_t size;
 	QString datetime;
 	QString localPath;

@@ -322,7 +322,7 @@ void Metalink2RequestGroup::createRequestGroup(
     }
     rg->setDownloadContext(dctx);
 
-    if (option->getAsBool(PREF_ENABLE_RPC)) {
+	if (option->getAsBool(PREF_ENABLE_UICTL) || option->getAsBool(PREF_ENABLE_RPC)) {
       rg->setPauseRequested(option->getAsBool(PREF_PAUSE));
     }
 

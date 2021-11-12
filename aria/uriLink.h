@@ -21,6 +21,8 @@ public:
 
 	void downloadSlt();
 
+	QString getFileName(QUrl &url);
+
 	void uriChangedSlt();
 
 	void addBtSlt();

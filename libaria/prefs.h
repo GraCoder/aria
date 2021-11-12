@@ -218,6 +218,8 @@ extern PrefPtr PREF_MAX_FILE_NOT_FOUND;
 // value: epoll | select
 extern PrefPtr PREF_EVENT_POLL;
 // value: true | false
+extern PrefPtr PREF_ENABLE_UICTL;
+// value: true | false
 extern PrefPtr PREF_ENABLE_RPC;
 // value: 1*digit
 extern PrefPtr PREF_RPC_LISTEN_PORT;

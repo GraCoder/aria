@@ -126,22 +126,24 @@ AriaDlg::AriaDlg()
 	_layout->addLayout(mainLayout);
 	createTrayIcon();
 
-	initAria();
 	_emitter = new Emitter;
+	_database = new TaskDatabase;
+
+	initAria();
+
+	_database->initTrashTask();
+	_database->initCompleteTask();
+	_database->initDownloadTask();
 
 	qRegisterMetaType<uint64_t>("uint64_t");
-	qRegisterMetaType<TaskInfo>("TaskInfo");
-	connect(_emitter, &Emitter::addTaskSig, _dnWidget, &AriaListWidget::addTaskSlt, Qt::BlockingQueuedConnection);
+	qRegisterMetaType<TaskUpdateInfo>("TaskUpdateInfo");
+	//connect(_emitter, &Emitter::addTaskSig, _dnWidget, &AriaListWidget::addTaskSlt, Qt::BlockingQueuedConnection);
 	connect(_emitter, &Emitter::updateTaskSig, _dnWidget, &AriaListWidget::updateTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::startTaskSig, _dnWidget, &AriaListWidget::startTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::pauseTaskSig, _dnWidget, &AriaListWidget::pauseTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::failTaskSig, _dnWidget, &AriaListWidget::failTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::completeTaskSig, _dnWidget, &AriaListWidget::removeTaskSlt, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::removeTaskSig, _dnWidget, &AriaListWidget::removeTaskSlt, Qt::QueuedConnection);
-
-	_database->initTrashTask();
-	_database->initCompleteTask();
-	_database->initDownloadTask();
 
 	connect(_emitter, &Emitter::completeTaskSig, _database, &TaskDatabase::completeTask, Qt::QueuedConnection);
 	connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::trashTask, Qt::QueuedConnection);
@@ -151,6 +153,7 @@ AriaDlg::AriaDlg()
 
 AriaDlg::~AriaDlg()
 {
+	hide();
 	_threadRunning = false;
 	_thread.join();
 
@@ -267,7 +270,7 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 		auto localTask = _database->findTask(tsk->getLocal());
 
 		if(localTask == nullptr) {
-			_dnWidget->addTaskSlt(tsk->id, QString::fromUtf8(tsk->name.c_str()));
+			_dnWidget->addTaskSlt(tsk->id, tsk.get());
 			_database->addTask(tsk.get());
 			addTask(tsk); continue;
 		}
@@ -282,17 +285,7 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 		if(QMessageBox::question(this, "", tr("already have a same task, override?")) == QMessageBox::No)
 			continue;
 
-		auto filePath = QString::fromStdString(tsk->getLocal());
-		QFileInfo fileInfo(filePath);
-		if(fileInfo.isFile())
-		{
-			QFile(filePath).remove();
-			QFile(filePath + ".aria2").remove();
-		}
-		else
-			QDir(filePath).removeRecursively();
-
-		_database->deleteTask(localTask->id);
+		_database->deleteTask(localTask->id, true);
 		if(localTask->state == DOWNLOAD_ERROR)
 			_dnWidget->removeTaskSlt(localTask->id);
 		else if(localTask->state == DOWNLOAD_COMPLETE)
@@ -300,7 +293,7 @@ void AriaDlg::addUri(const QString url, const QString cookie)
 		else if(localTask->state == DOWNLOAD_REMOVED)
 			_trWidget->removeTaskSlt(localTask->id);
 
-		_dnWidget->addTaskSlt(tsk->id, QString::fromUtf8(tsk->name.c_str()));
+		_dnWidget->addTaskSlt(tsk->id, tsk.get());
 		_database->addTask(tsk.get());
 		addTask(tsk);
 	}
@@ -374,7 +367,7 @@ void AriaDlg::deleteCompleteSelected()
 	auto ids = _cmWidget->getSelected();
 	for(auto id : ids) {
 		_cmWidget->removeTaskSlt(id);
-		_database->deleteFinishTask(id);
+		_database->deleteTask(id);
 		aria2::removeDownloadResult(_session, id);
 	}
 }
@@ -384,7 +377,7 @@ void AriaDlg::deleteAllCompleteSelected()
 	auto ids = _cmWidget->getSelected();
 	for(auto id : ids) {
 		_cmWidget->removeTaskSlt(id);
-		_database->deleteFinishTask(id);
+		_database->deleteTask(id, true);
 		aria2::removeDownloadResult(_session, id);
 	}
 }
@@ -399,7 +392,7 @@ void AriaDlg::deleteTrashSelected()
 	auto ids = _trWidget->getSelected();
 	for(auto id : ids){
 		_trWidget->removeTaskSlt(id);
-		_database->deleteFinishTask(id);
+		_database->deleteTask(id);
 		aria2::removeDownloadResult(_session, id);
 	}
 }
@@ -409,7 +402,7 @@ void AriaDlg::deleteAllTrashSelected()
 	auto ids = _trWidget->getSelected();
 	for(auto id : ids){
 		_trWidget->removeTaskSlt(id);
-		_database->deleteFinishTask(id, true);
+		_database->deleteTask(id, true);
 		aria2::removeDownloadResult(_session, id);
 	}
 }
@@ -427,16 +420,16 @@ void AriaDlg::restartTask(aria2::A2Gid id, bool createNew)
 	{
 		_database->deleteTask(id);
 		aria2::removePlace(id);
-		_dnWidget->addTaskSlt(tsk->id, QString::fromUtf8(tsk->name.c_str()));
+		_dnWidget->addTaskSlt(tsk->id, tsk.get());
 		_database->addTask(tsk.get());
 	}
 	tsk->state = aria2::DOWNLOAD_WAITING;
 	addTask(tsk);
 }
 
-TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
+TaskUpdateInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 {
-	TaskInfo tskInfo;
+	TaskUpdateInfo tskInfo;
 	auto dh = getDownloadHandle(_session, id);
 	if(dh)
 	{
@@ -449,6 +442,11 @@ TaskInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 		tskInfo.state = dh->getStatus();
 		tskInfo.picNums = dh->getNumPieces();
 		tskInfo.picLength = dh->getPieceLength();
+
+#ifndef NDEBUG
+		auto cnum = dh->getConnections();
+#endif
+
 		deleteDownloadHandle(dh);
 	}
 	return tskInfo;
@@ -487,7 +485,6 @@ void AriaDlg::initAria()
 
 	aria2::libraryInit();
 
-	_database = new TaskDatabase;
 	auto ss = _database->getSettings();
 
 	auto &opTmps = ariaSetting::instance().setting();
@@ -575,15 +572,6 @@ void AriaDlg::addUriTask(UriTask *tsk)
 	int ret = aria2::addUri(_session, &gid, url, tmpOpts);
 	if(ret != 0)
 		return;
-
-	auto taskInfo = getTaskInfo(gid);
-	taskInfo.state = tsk->state;
-	taskInfo.totalLength = tsk->to_size;
-	taskInfo.dnloadLength = tsk->dn_size;
-	taskInfo.uploadLength = tsk->up_size;
-	taskInfo.iconType = taskInfo.surfixToInt(QFileInfo(name).suffix());
-	_emitter->updateTaskSig(gid, taskInfo);
-
 }
 
 void AriaDlg::addBtTask(BtTask *tsk)
@@ -602,14 +590,6 @@ void AriaDlg::addBtTask(BtTask *tsk)
 	int ret = aria2::addTorrent(_session, &gid, tsk->torrent, tmpOpts);
 	if(ret != 0)
 		return;
-
-	auto taskInfo = getTaskInfo(gid);
-	taskInfo.state = tsk->state;
-	taskInfo.totalLength = tsk->to_size;
-	taskInfo.dnloadLength = tsk->dn_size;
-	taskInfo.uploadLength = tsk->up_size;
-	taskInfo.iconType = 2;
-	_emitter->updateTaskSig(gid, taskInfo);
 }
 
 void AriaDlg::updateTask(aria2::A2Gid id)

@@ -47,7 +47,7 @@ class Emitter : public QObject{
 public:
 signals:
 	void addTaskSig(uint64_t, QString);
-	void updateTaskSig(uint64_t, TaskInfo, bool sys = true);
+	void updateTaskSig(uint64_t, TaskUpdateInfo, bool sys = true);
 	void completeTaskSig(uint64_t);
 	void removeTaskSig(uint64_t);
 	void startTaskSig(uint64_t);
@@ -99,7 +99,7 @@ public:
 	Emitter* 		getEmitter(){return _emitter;}
 	TaskDatabase* 	getDatabase() {return _database;}
 
-	TaskInfo 	getTaskInfo(aria2::A2Gid);
+	TaskUpdateInfo 	getTaskInfo(aria2::A2Gid);
 	TaskInfoEx	getTaskInfo(aria2::Session *session, aria2::A2Gid);
 signals:
 	void 		changeViewSig(int);

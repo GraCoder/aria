@@ -10,6 +10,8 @@
 #include <QDir>
 #include <QDesktopServices>
 
+#include <filesystem>
+
 #include "ariaUi.h"
 #include "taskDatabase.h"
 
@@ -21,7 +23,7 @@ const QString iconPrefix = ":/aria/icons/filetype2";
 
 AriaListDelegate::AriaListDelegate()
 {
-	_pixMap[2] = QPixmap(iconPrefix + "/bt.png");
+	_pixMap[enTaskType_Bt] = QPixmap(iconPrefix + "/bt.png");
 }
 
 void AriaListDelegate::setSize(const QSize &size)
@@ -40,7 +42,7 @@ QPixmap &AriaListDelegate::getPixmap(int iconType) const
 	if(iter != _pixMap.end())
 		return *iter;
 
-	auto suf = TaskInfo::intToSurfix(iconType);
+	auto suf = QString::fromUtf8(TaskUpdateInfo::intToSurfix(iconType).c_str());
 	QString filepath = iconPrefix + "/" + suf + ".png";
 	auto &px = _pixMap[iconType];
 	if(QFile(filepath).exists())
@@ -127,11 +129,16 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 
 	{
 		if(info.state == aria2::DOWNLOAD_ACTIVE) {
-			int secs = (info.totalLength - info.dnloadLength) / (info.dnspeed + 0.0001);
+			float secs = (info.totalLength - info.dnloadLength) / (info.dnspeed + 0.0001);
 			texRect.translate(opt.rect.width() / 5, 0);
-			auto tm = QTime(0, 0).addSecs(secs);
-			if(tm.isValid())
-				painter->drawText(texRect, tr("remain:") + opt.locale.toString(tm), texOpt);
+			QString tmTex;;
+			if(secs > 1e6)
+				tmTex = "more than 2 days";
+			else {
+				auto tm = QTime(0, 0).addSecs(secs);
+				tmTex = opt.locale.toString(tm);
+			}
+			painter->drawText(texRect, tr("remain:") + tmTex, texOpt);
 		}
 	}
 	{
@@ -283,7 +290,7 @@ AriaListWidget::AriaListWidget(AriListViewType type)
 					  })");
 }
 
-void AriaListWidget::addTaskSlt(uint64_t aid, QString name)
+void AriaListWidget::addTaskSlt(uint64_t aid, Task *tsk)
 {
 	auto listmodel = static_cast<AriaDownloadListModel*>(model());
 	if(listmodel->_taskInfos.find(aid) != listmodel->_taskInfos.end())
@@ -292,13 +299,21 @@ void AriaListWidget::addTaskSlt(uint64_t aid, QString name)
 	int count = listmodel->rowCount();
 	listmodel->beginInsertRows(QModelIndex(), count, count);
 	listmodel->_tasks.push_back(aid);
-	TaskInfo tskInfo; tskInfo.name = name;
-	tskInfo.state = aria2::DOWNLOAD_WAITING;
+	TaskInfoEx tskInfo;
+	tskInfo.id = tsk->id;
+	tskInfo.type = tsk->type;
+	tskInfo.name = QString::fromUtf8(tsk->name.c_str());
+	tskInfo.state = tsk->state;
+	tskInfo.totalLength = tsk->to_size;
+	tskInfo.dnloadLength = tsk->dn_size;
+	tskInfo.uploadLength = tsk->up_size;
+	setTaskIcon(&tskInfo);
+
 	listmodel->_taskInfos.insert(aid, tskInfo);
 	listmodel->endInsertRows();
 }
 
-void AriaListWidget::updateTaskSlt(uint64_t aid, TaskInfo tskInfo)
+void AriaListWidget::updateTaskSlt(uint64_t aid, TaskUpdateInfo tskInfo)
 {
 	auto listmodel = static_cast<AriaDownloadListModel*>(model());
 	if(listmodel->_taskInfos.find(aid) == listmodel->_taskInfos.end())
@@ -363,7 +378,10 @@ void AriaListWidget::addFinishTaskSlt(uint64_t, FinishTaskInfo &taskInfo)
 
 	int count = listmodel->rowCount();
 	listmodel->beginInsertRows(QModelIndex(), count, count);
+
+	setTaskIcon(&taskInfo);
 	listmodel->_taskInfos.push_back(taskInfo);
+
 	listmodel->endInsertRows();
 }
 
@@ -500,6 +518,16 @@ void AriaListWidget::changeTaskState(uint64_t id)
 		setTaskState(id, aria2::DOWNLOAD_WAITING);
 		AriaDlg::getMainDlg()->restartTask(id, false);
 	}
+}
+
+void AriaListWidget::setTaskIcon(TaskInfo *tsk)
+{
+	if(tsk->type == enTaskType_Uri) {
+		auto suf = QFileInfo(tsk->name).suffix().toStdString();
+		tsk->iconType = TaskUpdateInfo::surfixToInt(suf);
+	}
+	else if(tsk->type == enTaskType_Bt)
+		tsk->iconType = enTaskType_Bt;
 }
 
 //--------------------------------------------------------------------------------

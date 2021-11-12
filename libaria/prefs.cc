@@ -265,6 +265,8 @@ PrefPtr PREF_MAX_FILE_NOT_FOUND = makePref("max-file-not-found");
 // value: epoll | select
 PrefPtr PREF_EVENT_POLL = makePref("event-poll");
 // value: true | false
+PrefPtr PREF_ENABLE_UICTL = makePref("enable-uictl");
+// value: true | false
 PrefPtr PREF_ENABLE_RPC = makePref("enable-rpc");
 // value: 1*digit
 PrefPtr PREF_RPC_LISTEN_PORT = makePref("rpc-listen-port");

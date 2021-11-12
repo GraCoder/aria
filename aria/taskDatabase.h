@@ -26,11 +26,9 @@ public:
 
 	void trashTask(aria2::A2Gid);
 
-	void deleteTask(aria2::A2Gid);
+	void deleteTask(aria2::A2Gid, bool deleteLocalFile = false);
 
 	void removeLocalFile(aria2::A2Gid ide);
-
-	void deleteFinishTask(aria2::A2Gid, bool removeLocalFile = false);
 
 	void failTask(aria2::A2Gid);
 
@@ -48,13 +46,14 @@ public:
 
 	void addLocalTask(aria2::A2Gid, int);
 
+	std::string getLocalFile(aria2::A2Gid);
 
 	std::unique_ptr<Task> findTask(const std::string &local, const std::string &uri = "");
 
 	std::map<std::string, std::string> getSettings();
 
 protected:
-	void setState(aria2::A2Gid, int);
+	void 	setState(aria2::A2Gid, int);
 private:
 	sqlite3 *_sql;
 };

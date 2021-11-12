@@ -71,6 +71,40 @@ void URILinkWgt::downloadSlt()
 	accept();
 }
 
+QString URILinkWgt::getFileName(QUrl &url)
+{
+	QMap<QString, QString> kv;
+	auto fun = [&kv](QString &str)
+	{
+		auto slist = str.split(';');
+		for(auto &s : slist)
+		{
+			auto kvs = s.split('=');
+			if(kvs.size() != 2)
+				continue;
+			kv[kvs[0].trimmed()] = kvs[1].trimmed();
+		}
+	};
+
+	QString filename;
+	QString query = url.query(QUrl::FullyDecoded);
+	if(query.isEmpty())
+		return filename;
+	auto list = query.split('&');
+	for(auto &ql : list)
+	{
+		bool ret = ql.startsWith("response-content-disposition", Qt::CaseInsensitive);
+
+		if(ret)
+		{
+			fun(ql);
+			filename = kv["filename"];
+			break;
+		}
+	}
+	return filename;
+}
+
 void URILinkWgt::uriChangedSlt()
 {
 	auto text = _edit->toPlainText();
@@ -83,18 +117,10 @@ void URILinkWgt::uriChangedSlt()
 		if(!url.isValid())
 			return false;
 		auto p = url.url();
-		if(QString("https://").contains(p) || QString("http://").contains(p) ||
-				QString("ftp://").contains(p))
-			return false;
-		std::regex url_regex (
-		  R"(^(([^:\/?#]+):)?(//([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
-		  //R"((http|ftp)://(([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
-		  std::regex::extended );
-		std::smatch regex_result;
-		std::string spath = p.toStdString();
-		if(!std::regex_match(spath, regex_result, url_regex))
-			return false;
-		return true;
+		if(p.startsWith("https://") || p.startsWith("http://") ||
+				p.startsWith("ftp://"))
+			return true;
+		return false;
 	};
 
 	QMap<QUrl, int> newUrls;
@@ -121,7 +147,12 @@ void URILinkWgt::uriChangedSlt()
 	for(auto iter = resultUrls.begin(); iter != resultUrls.end(); iter++) {
 		int pos = iter.key();
 		_downList->insertRow(pos);
-		auto item = new QTableWidgetItem(iter.value().fileName());
+
+		QString fileName = getFileName(iter.value());
+		if(fileName.isEmpty())
+			fileName = iter.value().fileName();
+
+		auto item = new QTableWidgetItem(fileName);
 		item->setCheckState(Qt::Checked);
 		item->setFlags(item->flags() & ~Qt::ItemIsSelectable);
 		item->setData(Qt::UserRole, iter.value());
@@ -222,7 +253,7 @@ void URILinkWgt::createWidgets()
 	_downList->setFocusPolicy(Qt::NoFocus);
 
 	_downdir = new QLineEdit;
-	_dnDirBtn = new QPushButton(QIcon(":/aria/icons/xx/folder.png"), "");
+	_dnDirBtn = new QPushButton(QIcon(":/aria/icons/folder.svg"), "");
 	auto dirLayout = new QHBoxLayout;
 	dirLayout->addWidget(_downdir);
 	dirLayout->addWidget(_dnDirBtn);

@@ -277,6 +277,12 @@ std::vector<OptionHandler*> OptionHandlerFactory::createOptionHandlers()
   }
 #endif // HAVE_MMAP || __MINGW32__
   {
+	OptionHandler* op(new BooleanOptionHandler(
+		PREF_ENABLE_UICTL, "", A2_V_FALSE, OptionHandler::OPT_ARG));
+	op->addTag(TAG_ADVANCED);
+	handlers.push_back(op);
+  }
+  {
     OptionHandler* op(new BooleanOptionHandler(
         PREF_ENABLE_RPC, TEXT_ENABLE_RPC, A2_V_FALSE, OptionHandler::OPT_ARG));
     op->addTag(TAG_RPC);

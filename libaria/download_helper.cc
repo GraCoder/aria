@@ -153,7 +153,7 @@ createRequestGroup(const std::shared_ptr<Option>& optionTemplate,
 	}
 	rg->setDownloadContext(dctx);
 
-	if (option->getAsBool(PREF_ENABLE_RPC)) {
+	if (option->getAsBool(PREF_ENABLE_UICTL) || option->getAsBool(PREF_ENABLE_RPC)) {
 		rg->setPauseRequested(option->getAsBool(PREF_PAUSE));
 	}
 
@@ -220,7 +220,7 @@ createBtRequestGroup(const std::string& metaInfoUri,
 	}
 	rg->setDownloadContext(dctx);
 
-	if (option->getAsBool(PREF_ENABLE_RPC)) {
+	if (option->getAsBool(PREF_ENABLE_UICTL) || option->getAsBool(PREF_ENABLE_RPC)) {
 		rg->setPauseRequested(option->getAsBool(PREF_PAUSE));
 	}
 
@@ -293,7 +293,7 @@ createBtMagnetRequestGroup(const std::string& magnetLink,
 	rg->setMetadataInfo(createMetadataInfo(gid, magnetLink));
 	rg->markInMemoryDownload();
 
-	if (option->getAsBool(PREF_ENABLE_RPC)) {
+	if (option->getAsBool(PREF_ENABLE_UICTL) || option->getAsBool(PREF_ENABLE_RPC)) {
 		rg->setPauseRequested(option->getAsBool(PREF_PAUSE));
 	}
 
