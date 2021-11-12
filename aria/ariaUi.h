@@ -103,6 +103,7 @@ public:
 	TaskInfoEx	getTaskInfo(aria2::Session *session, aria2::A2Gid);
 signals:
 	void 		changeViewSig(int);
+	void 		updateGlobalStat(aria2::GlobalStat &);
 private:
 	void 		initAria();
 	void 		download();
@@ -114,6 +115,8 @@ private:
 	void 		addBtTask(BtTask *tsk);
 	void 		updateTask(aria2::A2Gid);
 	void 		completeTask(aria2::A2Gid);
+
+	void 		staticsSlt();
 
 private:
 	AriaListWidget *_dnWidget, *_cmWidget, *_trWidget;
@@ -129,5 +132,5 @@ private:
 	aria2::Session 	*_session;
 
 	SpinLock 			_addLock;
-	std::vector<std::unique_ptr<Task>> 	_addTasks;
+	std::vector<std::unique_ptr<Task>> 	_addTasks;	
 };

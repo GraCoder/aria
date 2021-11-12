@@ -42,7 +42,7 @@ QSize AriaSysButton::sizeHint() const
 
 //--------------------------------------------------------------------------------
 
-const int panelHeight = 50;
+const int panelHeight = 60;
 
 AriaPanelButton::AriaPanelButton(const QString tex, const QString &uri)
 {
@@ -62,7 +62,7 @@ void AriaPanelButton::paintEvent(QPaintEvent *ev)
 		painter.fillRect(rect(),gradient);
 	}
 
-	int x = width() / 6.0, h = 16, y = (height() - h) / 2.0;
+	int x = width() / 6.0, h = 20, y = (height() - h) / 2.0;
 	painter.drawPixmap(QRect(x, y, h, h), _pix, _pix.rect());
 	x = x + h + 10;
 	QTextOption opt; opt.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -76,7 +76,7 @@ void AriaPanelButton::paintEvent(QPaintEvent *ev)
 	}
 	QFont ft("Microsoft YaHei");
 	//ft.setBold(true);
-	ft.setPixelSize(16);
+	ft.setPixelSize(h);
 	painter.setFont(ft);
 	painter.drawText(QRect(x, 0, width() - x, height()), _tex, opt);
 }

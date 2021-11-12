@@ -15,6 +15,7 @@
 #include <QStackedWidget>
 #include <QSystemTrayIcon>
 #include <QMessageBox>
+#include <QTimer>
 
 #include <algorithm>
 #include <filesystem>
@@ -149,6 +150,11 @@ AriaDlg::AriaDlg()
 	connect(_emitter, &Emitter::removeTaskSig, _database, &TaskDatabase::trashTask, Qt::QueuedConnection);
 
 	_thread = std::thread(std::bind(&AriaDlg::download, this));
+
+	auto timer = new QTimer(this);
+	timer->setInterval(3000);
+	connect(timer, &QTimer::timeout, this, &AriaDlg::staticsSlt);
+	timer->start();
 }
 
 AriaDlg::~AriaDlg()
@@ -498,7 +504,9 @@ void AriaDlg::initAria()
 	config.downloadEventCallback = downloadEventCallback;
 	config.userData = this;
 	_session = sessionNew(options, config);
-	auto opts = getGlobalOptions(_session);
+
+	if(_session == nullptr)
+		quitSlt();
 }
 
 void AriaDlg::download()
@@ -601,4 +609,10 @@ void AriaDlg::updateTask(aria2::A2Gid id)
 void AriaDlg::completeTask(aria2::A2Gid id)
 {
 	_emitter->completeTaskSig(id);
+}
+
+void AriaDlg::staticsSlt()
+{
+	auto stat = aria2::getGlobalStat(_session);
+	emit updateGlobalStat(stat);
 }
