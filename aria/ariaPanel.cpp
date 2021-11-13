@@ -24,7 +24,7 @@ AriaPanel::AriaPanel(AriaDlg *dlg)
 	grp->setExclusive(true);
 
 	{
-		auto btn = new AriaPanelButton(tr("download"), ":/aria/icons/downloading.png");
+		auto btn = new AriaPanelButton(tr("download"), ":/aria/icons/downloading.svg");
 		btn->setCheckable(true);
 		layout->addWidget(btn);
 		grp->addButton(btn);
@@ -33,7 +33,7 @@ AriaPanel::AriaPanel(AriaDlg *dlg)
 	}
 
 	{
-		auto btn = new AriaPanelButton(tr("completed"), ":/aria/icons/completed.png");
+		auto btn = new AriaPanelButton(tr("completed"), ":/aria/icons/complete.svg");
 		btn->setCheckable(true);
 		layout->addWidget(btn);
 		grp->addButton(btn);
@@ -41,7 +41,7 @@ AriaPanel::AriaPanel(AriaDlg *dlg)
 	}
 
 	{
-		auto btn = new AriaPanelButton(tr("trashcan"), ":/aria/icons/list-remove.png");
+		auto btn = new AriaPanelButton(tr("trashcan"), ":/aria/icons/trash.svg");
 		btn->setCheckable(true);
 		layout->addWidget(btn);
 		grp->addButton(btn);
@@ -86,7 +86,7 @@ void AriaPanel::paintEvent(QPaintEvent *ev)
 	ft.setPixelSize(16);
 	painter.setFont(ft);
 	int h = QFontMetrics(ft).height();
-	QRect rt(0, height() / 6 * 5, width(), h);
+	QRect rt(width() / 4, height() / 6 * 5, width(), h);
 
 	auto lo = locale();
 	QString dnString;
@@ -95,8 +95,8 @@ void AriaPanel::paintEvent(QPaintEvent *ev)
 		dnString = lo.formattedDataSize(_dnSpeed, 0, lo.DataSizeSIFormat);
 		dnString = dnString.rightJustified(7);
 	}else
-		dnString = " < 1 KB";
-	painter.drawText(rt, Qt::AlignCenter, tr("dnload:") + dnString + "/s");
+		dnString = " <1 KB";
+	painter.drawText(rt, Qt::AlignLeft, tr("dnload:") + dnString + "/s");
 
 	QString upString;
 	if(_upSpeed > 1024)
@@ -104,10 +104,15 @@ void AriaPanel::paintEvent(QPaintEvent *ev)
 		upString  = lo.formattedDataSize(_upSpeed, 0, lo.DataSizeSIFormat);
 		upString = upString.rightJustified(7);
 	}else
-		upString = " < 1 KB";
+		upString = " <1 KB";
 
 	rt.translate(0, h + 20);
-	painter.drawText(rt, Qt::AlignCenter, tr("upload:") + upString + "/s");
+	painter.drawText(rt, Qt::AlignLeft, tr("upload:") + upString + "/s");
+
+	rt.translate(0, h + 20);
+	QString numInfo = QString("ac:%1  st:%2  wa:%3")
+			.arg(QString::number(_active), QString::number(_stop), QString::number(_wait));
+	painter.drawText(rt, Qt::AlignLeft, numInfo);
 
 	Base::paintEvent(ev);
 }

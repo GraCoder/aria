@@ -74,8 +74,9 @@ void AriaPanelButton::paintEvent(QPaintEvent *ev)
 	{
 		painter.setPen(Qt::white);
 	}
-	QFont ft("Microsoft YaHei");
-	//ft.setBold(true);
+	//QFont ft = font();
+	QFont ft("Consolas");
+	ft.setBold(true);
 	ft.setPixelSize(h);
 	painter.setFont(ft);
 	painter.drawText(QRect(x, 0, width() - x, height()), _tex, opt);

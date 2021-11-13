@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <QSettings>
+#include <QFontDatabase>
 
 #include <QApplication>
 #include "singleapplication.h"
@@ -50,6 +51,7 @@ int main(int argc, char**argv)
 		std::bind(&AriaHttpServer::run, &server));
 	browserIntersect();
 #endif
+	//auto fts = QFontDatabase().families();
 
 	dlg.show();
 
