@@ -110,7 +110,7 @@ void AriaPanel::paintEvent(QPaintEvent *ev)
 	painter.drawText(rt, Qt::AlignLeft, tr("upload:") + upString + "/s");
 
 	rt.translate(0, h + 20);
-	QString numInfo = QString("ac:%1  st:%2  wa:%3")
+	QString numInfo = QString(" ac:%1  st:%2  wa:%3")
 			.arg(QString::number(_active), QString::number(_stop), QString::number(_wait));
 	painter.drawText(rt, Qt::AlignLeft, numInfo);
 

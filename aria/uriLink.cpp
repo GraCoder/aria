@@ -15,6 +15,8 @@
 #include <regex>
 #include <filesystem>
 
+#include "json.hpp"
+
 #include "ariaSetting.h"
 
 #include "ValueBase.h"
@@ -22,18 +24,61 @@
 #include "ValueBaseBencodeParser.h"
 #include "GenericParser.h"
 
-URILinkWgt::URILinkWgt(const QString &url)
+URILinkWgt::URILinkWgt()
 {
 	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 	createWidgets();
 	connect(_edit, &QPlainTextEdit::textChanged, this, &URILinkWgt::uriChangedSlt);
-
-	_edit->setPlainText(url);
 }
 
 URILinkWgt::~URILinkWgt()
 {
 
+}
+
+void URILinkWgt::initUrl(const QString &url, const QString &agent)
+{
+	if(url.isEmpty())
+		return;
+	QStringList urls;
+	auto jss = nlohmann::json::parse(url.toUtf8().toStdString());
+	if(jss.count("url_links")){
+		auto uriArray = jss["url_links"];
+		for(auto iter = uriArray.begin(); iter!= uriArray.end(); iter++)
+		{
+			std::string url, cookie, agent, filename, mime;
+			uint64_t filesize;
+			if(iter->contains("url"))
+				url = (*iter)["url"];
+			else
+				continue;
+			if(iter->contains("cookies"))
+				cookie = (*iter)["cookies"];
+			if(iter->contains("useragent"))
+				agent = (*iter)["useragent"];
+			if(iter->contains("filename"))
+				filename = (*iter)["filename"];
+			if(iter->contains("fileSize"))
+				filesize = (*iter)["fileSize"];
+			if(iter->contains("mime"))
+				mime = (*iter)["mime"];
+
+			if(url.empty())
+				continue;
+
+			QString qurl = QString::fromUtf8(url.c_str());
+			urls << qurl;
+
+			auto tsk = std::make_unique<UriTask>();
+			tsk->url = url;
+			tsk->name = filename;
+			tsk->to_size = filesize;
+			tsk->cookie = cookie;
+			tsk->agent = agent;
+			_uriTask[qurl] = std::move(tsk);
+		}
+	}
+	_edit->setPlainText(urls.join('\n'));
 }
 
 std::vector<std::unique_ptr<Task> >
@@ -44,10 +89,18 @@ URILinkWgt::getTasks()
 	for(int i = 0; i < _downList->rowCount(); i++)
 	{
 		auto item = _downList->item(i, 0);
-		auto tsk = std::make_unique<UriTask>();
+		QString url = item->data(Qt::UserRole).toUrl().url();
+		std::unique_ptr<UriTask> tsk;
+		if(_uriTask.find(url) != _uriTask.end())
+		{
+			tsk = std::move(_uriTask[url]);
+			_uriTask.erase(url);
+		} else{
+			tsk = std::make_unique<UriTask>();
+			tsk->url = item->data(Qt::UserRole).toUrl().toString().toUtf8().toStdString();
+			tsk->name = item->text().toUtf8().toStdString();
+		}
 		tsk->id = aria2::genId();
-		tsk->url = item->data(Qt::UserRole).toUrl().toString().toUtf8().toStdString();
-		tsk->name = item->text().toUtf8().toStdString();
 		tsk->type = 1;
 		tsk->state = aria2::DOWNLOAD_WAITING;
 		tsk->dir = _downdir->text().toUtf8().toStdString();
@@ -148,9 +201,24 @@ void URILinkWgt::uriChangedSlt()
 		int pos = iter.key();
 		_downList->insertRow(pos);
 
-		QString fileName = getFileName(iter.value());
-		if(fileName.isEmpty())
-			fileName = iter.value().fileName();
+		QString fileName, fileSize, fileType;
+
+		QString surl = iter.value().url();
+		if(_uriTask.find(surl) != _uriTask.end())
+		{
+			auto &tsk = _uriTask[surl];
+			fileName = QString::fromUtf8(tsk->name.c_str());
+			fileSize = locale().formattedDataSize(tsk->to_size, 0, QLocale::DataSizeSIFormat);
+			fileType = "";
+		}
+		else{
+			fileName = getFileName(iter.value());
+			if(fileName.isEmpty())
+				fileName = iter.value().fileName();
+			fileSize = "0";
+			fileType = "";
+		}
+
 
 		auto item = new QTableWidgetItem(fileName);
 		item->setCheckState(Qt::Checked);
@@ -158,11 +226,11 @@ void URILinkWgt::uriChangedSlt()
 		item->setData(Qt::UserRole, iter.value());
 		_downList->setItem(pos, 0, item);
 
-		item = new QTableWidgetItem("0");
+		item = new QTableWidgetItem(fileSize);
 		item->setFlags(Qt::NoItemFlags);
 		_downList->setItem(pos, 1, item);
 
-		item = new QTableWidgetItem("0");
+		item = new QTableWidgetItem(fileType);
 		item->setFlags(Qt::NoItemFlags);
 		_downList->setItem(pos, 2, item);
 	}
@@ -239,8 +307,6 @@ URILinkWgt::parseBtFile(const QString &file)
 void URILinkWgt::createWidgets()
 {
 	setTitle("new link task");
-
-	setFixedWidth(500);
 
 	_edit = new QPlainTextEdit;
 	auto btn = new QPushButton(tr("download"));

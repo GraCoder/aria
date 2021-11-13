@@ -31,28 +31,20 @@ std::optional<std::string> AriaHttpServer::handler(const http::server::request &
 		return std::nullopt;
 	if(req.uri == "/addTask")
 	{
+		QString url, agent;
 		for(auto &header : req.headers)
 		{
 			if(header.name == "uris")
 			{
-				auto jss = nlohmann::json::parse(header.value);
-				if(jss.count("url_links")){
-					auto uriArray = jss["url_links"];
-					for(auto iter = uriArray.begin(); iter!= uriArray.end(); iter++)
-					{
-						QString url, cookie;
-						if(iter->contains("url"))
-							url = QString::fromStdString((*iter)["url"]);
-						else
-							continue;
-						if(iter->contains("cookies"))
-							cookie = QString::fromStdString((*iter)["cookies"]);
-						addUriTaskSig(url, cookie);
-					}
-				}
-				break;
+				url = QString::fromUtf8(header.value.c_str());
+			}
+			else if(header.name == "agent")
+			{
+				agent = QString::fromUtf8(header.value.c_str());
 			}
 		}
+		if(!url.isEmpty())
+			addUriTaskSig(url, agent);
 		return "succeed";
 	}
 	return std::nullopt;

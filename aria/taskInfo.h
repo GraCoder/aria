@@ -101,6 +101,10 @@ struct Task{
 struct UriTask : public Task{
 
 	std::string url;
+	std::string agent;
+	std::string cookie;
+	std::string mime;
+
 	std::string getUri();
 	std::string getLocal();
 };

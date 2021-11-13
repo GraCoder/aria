@@ -262,11 +262,12 @@ void AriaDlg::quitSlt()
 	QCoreApplication::quit();
 }
 
-void AriaDlg::addUri(const QString url, const QString cookie)
+void AriaDlg::addUri(const QString url, const QString agent)
 {
 	using namespace aria2;
 
-	URILinkWgt wgt(url);
+	URILinkWgt wgt;
+	wgt.initUrl(url, agent);
 	if(wgt.exec() != QDialog::Accepted)
 		return;
 
