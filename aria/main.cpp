@@ -45,7 +45,7 @@ int main(int argc, char**argv)
 	auto ft = qApp->font();
 	AriaDlg dlg;
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 	AriaHttpServer server(&dlg);
 	std::thread httpThread(
 		std::bind(&AriaHttpServer::run, &server));

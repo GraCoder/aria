@@ -58,7 +58,7 @@ int downloadEventCallback(aria2::Session* session, aria2::DownloadEvent event,
 		std::cout << "STOP" << " [" << aria2::gidToHex(gid) << "] " << std::endl;
 		break;
 	}
-	case aria2::EVENT_ON_BT_DOWNLOAD_COMPLETE:
+	//case aria2::EVENT_ON_BT_DOWNLOAD_COMPLETE:
 	case aria2::EVENT_ON_DOWNLOAD_COMPLETE:
 	{
 		auto dlg = (AriaDlg*)userData;

@@ -23,6 +23,8 @@
 #include "bitfield.h"
 #include "ValueBaseBencodeParser.h"
 #include "GenericParser.h"
+#include "crypto_hash.h"
+#include "base64.h"
 
 URILinkWgt::URILinkWgt()
 {
@@ -295,7 +297,18 @@ URILinkWgt::parseBtFile(const QString &file)
 	tsk->id = aria2::genId();
 	tsk->type = 2;
 	tsk->name = taskName.toUtf8().toStdString();
-	tsk->torrent = file.toUtf8().toStdString();
+	auto torrentDir = std::filesystem::path(ariaSetting::instance().appPath()).append("dat/torrents");
+	if(!std::filesystem::exists(torrentDir))
+		std::filesystem::create_directories(torrentDir);
+
+	std::string hashStr = aria2::gidToHex(tsk->id);
+	auto torrentFile = torrentDir.append(hashStr).concat(".torrent").string();
+	if(!std::filesystem::exists(torrentFile))
+	{
+		auto oriFile = file.toUtf8().toStdString();
+		std::filesystem::copy_file(oriFile, torrentFile);
+	}
+	tsk->torrent = torrentFile;
 	tsk->state = aria2::DOWNLOAD_WAITING;
 	{
 		tsk->opts.push_back(std::make_pair("gid", aria2::gidToHex(tsk->id)));

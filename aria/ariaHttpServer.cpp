@@ -43,8 +43,10 @@ std::optional<std::string> AriaHttpServer::handler(const http::server::request &
 				agent = QString::fromUtf8(header.value.c_str());
 			}
 		}
-		if(!url.isEmpty())
+		if(!url.isEmpty() && url.contains("url"))
+		{
 			addUriTaskSig(url, agent);
+		}
 		return "succeed";
 	}
 	return std::nullopt;
