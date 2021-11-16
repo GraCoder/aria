@@ -100,9 +100,11 @@ public:
 
 	Emitter* 		getEmitter(){return _emitter;}
 	TaskDatabase* 	getDatabase() {return _database;}
+	aria2::Session*	getSession(){return _session;}
 
 	TaskUpdateInfo 	getTaskInfo(aria2::A2Gid);
 	TaskInfoEx		getTaskInfo(aria2::Session *session, aria2::A2Gid);
+	void			fillTaskDetail(TaskInfoEx &);
 signals:
 	void 		changeViewSig(int);
 	void 		updateGlobalStat(aria2::GlobalStat &);

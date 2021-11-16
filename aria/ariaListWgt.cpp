@@ -15,6 +15,7 @@
 
 #include "ariaUi.h"
 #include "taskDatabase.h"
+#include "taskDetailWgt.h"
 
 const int dnheight = 80;
 const int hfheight = dnheight / 5.0 * 2;
@@ -474,12 +475,22 @@ void AriaListWidget::restartTask(int idx)
 	AriaDlg::getMainDlg()->restartTask(id);
 }
 
-void AriaListWidget::showTaskDetail(uint64_t)
+TaskInfoEx AriaListWidget::getTaskInfo(uint64_t id)
+{
+	TaskInfoEx tskInfo;
+	auto listmodel = static_cast<AriaDownloadListModel*>(model());
+	if(listmodel->_taskInfos.find(id) != listmodel->_taskInfos.end())
+		tskInfo = listmodel->_taskInfos[id];
+	return tskInfo;
+}
+
+void AriaListWidget::showTaskDetail(uint64_t id)
 {
 	if(_taskDetailWgt == nullptr){
-		_taskDetailWgt = new QWidget(this);
-		_taskDetailWgt->setStyleSheet("QWidget{border:1px solid #088ACB;}");
+		_taskDetailWgt = new TaskDetailWgt(this);
 	}
+	TaskInfoEx tskInfo = getTaskInfo(id);
+	_taskDetailWgt->fillTaskDetail(tskInfo);
 	_taskDetailWgt->show();
 	_taskDetailWgt->setGeometry(0, height() / 2.0, width(), height() / 2.0);
 }
@@ -529,8 +540,11 @@ void AriaListWidget::mouseMoveEvent(QMouseEvent *ev)
 void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 {
 	Base::mousePressEvent(ev);
-
 	auto pt = ev->pos();
+
+	if(pt.y() > height() / 2.0)
+		setCursor(Qt::ArrowCursor);
+
 	int i = pt.y() / dnheight;
 	int y = pt.y() % dnheight;
 	if(_type == DOWNLOADING) {

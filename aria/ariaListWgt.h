@@ -66,6 +66,8 @@ protected:
 
 //--------------------------------------------------------------------------------
 
+class TaskDetailWgt;
+
 class AriaListWidget : public QListView
 {
 	Q_OBJECT
@@ -92,6 +94,7 @@ public:
 	void 	explorerIndexAt(int);
 	void 	restartTask(int);
 
+	TaskInfoEx getTaskInfo(uint64_t);
 	void 	showTaskDetail(uint64_t);
 	void 	hideTaskDetail();
 signals:
@@ -112,7 +115,7 @@ protected:
 private:
 	AriListViewType _type;
 
-	QWidget		*_taskDetailWgt;
+	TaskDetailWgt	*_taskDetailWgt;
 };
 
 class AriaDownloadListModel : public  QAbstractListModel{

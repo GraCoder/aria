@@ -45,8 +45,6 @@ struct TaskUpdateInfo{
 	int 	dnspeed;
 	int 	upspeed;
 
-	int 	picNums;
-	int 	picLength;
 
 	int64_t totalLength;
 	int64_t dnloadLength;
@@ -63,8 +61,14 @@ struct TaskInfo{
 };
 
 struct TaskInfoEx : public TaskInfo, public TaskUpdateInfo{
+	int 	connections;
+	int 	picNums;
+	int 	picLength;
+	std::string picString;
 
 	aria2::BtMetaInfoData metaInfo;
+
+	std::string btHash;
 	std::vector<aria2::FileData> fileData;
 	aria2::KeyVals opts;
 

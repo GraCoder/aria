@@ -14,6 +14,7 @@ set(moc_h
 	taskDatabase.h
 	singleapplication.h
 	singleapplication_p.h
+	taskDetailWgt.h
 )
 
 qt5_wrap_cpp(mocfiles ${moc_h})
@@ -38,6 +39,7 @@ set(hdr
 	singleapplication.h
 	singleapplication_p.h
 	ariaSetting.h
+	taskDetailWgt.h
 )
 
 set(src
@@ -55,6 +57,7 @@ set(src
 	singleapplication.cpp
 	singleapplication_p.cpp
 	ariaSetting.cpp
+	taskDetailWgt.cpp
 )
 
 set(aria_rc "${CMAKE_CURRENT_SOURCE_DIR}/aria.rc")

@@ -471,12 +471,6 @@ TaskUpdateInfo AriaDlg::getTaskInfo(aria2::A2Gid id)
 		tskInfo.uploadLength = dh->getUploadLength();
 
 		tskInfo.state = dh->getStatus();
-		tskInfo.picNums = dh->getNumPieces();
-		tskInfo.picLength = dh->getPieceLength();
-
-#ifndef NDEBUG
-		auto cnum = dh->getConnections();
-#endif
 
 		deleteDownloadHandle(dh);
 	}
@@ -488,8 +482,6 @@ TaskInfoEx AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 	TaskInfoEx tskInfo;
 	auto dh = getDownloadHandle(session, id);
 	if(dh){
-		tskInfo.fileData = dh->getFiles();
-
 		tskInfo.dnspeed = dh->getDownloadSpeed();
 		tskInfo.upspeed = dh->getUploadSpeed();
 		tskInfo.dnloadLength = dh->getCompletedLength();
@@ -497,8 +489,6 @@ TaskInfoEx AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 		tskInfo.uploadLength = dh->getUploadLength();
 
 		tskInfo.state = dh->getStatus();
-		tskInfo.picNums = dh->getNumPieces();
-		tskInfo.picLength = dh->getPieceLength();
 
 		tskInfo.fileData = dh->getFiles();
 		tskInfo.opts = dh->getOptions();
@@ -508,6 +498,33 @@ TaskInfoEx AriaDlg::getTaskInfo(aria2::Session *session, aria2::A2Gid id)
 	}
 
 	return tskInfo;
+}
+
+void AriaDlg::fillTaskDetail(TaskInfoEx &tskInfo)
+{
+	auto dh = getDownloadHandle(_session, tskInfo.id);
+	if(dh == nullptr)
+		return ;
+
+	tskInfo.connections = dh->getConnections();
+	tskInfo.dnspeed = dh->getDownloadSpeed();
+	tskInfo.upspeed = dh->getUploadSpeed();
+	tskInfo.dnloadLength = dh->getCompletedLength();
+	tskInfo.totalLength = dh->getTotalLength();
+	tskInfo.uploadLength = dh->getUploadLength();
+
+	tskInfo.state = dh->getStatus();
+	tskInfo.picNums = dh->getNumPieces();
+	tskInfo.picLength = dh->getPieceLength();
+	tskInfo.picString = dh->getBitfield();
+
+	tskInfo.btHash = dh->getInfoHash();
+
+	tskInfo.fileData = dh->getFiles();
+	tskInfo.opts = dh->getOptions();
+	tskInfo.metaInfo = dh->getBtMetaInfo();
+
+	deleteDownloadHandle(dh);
 }
 
 void AriaDlg::initAria()
