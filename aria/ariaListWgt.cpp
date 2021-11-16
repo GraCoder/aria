@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QDir>
 #include <QDesktopServices>
+#include <QProcess>
 
 #include <filesystem>
 
@@ -18,6 +19,7 @@
 const int dnheight = 80;
 const int hfheight = dnheight / 5.0 * 2;
 const int iconSize = 24;
+const int fontSize = 14;
 
 const QString iconPrefix = ":/aria/icons/filetype2";
 
@@ -62,11 +64,15 @@ DownloadDelegate::DownloadDelegate()
 void DownloadDelegate::setSize(const QSize &size)
 {
 	_btnRect = QRect(size.width() - dnheight, 10, iconSize, iconSize);
+
+	auto ft = QFont(); ft.setPixelSize(fontSize);
+	int w = QFontMetrics(ft).boundingRect(tr("task info")).width() + 10;
+	_tskRect = QRect(size.width() / 2.0, dnheight / 5.0 * 3, w, hfheight);
 }
 
 void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt, const QModelIndex &index) const
 {
-	auto wgt = dynamic_cast<const AriaListWidget *>(opt.widget);
+	auto wgt = static_cast<const AriaListWidget *>(opt.widget);
 	auto listmodel = static_cast<AriaDownloadListModel*>(wgt->model());
 	auto &info = listmodel->_taskInfos[listmodel->_tasks[index.row()]];
 
@@ -74,12 +80,12 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 		painter->fillRect(opt.rect, QColor(227, 230, 228));
 	painter->setRenderHint(QPainter::Antialiasing);
 
-	const int popSize = dnheight / 5.0 * 2;
+	const int popSize = hfheight;
 
 	const QPixmap& ico = getPixmap(info.iconType);
 	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico);
 
-	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
+	auto ft = opt.font;
 	ft.setBold(true);
 	painter->setFont(ft);
 
@@ -111,7 +117,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	}
 
 	{
-		texOpt.setAlignment(Qt::AlignLeft | Qt::AlignTop);
+		texOpt.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 		painter->setPen(QColor(100, 100, 100));
 		texRect.translate(0, dnheight / 5.0 * 3);
 		//ERROR---------------------------------------------------------------------------ERROR
@@ -143,7 +149,7 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	}
 	{
 		texRect = QRect(opt.rect.width() / 2.0, dnheight - popSize + opt.rect.top(), opt.rect.width() / 2.0 - 40, hfheight);
-		texOpt.setAlignment(Qt::AlignRight | Qt::AlignTop);
+		texOpt.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 		if(info.state == aria2::DOWNLOAD_ACTIVE) {
 			auto dnspeed = opt.locale.formattedDataSize(info.dnspeed, 2, opt.locale.DataSizeTraditionalFormat);
 			painter->drawText(texRect, dnspeed + "/s", texOpt);
@@ -152,6 +158,16 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 		else if(info.state == aria2::DOWNLOAD_WAITING)
 			painter->drawText(texRect, tr("waiting"), texOpt);
 	}
+	{
+		texOpt.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+		QFont ft = painter->font();
+		painter->setPen(QColor(8, 138, 203));
+		ft.setItalic(true); painter->setFont(ft);
+		auto rect = _tskRect.translated(0, opt.rect.top());
+		painter->drawText(rect, tr("task info"), texOpt);
+		//painter->drawLine(rect.left(), rect.bottom(), rect.right(), rect.bottom());
+	}
+
 	{
 		QRect prgRect(dnheight, dnheight / 2.0, opt.rect.width() - dnheight, 4);
 		prgRect.translate(0, opt.rect.top());
@@ -176,7 +192,7 @@ void DownloadDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionV
 
 void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt, const QModelIndex &index) const
 {
-	auto wgt = dynamic_cast<const AriaListWidget *>(opt.widget);
+	auto wgt = static_cast<const AriaListWidget *>(opt.widget);
 	auto listmodel = static_cast<AriaFinishListModel*>(wgt->model());
 	auto &info = listmodel->_taskInfos[index.row()];
 
@@ -189,7 +205,7 @@ void FinishListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
 	const QPixmap& ico = getPixmap(info.iconType);
 	painter->drawPixmap(QRect(dnheight / 5, dnheight / 5 + opt.rect.top(), dnheight - popSize , dnheight - popSize), ico);
 
-	auto ft = opt.font; ft.setPixelSize(dnheight / 6.0);
+	auto ft = opt.font;
 	ft.setBold(true);
 	painter->setFont(ft);
 
@@ -288,6 +304,8 @@ AriaListWidget::AriaListWidget(AriListViewType type)
 					   width: 10px;
 					   height: 0px;
 					  })");
+
+	_taskDetailWgt = nullptr;
 }
 
 void AriaListWidget::addTaskSlt(uint64_t aid, Task *tsk)
@@ -436,8 +454,16 @@ void AriaListWidget::explorerIndexAt(int i)
 		return;
 	auto &taskInfo = listmodel->_taskInfos[i];
 	QFileInfo fileInfo(taskInfo.localPath);
-	QString dir = fileInfo.absoluteDir().absolutePath();
+	QString dir = fileInfo.absoluteFilePath();
+#ifdef Q_OS_WIN
+	const QString explorer = "explorer";
+	QStringList param;
+	param << QLatin1String("/select,");
+	param << QDir::toNativeSeparators(dir);
+	QProcess::startDetached(explorer, param);
+#else
 	QDesktopServices::openUrl(QUrl(dir));
+#endif
 }
 
 void AriaListWidget::restartTask(int idx)
@@ -446,6 +472,31 @@ void AriaListWidget::restartTask(int idx)
 	auto id = listmodel->_taskInfos[idx].id;
 	removeTaskSlt(id);
 	AriaDlg::getMainDlg()->restartTask(id);
+}
+
+void AriaListWidget::showTaskDetail(uint64_t)
+{
+	if(_taskDetailWgt == nullptr){
+		_taskDetailWgt = new QWidget(this);
+		_taskDetailWgt->setStyleSheet("QWidget{border:1px solid #088ACB;}");
+	}
+	_taskDetailWgt->show();
+	_taskDetailWgt->setGeometry(0, height() / 2.0, width(), height() / 2.0);
+}
+
+void AriaListWidget::hideTaskDetail()
+{
+	if(_taskDetailWgt)
+		_taskDetailWgt->hide();
+}
+
+QStyleOptionViewItem
+AriaListWidget::viewOptions() const
+{
+	auto viewOpt = Base::viewOptions();
+	viewOpt.font.setPixelSize(fontSize);
+
+	return viewOpt;
 }
 
 void AriaListWidget::resizeEvent(QResizeEvent *ev)
@@ -457,8 +508,22 @@ void AriaListWidget::resizeEvent(QResizeEvent *ev)
 
 void AriaListWidget::mouseMoveEvent(QMouseEvent *ev)
 {
-	update();
 	Base::mouseMoveEvent(ev);
+	auto pt = ev->pos();
+	int i = pt.y() / dnheight;
+	int y = pt.y() % dnheight;
+	setCursor(Qt::ArrowCursor);
+	if(_type == DOWNLOADING){
+		auto dngate = (DownloadDelegate*)itemDelegate();
+		auto mdl = (AriaDownloadListModel*)model();
+		if(i >= mdl->_tasks.size())
+			return;
+		if(dngate->_tskRect.contains(pt.x(), y))
+		{
+			setCursor(Qt::PointingHandCursor);
+		}
+	}
+	update();
 }
 
 void AriaListWidget::mousePressEvent(QMouseEvent *ev)
@@ -466,24 +531,32 @@ void AriaListWidget::mousePressEvent(QMouseEvent *ev)
 	Base::mousePressEvent(ev);
 
 	auto pt = ev->pos();
-	auto dngate = dynamic_cast<AriaListDelegate*>(itemDelegate());
 	int i = pt.y() / dnheight;
 	int y = pt.y() % dnheight;
 	if(_type == DOWNLOADING) {
+		hideTaskDetail();
+
 		auto mdl = (AriaDownloadListModel*)model();
 		if(i >= mdl->_tasks.size())
 			return;
-		if(!dngate->_btnRect.contains(pt.x(), y))
-			return;
-		auto gid = mdl->_tasks[i];
-		changeTaskState(gid);
+		auto dngate = static_cast<DownloadDelegate*>(itemDelegate());
+		if(dngate->_btnRect.contains(pt.x(), y)) {
+			auto gid = mdl->_tasks[i];
+			changeTaskState(gid);
+		}
+		else if(dngate->_tskRect.contains(pt.x(), y)) {
+			auto gid = mdl->_tasks[i];
+			showTaskDetail(gid);
+		}
 	}
 	else if(_type == COMPLETED) {
+		auto dngate = static_cast<AriaListDelegate*>(itemDelegate());
 		if(!dngate->_btnRect.contains(pt.x(), y))
 			return;
 		explorerIndexAt(i);
 	}
 	else{
+		auto dngate = static_cast<AriaListDelegate*>(itemDelegate());
 		if(!dngate->_btnRect.contains(pt.x(), y))
 			return;
 		restartTask(i);
@@ -528,6 +601,13 @@ void AriaListWidget::setTaskIcon(TaskInfo *tsk)
 	}
 	else if(tsk->type == enTaskType_Bt)
 		tsk->iconType = enTaskType_Bt;
+}
+
+void AriaListWidget::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+	QListView::selectionChanged(selected, deselected);
+
+	emit selectionChange(selected, deselected);
 }
 
 //--------------------------------------------------------------------------------

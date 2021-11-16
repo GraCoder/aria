@@ -14,6 +14,8 @@
 class QListWidget;
 class QListWidgetItem;
 class QSystemTrayIcon;
+class QActionGroup;
+class QItemSelection;
 class AriaListWidget;
 class TaskDatabase;
 
@@ -100,7 +102,7 @@ public:
 	TaskDatabase* 	getDatabase() {return _database;}
 
 	TaskUpdateInfo 	getTaskInfo(aria2::A2Gid);
-	TaskInfoEx	getTaskInfo(aria2::Session *session, aria2::A2Gid);
+	TaskInfoEx		getTaskInfo(aria2::Session *session, aria2::A2Gid);
 signals:
 	void 		changeViewSig(int);
 	void 		updateGlobalStat(aria2::GlobalStat &);
@@ -117,6 +119,8 @@ private:
 	void 		completeTask(aria2::A2Gid);
 
 	void 		staticsSlt();
+
+	void 		changeToolBarState(QActionGroup*, const QItemSelection &, const QItemSelection &);
 
 private:
 	AriaListWidget *_dnWidget, *_cmWidget, *_trWidget;

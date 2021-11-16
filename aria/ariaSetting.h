@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 
+class ariaSetting;
+
 class ariaSetting
 {
 public:
@@ -13,7 +15,7 @@ public:
 
 	std::string downloadPath();
 
-	std::map<std::string, std::string> &setting() {return _settings;}
+	std::map<std::string, std::string> &setting();
 private:
 	ariaSetting();
 

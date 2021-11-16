@@ -37,6 +37,8 @@ protected:
 	void paint(QPainter *painter, const QStyleOptionViewItem &opt, const QModelIndex &index) const;
 
 	void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+
+	QRect _tskRect;
 };
 
 //--------------------------------------------------------------------------------
@@ -90,7 +92,13 @@ public:
 	void 	explorerIndexAt(int);
 	void 	restartTask(int);
 
+	void 	showTaskDetail(uint64_t);
+	void 	hideTaskDetail();
+signals:
+	void 	selectionChange(const QItemSelection &selected, const QItemSelection &deselected);
+
 protected:
+	QStyleOptionViewItem viewOptions() const;
 	void 	resizeEvent(QResizeEvent *ev);
 	void 	mouseMoveEvent(QMouseEvent *ev);
 	void 	mousePressEvent(QMouseEvent *ev);
@@ -99,8 +107,12 @@ protected:
 	void 	changeTaskState(uint64_t);
 
 	void 	setTaskIcon(TaskInfo *);
+
+	void 	selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 private:
 	AriListViewType _type;
+
+	QWidget		*_taskDetailWgt;
 };
 
 class AriaDownloadListModel : public  QAbstractListModel{

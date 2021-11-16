@@ -28,9 +28,11 @@
 
 URILinkWgt::URILinkWgt()
 {
-	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+	//setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 	createWidgets();
 	connect(_edit, &QPlainTextEdit::textChanged, this, &URILinkWgt::uriChangedSlt);
+
+	raise();
 }
 
 URILinkWgt::~URILinkWgt()

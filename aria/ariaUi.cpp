@@ -16,6 +16,7 @@
 #include <QSystemTrayIcon>
 #include <QMessageBox>
 #include <QTimer>
+#include <QActionGroup>
 
 #include <algorithm>
 #include <filesystem>
@@ -95,6 +96,8 @@ AriaDlg::AriaDlg()
 	:_threadRunning(true)
 {
 	mainDlg = this;
+	_emitter = new Emitter;
+	_database = new TaskDatabase;
 
 	setMinimumSize(1200, 800);
 	setContentsMargins(0, 0, 0, 0);
@@ -126,9 +129,6 @@ AriaDlg::AriaDlg()
 	mainLayout->addWidget(createStatusBar());
 	_layout->addLayout(mainLayout);
 	createTrayIcon();
-
-	_emitter = new Emitter;
-	_database = new TaskDatabase;
 
 	initAria();
 
@@ -203,9 +203,16 @@ QWidget *AriaDlg::createToolBar()
 			bar->addAction(QIcon(":/aria/icons/insert-link.svg"), tr("addUri"), std::bind(&AriaDlg::addUri, this, QString(), QString()));
 		}
 		{
-			bar->addAction(QIcon(":/aria/icons/download.svg"), tr("start"), std::bind(&AriaDlg::startSelected, this));
-			bar->addAction(QIcon(":/aria/icons/pause.svg"), tr("pause"), std::bind(&AriaDlg::pauseSelected, this));
-			bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::removeSelected, this));
+			auto grp = new QActionGroup(this); grp->setDisabled(true);
+			QAction *ac = nullptr;
+			ac = bar->addAction(QIcon(":/aria/icons/download.svg"), tr("start"), std::bind(&AriaDlg::startSelected, this));
+			grp->addAction(ac);
+			ac = bar->addAction(QIcon(":/aria/icons/pause.svg"), tr("pause"), std::bind(&AriaDlg::pauseSelected, this));
+			grp->addAction(ac);
+			ac = bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::removeSelected, this));
+			grp->addAction(ac);
+			connect(_dnWidget, &AriaListWidget::selectionChange,
+					std::bind(&AriaDlg::changeToolBarState, this, grp, std::placeholders::_1, std::placeholders::_2));
 		}
 
 		stackWgt->addWidget(bar);
@@ -215,9 +222,16 @@ QWidget *AriaDlg::createToolBar()
 		bar->setAttribute(Qt::WA_TranslucentBackground, false);
 		bar->setIconSize(QSize(32, 32));
 		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
-		bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteCompleteSelected, this));
-		bar->addAction(QIcon(":/aria/icons/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllCompleteSelected, this));
-		bar->addAction(QIcon(":/aria/icons/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
+		auto grp = new QActionGroup(this); grp->setDisabled(true);
+		QAction *ac = nullptr;
+		ac = bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteCompleteSelected, this));
+		grp->addAction(ac);
+		ac = bar->addAction(QIcon(":/aria/icons/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllCompleteSelected, this));
+		grp->addAction(ac);
+		ac = bar->addAction(QIcon(":/aria/icons/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerCompleteSelected, this));
+		grp->addAction(ac);
+		connect(_cmWidget, &AriaListWidget::selectionChange,
+				std::bind(&AriaDlg::changeToolBarState, this, grp, std::placeholders::_1, std::placeholders::_2));
 		stackWgt->addWidget(bar);
 	}
 	{
@@ -225,9 +239,16 @@ QWidget *AriaDlg::createToolBar()
 		bar->setAttribute(Qt::WA_TranslucentBackground, false);
 		bar->setIconSize(QSize(32, 32));
 		bar->setStyleSheet("QToolBar{spacing:20px; padding-left:20px;}");
-		bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteTrashSelected, this));
-		bar->addAction(QIcon(":/aria/icons/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllTrashSelected, this));
-		bar->addAction(QIcon(":/aria/icons/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
+		auto grp = new QActionGroup(this); grp->setDisabled(true);
+		QAction *ac = nullptr;
+		ac = bar->addAction(QIcon(":/aria/icons/delete.svg"), tr("delete"), std::bind(&AriaDlg::deleteTrashSelected, this));
+		grp->addAction(ac);
+		ac = bar->addAction(QIcon(":/aria/icons/delete-all.svg"), tr("deleteAll"), std::bind(&AriaDlg::deleteAllTrashSelected, this));
+		grp->addAction(ac);
+		ac = bar->addAction(QIcon(":/aria/icons/folder.svg"), tr("explorer"), std::bind(&AriaDlg::explorerTrashSelected, this));
+		grp->addAction(ac);
+		connect(_trWidget, &AriaListWidget::selectionChange,
+				std::bind(&AriaDlg::changeToolBarState, this, grp, std::placeholders::_1, std::placeholders::_2));
 		stackWgt->addWidget(bar);
 	}
 	return stackWgt;
@@ -254,7 +275,10 @@ void AriaDlg::createTrayIcon()
 void AriaDlg::showSlt(int ret)
 {
 	if(ret == QSystemTrayIcon::DoubleClick)
+	{
 		show();
+		raise();
+	}
 }
 
 void AriaDlg::quitSlt()
@@ -492,10 +516,7 @@ void AriaDlg::initAria()
 
 	aria2::libraryInit();
 
-	auto ss = _database->getSettings();
-
 	auto &opTmps = ariaSetting::instance().setting();
-	opTmps.insert(ss.begin(), ss.end());
 	KeyVals options;
 	for(auto &iter : opTmps)
 		options.push_back(std::make_pair(iter.first, iter.second));
@@ -616,4 +637,15 @@ void AriaDlg::staticsSlt()
 {
 	auto stat = aria2::getGlobalStat(_session);
 	emit updateGlobalStat(stat);
+}
+
+void AriaDlg::changeToolBarState(QActionGroup *grp, const QItemSelection &sel, const QItemSelection &deSel)
+{
+	auto sd = sender();
+	auto wgt = dynamic_cast<AriaListWidget *>(sender());
+
+	if(sel.size() > 0)
+		grp->setDisabled(false);
+	else
+		grp->setDisabled(true);
 }
