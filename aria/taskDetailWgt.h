@@ -20,13 +20,19 @@ public:
 	std::set<int> getPieces(const std::string &);
 protected:
 	void paintEvent(QPaintEvent *ev);
+	void showEvent(QShowEvent *ev);
+	void hideEvent(QHideEvent *ev);
 
+	void updateTaskInfo();
 private:
-	uint64_t _id;
 
-	QLabel 	*_name, *_hashlabel, *_hash;
+	QLabel 	*_name;
 
 	QLabel *_picSize, *_picNum, *_picCom, *_connections;
+
+	QTimer *m_timer;
+
+	TaskInfoEx _tskInfo;
 };
 
 #endif // TASKDETAILWGT_H

@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QListWidget>
+#include <QTimer>
 
 #include "ariaUi.h"
 
@@ -13,39 +14,36 @@ TaskDetailWgt::TaskDetailWgt(QWidget *par)
 {
 	setAttribute(Qt::WA_TranslucentBackground, false);
 
-	setStyleSheet("TaskDetailWgt{border:1px solid #088ACB;}");
+	setStyleSheet("QWidget{background-color: #D1DFFF;}");
+
+	auto timer = new QTimer;
+	timer->setInterval(5000);
+	connect(timer, &QTimer::timeout, this, &TaskDetailWgt::updateTaskInfo);
+	m_timer = timer;
 
 	auto layout = new QVBoxLayout(this);
 
 	{
-		auto lay = new QHBoxLayout;
-		lay->addStretch();
-		lay->addWidget(new QLabel(tr("name: ")));
 		_name = new QLabel;
-		lay->addWidget(_name);
-		lay->addStretch();
-		_hashlabel = new QLabel(tr("hash: "));
-		lay->addWidget(_hashlabel);
-		_hash = new QLabel;
-		lay->addWidget(_hash);
-		lay->addStretch();
-		layout->addLayout(lay);
+		layout->addWidget(_name, 0, Qt::AlignCenter);
+		layout->addSpacing(10);
 	}
 	{
 		auto lay = new QHBoxLayout;
-		lay->addWidget(new QLabel(tr("piece size: ")));
 		_picSize = new QLabel;
+		lay->addStretch();
 		lay->addWidget(_picSize);
-		lay->addWidget(new QLabel(tr("piece num: ")));
+		lay->addStretch();
 		_picNum = new QLabel;
 		lay->addWidget(_picNum);
-		lay->addWidget(new QLabel(tr("piece completed: ")));
+		lay->addStretch();
 		_picCom = new QLabel;
 		lay->addWidget(_picCom);
+		lay->addStretch();
 
-		lay->addWidget(new QLabel(tr("connections: ")));
 		_connections = new QLabel;
 		lay->addWidget(_connections);
+		lay->addStretch();
 		layout->addLayout(lay);
 	}
 
@@ -54,28 +52,8 @@ TaskDetailWgt::TaskDetailWgt(QWidget *par)
 
 void TaskDetailWgt::fillTaskDetail(TaskInfoEx &tskInfo)
 {
-	auto dlg = AriaDlg::getMainDlg();
-	dlg->fillTaskDetail(tskInfo);
-	_name->setText(tskInfo.name);
-	if(tskInfo.type == enTaskType_Uri){
-		_hashlabel->hide();
-		_hash->hide();
-	}
-	else{
-		_hash->setText(tskInfo.btHash.c_str());
-		_hash->show();
-		_hashlabel->show();
-	}
-
-	auto lo = locale();
-	_picSize->setText(lo.formattedDataSize(tskInfo.picLength));
-	_picNum->setText(QString::number(tskInfo.picNums));
-
-	auto set = getPieces(tskInfo.picString);
-
-	_picCom->setText(QString::number(set.size()));
-
-	_connections->setText(QString::number(tskInfo.connections));
+	_tskInfo = tskInfo;
+	updateTaskInfo();
 }
 
 std::set<int> TaskDetailWgt::getPieces(const std::string &pic)
@@ -103,4 +81,37 @@ void TaskDetailWgt::paintEvent(QPaintEvent *ev)
 	opt.init(this);
 	QPainter painter(this);
 	style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
+	//QWidget::paintEvent(ev);
+}
+
+void TaskDetailWgt::showEvent(QShowEvent *ev)
+{
+	QWidget::showEvent(ev);
+
+	m_timer->start();
+}
+
+void TaskDetailWgt::hideEvent(QHideEvent *ev)
+{
+	QWidget::hideEvent(ev);
+
+	m_timer->stop();
+}
+
+void TaskDetailWgt::updateTaskInfo()
+{
+	auto dlg = AriaDlg::getMainDlg();
+	dlg->fillTaskDetail(_tskInfo);
+	_name->setText("name: <b>" + _tskInfo.name + "</b>");
+
+	auto lo = locale();
+	_picSize->setText(tr("piece size: <b>") + lo.formattedDataSize(_tskInfo.picLength) + "</b>");
+	_picNum->setText("piece num: <b>" + QString::number(_tskInfo.picNums) + "</b>");
+
+	auto set = getPieces(_tskInfo.picString);
+
+	_picCom->setText("piece completed: <b>" + QString::number(set.size()) + "</b>");
+
+	_connections->setText("connections: <b>" + QString::number(_tskInfo.connections) + "</b>");
+
 }

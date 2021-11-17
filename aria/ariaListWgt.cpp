@@ -68,7 +68,7 @@ void DownloadDelegate::setSize(const QSize &size)
 
 	auto ft = QFont(); ft.setPixelSize(fontSize);
 	int w = QFontMetrics(ft).boundingRect(tr("task info")).width() + 10;
-	_tskRect = QRect(size.width() / 2.0, dnheight / 5.0 * 3, w, hfheight);
+	_tskRect = QRect(size.width() / 5.0 * 3, dnheight / 5.0 * 3, w, hfheight);
 }
 
 void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt, const QModelIndex &index) const
@@ -162,9 +162,10 @@ void DownloadDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
 	{
 		texOpt.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 		QFont ft = painter->font();
-		painter->setPen(QColor(8, 138, 203));
 		ft.setItalic(true); painter->setFont(ft);
 		auto rect = _tskRect.translated(0, opt.rect.top());
+		if(rect.contains(pt))
+			painter->setPen(QColor(8, 138, 203));
 		painter->drawText(rect, tr("task info"), texOpt);
 		//painter->drawLine(rect.left(), rect.bottom(), rect.right(), rect.bottom());
 	}
@@ -515,6 +516,9 @@ void AriaListWidget::resizeEvent(QResizeEvent *ev)
 	auto delegate = (AriaListDelegate*)itemDelegate();
 	delegate->setSize(ev->size());
 	Base::resizeEvent(ev);
+
+	if(_taskDetailWgt && _taskDetailWgt->isVisible())
+		_taskDetailWgt->setGeometry(0, height() / 2.0, width(), height() / 2.0);
 }
 
 void AriaListWidget::mouseMoveEvent(QMouseEvent *ev)
