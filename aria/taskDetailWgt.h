@@ -4,15 +4,19 @@
 #include <set>
 
 #include <QWidget>
+#include <QTabWidget>
 
 #include "taskInfo.h"
 
 class QLabel;
+class PieceWgt;
 
 class TaskDetailWgt : public QWidget
 {
 	Q_OBJECT
 public:
+	typedef QWidget Base;
+
 	TaskDetailWgt(QWidget *);
 
 	void fillTaskDetail(TaskInfoEx &);
@@ -29,6 +33,8 @@ private:
 	QLabel 	*_name;
 
 	QLabel *_picSize, *_picNum, *_picCom, *_connections;
+
+	PieceWgt *_picWgt;
 
 	QTimer *m_timer;
 
