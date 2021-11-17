@@ -16,6 +16,17 @@ AriaSysMenu::AriaSysMenu()
 	connect(btn, &QAbstractButton::clicked, this, &AriaSysMenu::miniSlt);
 }
 
+void AriaSysMenu::mouseDoubleClickEvent(QMouseEvent *ev)
+{
+	QWidget::mouseDoubleClickEvent(ev);
+
+	auto wgt = topLevelWidget();
+	if(wgt->isMaximized())
+		wgt->showNormal();
+	else
+		wgt->showMaximized();
+}
+
 void AriaSysMenu::miniSlt()
 {
 	topLevelWidget()->hide();

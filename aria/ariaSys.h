@@ -8,6 +8,8 @@ class AriaSysMenu : public QWidget
 public:
 	AriaSysMenu();
 
+protected:
+	void mouseDoubleClickEvent(QMouseEvent *ev);
 public:
 	void miniSlt();
 };
