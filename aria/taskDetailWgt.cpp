@@ -60,7 +60,7 @@ TaskDetailWgt::TaskDetailWgt(QWidget *par)
 {
 	setAttribute(Qt::WA_TranslucentBackground, false);
 
-	setStyleSheet("TaskDetailWidget{border: 1px solid #D1DFFF;}");
+	setStyleSheet("TaskDetailWidget{border: 1px solid #D1DFFF; background-color:white}");
 
 	auto timer = new QTimer;
 	timer->setInterval(5000);

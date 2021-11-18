@@ -92,6 +92,9 @@ ariaSetting::setting()
 		_settings["max-upload-limit"]= "0";
 		_settings["seed-ratio"]= "2.0";
 
+		//--check-integrity=true
+		//--bt-hash-check-seed=true
+
 		auto sets = AriaDlg::getMainDlg()->getDatabase()->getSettings();
 		for(auto &set : sets) {
 			_settings[set.first] = set.second;

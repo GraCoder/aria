@@ -561,7 +561,7 @@ void AriaDlg::download()
 
 		int ret = run(_session, RUN_ONCE);
 
-		if(ret)
+		if(ret && isVisible())
 		{
 			auto curr = std::chrono::system_clock().now();
 			auto sec = std::chrono::duration_cast<std::chrono::milliseconds>(curr - prev);
