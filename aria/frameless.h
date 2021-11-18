@@ -11,7 +11,7 @@ class FramelessFrame: public QDialog{
 public:
 	typedef QDialog Base;
 
-	FramelessFrame(QBoxLayout::Direction dir = QBoxLayout::LeftToRight, QWidget *par = nullptr);
+	FramelessFrame(QWidget *par = nullptr);
 
 	~FramelessFrame();
 
@@ -19,16 +19,20 @@ public:
 
 	void setFixSize(bool);
 protected:
+	QRect clientRect();
+
 	void mousePressEvent(QMouseEvent *event);
 
 	void mouseMoveEvent(QMouseEvent *event);
 
 	void resizeEvent(QResizeEvent *);
 
+	void paintEvent(QPaintEvent *ev);
+
 	bool nativeEvent(const QByteArray &eventType, void *message, long *result);
 
 protected:
-	QBoxLayout *_layout;
+	QWidget *_widget;
 private:
 	int64_t _area[9];
 
@@ -40,7 +44,7 @@ private:
 class FramelessDlg : public FramelessFrame{
 	Q_OBJECT
 public:
-	FramelessDlg(QBoxLayout::Direction dir = QBoxLayout::TopToBottom, QWidget *par = nullptr);
+	FramelessDlg(QWidget *par = nullptr);
 	~FramelessDlg();
 
 	void setTitle(const QString &);
@@ -49,6 +53,7 @@ signals:
 	void maxiSig();
 	void closeSig();
 protected:
+	QVBoxLayout *_layout;
 private:
 	QHBoxLayout *_sysLayout;
 };

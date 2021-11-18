@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QMouseEvent>
 
+#include <QPainter>
 
 #include "ariaButton.h"
 
@@ -11,8 +12,11 @@
 
 const int warea = 10, harea = 10;
 
-FramelessFrame::FramelessFrame(QBoxLayout::Direction dir, QWidget *par)
+const int lmargin = 1, rmargin = 3, tmargin = 1, bmargin = 3;
+
+FramelessFrame::FramelessFrame(QWidget *par)
 	: QDialog(par, Qt::FramelessWindowHint)
+	, _widget(nullptr)
 	, _fixsize(false)
 {
 	_area[0] = HTTOPLEFT;
@@ -26,21 +30,6 @@ FramelessFrame::FramelessFrame(QBoxLayout::Direction dir, QWidget *par)
 	_area[8] = HTBOTTOMRIGHT;
 
 	setAttribute(Qt::WA_TranslucentBackground, true);
-	auto layout = new QHBoxLayout(this);
-	layout->setContentsMargins(0, 0, 0, 0);
-	auto wgt = new QLabel; wgt->setObjectName("framelabel");
-	wgt->setStyleSheet("QLabel#framelabel{background-color: rgba(0, 0, 0, 15);}");
-	layout->addWidget(wgt);
-	layout = new QHBoxLayout(wgt);
-	layout->setContentsMargins(1, 1, 3, 3);
-	wgt = new QLabel; wgt->setObjectName("framelabel");
-	wgt->setStyleSheet("QLabel#framelabel{background-color: rgba(255, 255, 255, 255);}");
-	layout->addWidget(wgt);
-
-	_layout = new QBoxLayout(dir);
-	wgt->setLayout(_layout);
-
-	ensurePolished();
 }
 
 FramelessFrame::~FramelessFrame()
@@ -50,12 +39,19 @@ FramelessFrame::~FramelessFrame()
 
 void FramelessFrame::setWidget(QWidget *wgt)
 {
-	_layout->addWidget(wgt);
+	_widget = wgt;
+	wgt->setParent(this);
+	wgt->setGeometry(clientRect());
 }
 
 void FramelessFrame::setFixSize(bool fixsize)
 {
 	_fixsize = fixsize;
+}
+
+QRect FramelessFrame::clientRect()
+{
+	return QRect(lmargin, tmargin, width() - lmargin - rmargin, height() - tmargin - bmargin);
 }
 
 void FramelessFrame::mousePressEvent(QMouseEvent *event)
@@ -76,6 +72,21 @@ void FramelessFrame::mouseMoveEvent(QMouseEvent *event)
 void FramelessFrame::resizeEvent(QResizeEvent *ev)
 {
 	Base::resizeEvent(ev);
+	if(_widget)
+		_widget->setGeometry(clientRect());
+}
+
+void FramelessFrame::paintEvent(QPaintEvent *ev)
+{
+	QPainter painter(this);
+
+	{
+		painter.fillRect(rect(), QColor(0, 0, 0, 18));
+	}
+
+	painter.fillRect(clientRect(), Qt::white);
+
+	Base::paintEvent(ev);
 }
 
 bool FramelessFrame::nativeEvent(const QByteArray &eventType, void *message, long *result)
@@ -103,11 +114,15 @@ bool FramelessFrame::nativeEvent(const QByteArray &eventType, void *message, lon
 
 //-----------------------------------------------------------------------------------------------------------------------
 
-FramelessDlg::FramelessDlg(QBoxLayout::Direction dir, QWidget *par)
-	: FramelessFrame(dir, par)
+FramelessDlg::FramelessDlg(QWidget *par)
+	: FramelessFrame(par)
 {
 	auto btn = new AriaSysButton(":/aria/icons/application-exit.svg");
 	connect(btn, &QAbstractButton::clicked, this, &FramelessDlg::close);
+
+	auto clientWgt = new QWidget;
+	setWidget(clientWgt);
+	_layout = new QVBoxLayout(clientWgt);
 
 	auto layout = new QHBoxLayout;
 	layout->addStretch(1);

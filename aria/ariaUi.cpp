@@ -119,15 +119,18 @@ AriaDlg::AriaDlg()
 
 	auto panel = new AriaPanel(this);
 
-	_layout->setSpacing(0);
-	_layout->setContentsMargins(0, 0, 0, 0);
-	_layout->addWidget(panel);
+	auto clientWgt = new QWidget;
+	setWidget(clientWgt);
+	auto layout = new QHBoxLayout(clientWgt);
+	layout->setSpacing(0);
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->addWidget(panel);
 	auto mainLayout = new QVBoxLayout;
 	mainLayout->addWidget(new AriaSysMenu);
 	mainLayout->addWidget(createToolBar());
 	mainLayout->addWidget(stackWgt, 10);
 	mainLayout->addWidget(createStatusBar());
-	_layout->addLayout(mainLayout);
+	layout->addLayout(mainLayout);
 	createTrayIcon();
 
 	initAria();
