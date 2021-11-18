@@ -58,10 +58,6 @@ private:
 TaskDetailWgt::TaskDetailWgt(QWidget *par)
 	: Base(par)
 {
-	setAttribute(Qt::WA_TranslucentBackground, false);
-
-	setStyleSheet("TaskDetailWidget{border: 1px solid #D1DFFF; background-color:white}");
-
 	auto timer = new QTimer;
 	timer->setInterval(5000);
 	connect(timer, &QTimer::timeout, this, &TaskDetailWgt::updateTaskInfo);
@@ -159,11 +155,13 @@ std::set<int> TaskDetailWgt::getPieces(const std::string &pic)
 
 void TaskDetailWgt::paintEvent(QPaintEvent *ev)
 {
-	QStyleOption opt;
-	opt.init(this);
+//	QStyleOption opt;
+//	opt.init(this);
+//	QPainter painter(this);
+//	style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
 	QPainter painter(this);
-	style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
-	//QWidget::paintEvent(ev);
+	painter.fillRect(rect(), Qt::white);
+	QWidget::paintEvent(ev);
 }
 
 void TaskDetailWgt::showEvent(QShowEvent *ev)

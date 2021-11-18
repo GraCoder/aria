@@ -28,13 +28,13 @@ FramelessFrame::FramelessFrame(QBoxLayout::Direction dir, QWidget *par)
 	setAttribute(Qt::WA_TranslucentBackground, true);
 	auto layout = new QHBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
-	auto wgt = new QLabel;
-	wgt->setStyleSheet("QLabel{background-color: rgba(0, 0, 0, 15);}");
+	auto wgt = new QLabel; wgt->setObjectName("framelabel");
+	wgt->setStyleSheet("QLabel#framelabel{background-color: rgba(0, 0, 0, 15);}");
 	layout->addWidget(wgt);
 	layout = new QHBoxLayout(wgt);
 	layout->setContentsMargins(1, 1, 3, 3);
-	wgt = new QLabel;
-	wgt->setStyleSheet("QLabel{background-color: rgba(255, 255, 255, 255);}");
+	wgt = new QLabel; wgt->setObjectName("framelabel");
+	wgt->setStyleSheet("QLabel#framelabel{background-color: rgba(255, 255, 255, 255);}");
 	layout->addWidget(wgt);
 
 	_layout = new QBoxLayout(dir);
